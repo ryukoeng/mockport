@@ -35,6 +35,7 @@ type Scenario struct {
 }
 
 type SafetyWarning struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
+	Field    string `json:"field"`
+	Category string `json:"category"`
+	Message  string `json:"message"`
 }

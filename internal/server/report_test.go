@@ -54,4 +54,13 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if len(snapshot.SafetyWarnings) != 1 {
 		t.Fatalf("safety warnings = %#v", snapshot.SafetyWarnings)
 	}
+	if snapshot.Safety.Safe {
+		t.Fatal("safety safe = true, want false")
+	}
+	if snapshot.Safety.Mode != "ai-safe" {
+		t.Fatalf("safety mode = %q, want ai-safe", snapshot.Safety.Mode)
+	}
+	if snapshot.Safety.RealLookingSecrets != 1 {
+		t.Fatalf("real-looking secrets = %d, want 1", snapshot.Safety.RealLookingSecrets)
+	}
 }

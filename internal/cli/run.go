@@ -14,6 +14,7 @@ import (
 
 func newRunCommand() *cobra.Command {
 	var configPath string
+	var check bool
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run Mockport server",
@@ -21,6 +22,11 @@ func newRunCommand() *cobra.Command {
 			cfg, err := config.LoadFile(configPath)
 			if err != nil {
 				return err
+			}
+			printSafetyWarnings(cmd, cfg)
+			if check {
+				fmt.Fprintln(cmd.OutOrStdout(), "Config check passed")
+				return nil
 			}
 			reg := adapter.NewRegistry()
 			reg.Register(stripe.New())
@@ -33,5 +39,17 @@ func newRunCommand() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&configPath, "config", "mockport.yml", "Path to mockport.yml")
+	cmd.Flags().BoolVar(&check, "check", false, "Validate config and print safety warnings without starting the server")
 	return cmd
+}
+
+func printSafetyWarnings(cmd *cobra.Command, cfg config.Config) {
+	if len(cfg.SafetyWarnings) == 0 {
+		return
+	}
+	out := cmd.OutOrStdout()
+	fmt.Fprintln(out, "[MOCKPORT SECURITY WARNING]")
+	for _, warning := range cfg.SafetyWarnings {
+		fmt.Fprintf(out, "- %s: %s (%s)\n", warning.Field, warning.Message, warning.Category)
+	}
 }

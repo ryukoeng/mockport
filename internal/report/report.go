@@ -2,9 +2,17 @@ package report
 
 type Snapshot struct {
 	Mode           string          `json:"mode"`
+	Safety         SafetySummary   `json:"safety"`
 	Adapters       []AdapterStatus `json:"adapters"`
 	Requests       []Request       `json:"requests"`
 	SafetyWarnings []SafetyWarning `json:"safety_warnings"`
+}
+
+type SafetySummary struct {
+	Mode               string `json:"mode"`
+	Safe               bool   `json:"safe"`
+	RealLookingSecrets int    `json:"real_looking_secrets"`
+	ExternalURLs       int    `json:"external_urls"`
 }
 
 type AdapterStatus struct {
@@ -20,6 +28,7 @@ type Request struct {
 }
 
 type SafetyWarning struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
+	Field    string `json:"field"`
+	Category string `json:"category"`
+	Message  string `json:"message"`
 }

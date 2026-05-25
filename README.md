@@ -68,4 +68,12 @@ Later:
 
 Mockport warns when real-looking credentials or real external service URLs are detected. In `strict` mode, unsafe configuration fails startup.
 
+Check a config without starting the server:
+
+```bash
+mockport run --config examples/unsafe-config/mockport.yml --check
+```
+
+See [AI-safe Development](docs/ai-safe-development.md) for warning categories, strict mode, and redaction behavior.
+
 Mockport is not a full clone of external services. It focuses on local integration testing scenarios: success, failure, auth error, rate limit, timeout, and webhook/callback.

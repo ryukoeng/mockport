@@ -27,7 +27,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	var adapterStatuses []report.AdapterStatus
 	for warningIdx := range cfg.SafetyWarnings {
 		warning := cfg.SafetyWarnings[warningIdx]
-		rec.RecordSafetyWarning(warning.Field, warning.Message)
+		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
 	}
 
 	for name, adapterCfg := range cfg.Adapters {

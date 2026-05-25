@@ -32,10 +32,10 @@ func (r *Recorder) RecordRequest(method, path string, status int) {
 	r.requests = append(r.requests, Request{Method: method, Path: path, Status: status})
 }
 
-func (r *Recorder) RecordSafetyWarning(field, message string) {
+func (r *Recorder) RecordSafetyWarning(field, category, message string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.safetyWarnings = append(r.safetyWarnings, SafetyWarning{Field: field, Message: message})
+	r.safetyWarnings = append(r.safetyWarnings, SafetyWarning{Field: field, Category: category, Message: message})
 }
 
 func (r *Recorder) Snapshot() Snapshot {
@@ -43,8 +43,22 @@ func (r *Recorder) Snapshot() Snapshot {
 	defer r.mu.Unlock()
 	return Snapshot{
 		Mode:           r.mode,
+		Safety:         safetySummary(r.mode, r.safetyWarnings),
 		Adapters:       append([]AdapterStatus(nil), r.adapters...),
 		Requests:       append([]Request(nil), r.requests...),
 		SafetyWarnings: append([]SafetyWarning(nil), r.safetyWarnings...),
 	}
+}
+
+func safetySummary(mode string, warnings []SafetyWarning) SafetySummary {
+	summary := SafetySummary{Mode: mode, Safe: len(warnings) == 0}
+	for _, warning := range warnings {
+		switch warning.Category {
+		case "real_looking_secret":
+			summary.RealLookingSecrets++
+		case "external_url":
+			summary.ExternalURLs++
+		}
+	}
+	return summary
 }

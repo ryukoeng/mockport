@@ -8,7 +8,7 @@ import (
 func TestRecorderStoresRequestsAndSafety(t *testing.T) {
 	rec := NewRecorder()
 	rec.RecordRequest(http.MethodPost, "/stripe/v1/checkout/sessions", 200)
-	rec.RecordSafetyWarning("STRIPE_SECRET_KEY", "real-looking Stripe key")
+	rec.RecordSafetyWarning("STRIPE_SECRET_KEY", "real_looking_secret", "real-looking Stripe key")
 
 	snapshot := rec.Snapshot()
 	if len(snapshot.Requests) != 1 {
@@ -19,5 +19,11 @@ func TestRecorderStoresRequestsAndSafety(t *testing.T) {
 	}
 	if len(snapshot.SafetyWarnings) != 1 {
 		t.Fatalf("warning count = %d, want 1", len(snapshot.SafetyWarnings))
+	}
+	if snapshot.Safety.Safe {
+		t.Fatal("safety summary safe = true, want false")
+	}
+	if snapshot.Safety.RealLookingSecrets != 1 {
+		t.Fatalf("real-looking secret count = %d, want 1", snapshot.Safety.RealLookingSecrets)
 	}
 }

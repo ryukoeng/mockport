@@ -72,15 +72,48 @@ func TestStrictRejectsRealLookingSecret(t *testing.T) {
 }
 
 func TestStrictRejectsExternalServiceURL(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"stripe", "https://api.stripe.com"},
+		{"openai", "https://api.openai.com"},
+		{"github", "https://api.github.com"},
+		{"line", "https://api.line.me"},
+		{"slack", "https://slack.com/api"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := Config{
+				Server: ServerConfig{Port: 43101},
+				Mode:   "strict",
+				Adapters: map[string]AdapterConfig{
+					"stripe": {Enabled: true, BasePath: "/stripe", APIURL: tt.url},
+				},
+			}
+			if err := Validate(&cfg); err == nil {
+				t.Fatal("strict config with external service URL returned nil error")
+			}
+		})
+	}
+}
+
+func TestAISafeRecordsExternalURLWarning(t *testing.T) {
 	cfg := Config{
 		Server: ServerConfig{Port: 43101},
-		Mode:   "strict",
+		Mode:   "ai-safe",
 		Adapters: map[string]AdapterConfig{
 			"stripe": {Enabled: true, BasePath: "/stripe", APIURL: "https://api.stripe.com"},
 		},
 	}
 
-	if err := Validate(&cfg); err == nil {
-		t.Fatal("strict config with external service URL returned nil error")
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("validate ai-safe config: %v", err)
+	}
+	if len(cfg.SafetyWarnings) != 1 {
+		t.Fatalf("warnings = %d, want 1", len(cfg.SafetyWarnings))
+	}
+	if cfg.SafetyWarnings[0].Category != "external_url" {
+		t.Fatalf("category = %q, want external_url", cfg.SafetyWarnings[0].Category)
 	}
 }

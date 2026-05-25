@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/report"
 	"github.com/spf13/cobra"
@@ -15,7 +16,8 @@ func newReportCommand() *cobra.Command {
 		Use:   "report",
 		Short: "Print Mockport request and safety report",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Get(reportURL)
+			client := &http.Client{Timeout: 5 * time.Second}
+			resp, err := client.Get(reportURL)
 			if err != nil {
 				return fmt.Errorf("fetch report: %w", err)
 			}

@@ -34,10 +34,10 @@ func Validate(cfg *Config) error {
 				continue
 			}
 			if security.LooksLikeSecret(value) {
-				warnings = append(warnings, SafetyWarning{Field: field, Message: "real-looking secret detected"})
+				warnings = append(warnings, SafetyWarning{Field: field, Category: "real_looking_secret", Message: "real-looking secret detected"})
 			}
 			if security.LooksLikeExternalServiceURL(value) {
-				warnings = append(warnings, SafetyWarning{Field: field, Message: "external live service URL detected"})
+				warnings = append(warnings, SafetyWarning{Field: field, Category: "external_url", Message: "external live service URL detected"})
 			}
 		}
 	}

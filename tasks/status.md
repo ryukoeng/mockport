@@ -21,7 +21,7 @@
 | Phase 0 | Repository skeleton, CLI, config, server, health, Docker, CI | done | Go 1.26.3 test/vet/build, Docker build, `/health` 200 |
 | Phase 1 | Stripe-like Minimal MVP | done | Stripe scenarios, webhook tests, report, AI-safe tests, Docker run |
 | Phase 2 | CLI UX | done | Empty directory init/up/run flow works in under 2 minutes |
-| Phase 3 | AI-safe mode | pending | Warn/fail/redact/report/docs are explicit and tested |
+| Phase 3 | AI-safe mode | done | Warn/fail/redact/report/docs are explicit and tested |
 | Phase 4 | Trust reports and adapter contracts | pending | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters use the adapter contract and have examples |
 | Phase 6 | Distribution | pending | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
@@ -83,12 +83,12 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P3-T01 | Add safety status model | pending | Report tests assert `safe`, warning counts, and categories |
-| P3-T02 | Emit startup warnings in ai-safe mode | pending | CLI run tests assert warning text without full secrets |
-| P3-T03 | Harden strict mode exit behavior | pending | CLI run tests assert non-zero error for unsafe config |
-| P3-T04 | Expand redaction coverage | pending | Security tests cover URLs, short values, env-like values |
-| P3-T05 | Block proxy-like external URLs | pending | Config tests assert known provider URLs fail in strict mode |
-| P3-T06 | Add AI-safe docs and examples | pending | Docs command examples match implemented behavior |
+| P3-T01 | Add safety status model | done | Report tests assert `safe`, warning counts, and categories |
+| P3-T02 | Emit startup warnings in ai-safe mode | done | CLI run tests assert warning text without full secrets |
+| P3-T03 | Harden strict mode exit behavior | done | CLI run tests assert non-zero error for unsafe config |
+| P3-T04 | Expand redaction coverage | done | Security tests cover URLs, short values, env-like values |
+| P3-T05 | Block proxy-like external URLs | done | Config tests assert known provider URLs fail in strict mode |
+| P3-T06 | Add AI-safe docs and examples | done | Docs command examples match implemented behavior |
 
 ## Phase 4 Tasks
 
