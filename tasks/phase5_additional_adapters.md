@@ -27,70 +27,70 @@
 
 ## Task P5-T01: OpenAI-compatible Adapter
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing HTTP tests for `GET /openai/v1/models`, `POST /openai/v1/chat/completions`, `POST /openai/v1/responses`.
-- [ ] Add scenario tests for `chat_success`, `stream_success`, `rate_limited`, `context_length_exceeded`, `auth_error`.
-- [ ] Implement `adapters/openai` with deterministic JSON responses.
-- [ ] Implement Phase 4 metadata contract for OpenAI.
-- [ ] Register OpenAI in `mockport run`.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/openai ./internal/server -v`.
+- [x] Write failing HTTP tests for `GET /openai/v1/models`, `POST /openai/v1/chat/completions`, `POST /openai/v1/responses`.
+- [x] Add scenario tests for `chat_success`, `stream_success`, `rate_limited`, `context_length_exceeded`, `auth_error`.
+- [x] Implement `adapters/openai` with deterministic JSON responses.
+- [x] Implement Phase 4 metadata contract for OpenAI.
+- [x] Register OpenAI in `mockport run`.
+- [x] Run `/usr/local/go/bin/go test ./adapters/openai ./internal/server -v`.
 
 ## Task P5-T02: GitHub OAuth-like Adapter
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for `GET /github/login/oauth/authorize`, `POST /github/login/oauth/access_token`, `GET /github/user`.
-- [ ] Add scenarios: `oauth_success`, `invalid_code`, `expired_token`, `scope_missing`.
-- [ ] Implement redirects/token/user JSON with fake deterministic values.
-- [ ] Implement Phase 4 metadata contract for GitHub OAuth.
-- [ ] Register GitHub OAuth in server.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/githuboauth ./internal/server -v`.
+- [x] Write failing tests for `GET /github/login/oauth/authorize`, `POST /github/login/oauth/access_token`, `GET /github/user`.
+- [x] Add scenarios: `oauth_success`, `invalid_code`, `expired_token`, `scope_missing`.
+- [x] Implement redirects/token/user JSON with fake deterministic values.
+- [x] Implement Phase 4 metadata contract for GitHub OAuth.
+- [x] Register GitHub OAuth in server.
+- [x] Run `/usr/local/go/bin/go test ./adapters/githuboauth ./internal/server -v`.
 
 ## Task P5-T03: Slack-like Adapter
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for `POST /slack/api/auth.test`, `POST /slack/api/chat.postMessage`.
-- [ ] Add scenarios: `message_success`, `auth_error`, `rate_limited`, `delivery_failed`.
-- [ ] Implement Slack-like JSON bodies with `ok`, `error`, `channel`, `ts`.
-- [ ] Implement Phase 4 metadata contract for Slack.
-- [ ] Register Slack in server.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/slack ./internal/server -v`.
+- [x] Write failing tests for `POST /slack/api/auth.test`, `POST /slack/api/chat.postMessage`.
+- [x] Add scenarios: `message_success`, `auth_error`, `rate_limited`, `delivery_failed`.
+- [x] Implement Slack-like JSON bodies with `ok`, `error`, `channel`, `ts`.
+- [x] Implement Phase 4 metadata contract for Slack.
+- [x] Register Slack in server.
+- [x] Run `/usr/local/go/bin/go test ./adapters/slack ./internal/server -v`.
 
 ## Task P5-T04: Multi-adapter Init And Add
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing CLI tests: `mockport init --adapter stripe --adapter openai` generates both adapter configs and env vars.
-- [ ] Write failing tests for `mockport add openai github-oauth slack`.
-- [ ] Implement repeated adapter flags and `add` command for config updates.
-- [ ] Preserve existing files unless `--force` is passed.
-- [ ] Run `/usr/local/go/bin/go test ./internal/cli -run 'Init|Add' -v`.
+- [x] Write failing CLI tests: `mockport init --adapter stripe --adapter openai` generates both adapter configs and env vars.
+- [x] Write failing tests for `mockport add openai github-oauth slack`.
+- [x] Implement repeated adapter flags and `add` command for config updates.
+- [x] Preserve existing files unless `--force` is passed.
+- [x] Run `/usr/local/go/bin/go test ./internal/cli -run 'Init|Add' -v`.
 
 ## Task P5-T05: Adapter Examples
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add one example directory per new adapter.
-- [ ] Add example config load tests or smoke script entries for each config.
-- [ ] Update README supported adapters and adapter maturity table.
-- [ ] Run `/usr/local/go/bin/go test ./...`.
+- [x] Add one example directory per new adapter.
+- [x] Add example config load tests or smoke script entries for each config.
+- [x] Update README supported adapters and adapter maturity table.
+- [x] Run `/usr/local/go/bin/go test ./...`.
 
 ## Task P5-T06: Cross-adapter Smoke Coverage
 
-**Status:** pending
+**Status:** done
 
-- [ ] Create a multi-adapter config enabling Stripe, OpenAI, GitHub OAuth, and Slack.
-- [ ] Add smoke script that starts Docker and calls one success endpoint per adapter.
-- [ ] Assert report contains all adapters and their metadata.
-- [ ] Run Docker smoke and full verification.
+- [x] Create a multi-adapter config enabling Stripe, OpenAI, GitHub OAuth, and Slack.
+- [x] Add smoke script that starts Docker and calls one success endpoint per adapter.
+- [x] Assert report contains all adapters and their metadata.
+- [x] Run Docker smoke and full verification.
 
 ## Phase 5 Exit
 
-- [ ] OpenAI, GitHub OAuth, and Slack-like adapters are registered.
-- [ ] Each adapter has success, auth error, rate limit or equivalent failure scenario tests.
-- [ ] Each adapter implements metadata/report contract.
-- [ ] Examples exist and config loads.
-- [ ] Multi-adapter init/add works.
-- [ ] Cross-adapter Docker smoke passes.
+- [x] OpenAI, GitHub OAuth, and Slack-like adapters are registered.
+- [x] Each adapter has success, auth error, rate limit or equivalent failure scenario tests.
+- [x] Each adapter implements metadata/report contract.
+- [x] Examples exist and config loads.
+- [x] Multi-adapter init/add works.
+- [x] Cross-adapter Docker smoke passes.

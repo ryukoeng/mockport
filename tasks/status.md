@@ -1,6 +1,6 @@
 # Mockport Implementation Status
 
-最終更新: 2026-05-25
+最終更新: 2026-05-26
 
 ## Decisions
 
@@ -23,7 +23,7 @@
 | Phase 2 | CLI UX | done | Empty directory init/up/run flow works in under 2 minutes |
 | Phase 3 | AI-safe mode | done | Warn/fail/redact/report/docs are explicit and tested |
 | Phase 4 | Trust reports and adapter contracts | done | Report explains supported/unsupported behavior before adding more adapters |
-| Phase 5 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters use the adapter contract and have examples |
+| Phase 5 | Additional adapters | done | OpenAI, GitHub OAuth, Slack-like adapters, examples, multi-adapter CLI, Docker smoke |
 | Phase 6 | Distribution | pending | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 
 ## Phase 0 Tasks
@@ -105,12 +105,12 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P5-T01 | Add OpenAI-compatible adapter | pending | HTTP tests cover models, chat success, auth, rate limit |
-| P5-T02 | Add GitHub OAuth-like adapter | pending | HTTP tests cover authorize, token, user, invalid code |
-| P5-T03 | Add Slack-like messaging adapter | pending | HTTP tests cover auth.test, chat.postMessage, rate limit |
-| P5-T04 | Extend `mockport init/add` for multiple adapters | pending | CLI tests assert multi-adapter config/env generation |
-| P5-T05 | Add examples for each adapter | pending | Example configs load and adapter routes respond |
-| P5-T06 | Add cross-adapter smoke coverage | pending | Docker smoke validates multiple adapters in one config |
+| P5-T01 | Add OpenAI-compatible adapter | done | HTTP tests cover models, chat success, auth, rate limit |
+| P5-T02 | Add GitHub OAuth-like adapter | done | HTTP tests cover authorize, token, user, invalid code |
+| P5-T03 | Add Slack-like messaging adapter | done | HTTP tests cover auth.test, chat.postMessage, rate limit |
+| P5-T04 | Extend `mockport init/add` for multiple adapters | done | CLI tests assert multi-adapter config/env generation |
+| P5-T05 | Add examples for each adapter | done | Example configs load and adapter routes respond |
+| P5-T06 | Add cross-adapter smoke coverage | done | Docker smoke validates multiple adapters in one config |
 
 ## Phase 6 Tasks
 
@@ -131,3 +131,5 @@
 - Passed: `/usr/local/go/bin/go build ./cmd/mockport`.
 - Passed: `docker build -t mockport:local -f docker/Dockerfile .`.
 - Passed with `mockport:local`: `GET /health`, `POST /stripe/v1/checkout/sessions`, `GET /_mockport/report`.
+- Passed: `bash scripts/smoke-empty-dir.sh`.
+- Passed: `bash scripts/smoke-multi-adapter.sh` with Stripe, OpenAI, GitHub OAuth, and Slack endpoints.

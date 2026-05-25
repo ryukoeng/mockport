@@ -3,7 +3,7 @@
 This example runs the Stripe-like Mockport adapter with fake local credentials.
 
 ```bash
-docker build -t mockport:local -f docker/Dockerfile ../..
+docker build -t mockport:local -f docker/Dockerfile .
 docker compose -f examples/stripe-checkout/docker-compose.yml up
 ```
 

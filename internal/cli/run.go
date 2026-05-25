@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/albert-einshutoin/mockport/adapters/githuboauth"
+	"github.com/albert-einshutoin/mockport/adapters/openai"
+	"github.com/albert-einshutoin/mockport/adapters/slack"
 	"github.com/albert-einshutoin/mockport/adapters/stripe"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/config"
@@ -30,6 +33,9 @@ func newRunCommand() *cobra.Command {
 			}
 			reg := adapter.NewRegistry()
 			reg.Register(stripe.New())
+			reg.Register(openai.New())
+			reg.Register(githuboauth.New())
+			reg.Register(slack.New())
 			handler, err := server.NewConfiguredHandler(cfg, reg, report.NewRecorder())
 			if err != nil {
 				return err

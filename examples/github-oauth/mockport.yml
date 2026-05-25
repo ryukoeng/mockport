@@ -1,0 +1,14 @@
+version: "0.1"
+
+server:
+  host: 0.0.0.0
+  port: 43101
+
+mode: ai-safe
+
+adapters:
+  github-oauth:
+    enabled: true
+    base_path: /github
+    scenario: oauth_success
+    fake_secret: mockport_github_secret

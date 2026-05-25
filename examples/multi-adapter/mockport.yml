@@ -1,0 +1,32 @@
+version: "0.1"
+
+server:
+  host: 0.0.0.0
+  port: 43101
+
+mode: ai-safe
+
+adapters:
+  stripe:
+    enabled: true
+    base_path: /stripe
+    scenario: payment_success
+    fake_secret: mockport_stripe_secret
+    webhook:
+      target_url: http://host.docker.internal:3000/webhooks/stripe
+      signing_secret: whsec_mockport
+  openai:
+    enabled: true
+    base_path: /openai
+    scenario: chat_success
+    fake_secret: mockport_openai_key
+  github-oauth:
+    enabled: true
+    base_path: /github
+    scenario: oauth_success
+    fake_secret: mockport_github_secret
+  slack:
+    enabled: true
+    base_path: /slack
+    scenario: message_success
+    fake_secret: mockport_slack_token

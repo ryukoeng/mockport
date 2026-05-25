@@ -37,4 +37,6 @@ contract-tested
 sandbox-verified
 ```
 
-Mockport starts with `partial` Stripe compatibility. It is scenario-driven, not a full provider clone.
+Stripe compatibility is `partial`. OpenAI-compatible, GitHub OAuth-like, and Slack-like adapters start as `experimental`.
+
+All adapters are scenario-driven, not full provider clones. Use the behavior matrix and unsupported endpoint list as the source of truth for what a test run actually exercised.

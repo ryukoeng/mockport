@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GO_BIN="${GO_BIN:-/usr/local/go/bin/go}"
+IMAGE_TAG="mockport:local"
+WORK_DIR="$(mktemp -d)"
+
+cleanup() {
+  (cd "$WORK_DIR" && docker compose -f docker-compose.mockport.yml down >/dev/null 2>&1 || true)
+  rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
+
+cd "$ROOT_DIR"
+"$GO_BIN" build -o "$WORK_DIR/mockport" ./cmd/mockport
+docker build -t "$IMAGE_TAG" -f docker/Dockerfile .
+
+cp examples/multi-adapter/mockport.yml "$WORK_DIR/mockport.yml"
+cat >"$WORK_DIR/docker-compose.mockport.yml" <<'COMPOSE'
+services:
+  mockport:
+    image: mockport:local
+    ports:
+      - "43101:43101"
+    volumes:
+      - ./mockport.yml:/etc/mockport/mockport.yml
+COMPOSE
+
+cd "$WORK_DIR"
+docker compose -f docker-compose.mockport.yml up -d
+
+for _ in $(seq 1 30); do
+  if curl -fsS http://localhost:43101/health >/dev/null; then
+    break
+  fi
+  sleep 1
+done
+
+curl -fsS http://localhost:43101/health
+printf '\n'
+curl -fsS -X POST http://localhost:43101/stripe/v1/checkout/sessions
+printf '\n'
+curl -fsS http://localhost:43101/openai/v1/models
+printf '\n'
+curl -fsS http://localhost:43101/github/user
+printf '\n'
+curl -fsS -X POST http://localhost:43101/slack/api/auth.test
+printf '\n'
+report="$(curl -fsS http://localhost:43101/_mockport/report)"
+printf '%s\n' "$report"
+
+for adapter in stripe openai github-oauth slack; do
+  if ! printf '%s' "$report" | grep -q "\"name\":\"$adapter\""; then
+    echo "missing adapter in report: $adapter" >&2
+    exit 1
+  fi
+done

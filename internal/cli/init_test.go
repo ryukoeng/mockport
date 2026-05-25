@@ -48,6 +48,41 @@ func TestInitGeneratesStripeFiles(t *testing.T) {
 	}
 }
 
+func TestInitGeneratesMultipleAdapters(t *testing.T) {
+	dir := chdirTemp(t)
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--adapter", "openai"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute init: %v", err)
+	}
+
+	configData, err := os.ReadFile(filepath.Join(dir, "mockport.yml"))
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	configText := string(configData)
+	for _, want := range []string{"stripe:", "openai:", "base_path: /openai"} {
+		if !strings.Contains(configText, want) {
+			t.Fatalf("config missing %q:\n%s", want, configText)
+		}
+	}
+
+	envData, err := os.ReadFile(filepath.Join(dir, ".env.mockport"))
+	if err != nil {
+		t.Fatalf("read env: %v", err)
+	}
+	env := string(envData)
+	for _, want := range []string{"STRIPE_API_URL=http://localhost:43101/stripe", "OPENAI_BASE_URL=http://localhost:43101/openai/v1"} {
+		if !strings.Contains(env, want) {
+			t.Fatalf("env missing %q:\n%s", want, env)
+		}
+	}
+}
+
 func TestInitDoesNotOverwriteExistingFiles(t *testing.T) {
 	dir := chdirTemp(t)
 	existingPath := filepath.Join(dir, "mockport.yml")
