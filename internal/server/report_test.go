@@ -63,4 +63,50 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if snapshot.Safety.RealLookingSecrets != 1 {
 		t.Fatalf("real-looking secrets = %d, want 1", snapshot.Safety.RealLookingSecrets)
 	}
+	if len(snapshot.ScenarioCoverage) != 1 || snapshot.ScenarioCoverage[0].Adapter != "stripe" {
+		t.Fatalf("scenario coverage = %#v", snapshot.ScenarioCoverage)
+	}
+	if len(snapshot.BehaviorMatrix) == 0 {
+		t.Fatal("behavior matrix is empty")
+	}
+	if snapshot.Adapters[0].Maturity != "partial" {
+		t.Fatalf("maturity = %q, want partial", snapshot.Adapters[0].Maturity)
+	}
+}
+
+func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {
+	cfg := config.Config{
+		Mode:   "ai-safe",
+		Server: config.ServerConfig{Host: "0.0.0.0", Port: 43101},
+		Adapters: map[string]config.AdapterConfig{
+			"stripe": {Enabled: true, BasePath: "/stripe", Scenario: "payment_success", FakeSecret: "mockport_stripe_secret"},
+		},
+	}
+	if err := config.Validate(&cfg); err != nil {
+		t.Fatalf("validate config: %v", err)
+	}
+	reg := adapter.NewRegistry()
+	reg.Register(stripe.New())
+	handler, err := NewConfiguredHandler(cfg, reg, report.NewRecorder())
+	if err != nil {
+		t.Fatalf("new handler: %v", err)
+	}
+
+	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/stripe/v1/not-supported", nil))
+	reportRec := httptest.NewRecorder()
+	handler.ServeHTTP(reportRec, httptest.NewRequest(http.MethodGet, "/_mockport/report", nil))
+
+	var snapshot report.Snapshot
+	if err := json.Unmarshal(reportRec.Body.Bytes(), &snapshot); err != nil {
+		t.Fatalf("decode report: %v", err)
+	}
+	if len(snapshot.UnsupportedEndpoints) != 1 {
+		t.Fatalf("unsupported endpoint count = %d, want 1", len(snapshot.UnsupportedEndpoints))
+	}
+	if snapshot.UnsupportedEndpoints[0].Reason != "unsupported_endpoint" {
+		t.Fatalf("reason = %q", snapshot.UnsupportedEndpoints[0].Reason)
+	}
+	if snapshot.Requests[0].Adapter != "stripe" || snapshot.Requests[0].Scenario != "payment_success" {
+		t.Fatalf("request metadata = %#v", snapshot.Requests[0])
+	}
 }

@@ -25,6 +25,8 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	rec.SetMode(cfg.Mode)
 
 	var adapterStatuses []report.AdapterStatus
+	var coverage []report.ScenarioCoverage
+	var matrix []report.BehaviorMatrixEntry
 	for warningIdx := range cfg.SafetyWarnings {
 		warning := cfg.SafetyWarnings[warningIdx]
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
@@ -38,7 +40,17 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		if !ok {
 			return nil, fmt.Errorf("adapter %s is enabled but not registered", name)
 		}
-		adapterStatuses = append(adapterStatuses, report.AdapterStatus{Name: name, BasePath: adapterCfg.BasePath, Enabled: true})
+		meta := registered.Metadata()
+		adapterStatuses = append(adapterStatuses, report.AdapterStatus{
+			Name:         name,
+			BasePath:     adapterCfg.BasePath,
+			Enabled:      true,
+			Scenario:     adapterCfg.Scenario,
+			Maturity:     meta.Maturity,
+			Capabilities: append([]string(nil), meta.Capabilities...),
+		})
+		coverage = append(coverage, scenarioCoverage(meta))
+		matrix = append(matrix, behaviorMatrix(meta)...)
 		if err := registered.Register(mux, adapter.Config{
 			BasePath:             adapterCfg.BasePath,
 			Scenario:             adapterCfg.Scenario,
@@ -50,6 +62,8 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		}
 	}
 	rec.SetAdapters(adapterStatuses)
+	rec.SetScenarioCoverage(coverage)
+	rec.SetBehaviorMatrix(matrix)
 	mux.HandleFunc("/_mockport/report", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -59,7 +73,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		_ = json.NewEncoder(w).Encode(rec.Snapshot())
 	})
 
-	return recordMiddleware(mux, rec), nil
+	return recordMiddleware(mux, rec, adapterStatuses), nil
 }
 
 type statusRecorder struct {
@@ -72,12 +86,49 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
-func recordMiddleware(next http.Handler, rec *report.Recorder) http.Handler {
+func recordMiddleware(next http.Handler, rec *report.Recorder, adapters []report.AdapterStatus) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(sr, r)
 		if r.URL.Path != "/_mockport/report" {
-			rec.RecordRequest(r.Method, r.URL.Path, sr.status)
+			adapterName, scenario := classifyAdapter(r.URL.Path, adapters)
+			reason := ""
+			if sr.status == http.StatusNotFound || sr.status == http.StatusMethodNotAllowed {
+				reason = "unsupported_endpoint"
+			}
+			rec.RecordRequestWithDetails(r.Method, r.URL.Path, sr.status, adapterName, scenario, reason)
 		}
 	})
+}
+
+func scenarioCoverage(meta adapter.Metadata) report.ScenarioCoverage {
+	coverage := report.ScenarioCoverage{Adapter: meta.Name}
+	for _, scenario := range meta.Scenarios {
+		coverage.Scenarios = append(coverage.Scenarios, report.ScenarioSupport{Name: scenario.Name, Supported: scenario.Supported})
+	}
+	return coverage
+}
+
+func behaviorMatrix(meta adapter.Metadata) []report.BehaviorMatrixEntry {
+	matrix := make([]report.BehaviorMatrixEntry, 0, len(meta.Endpoints))
+	for _, endpoint := range meta.Endpoints {
+		matrix = append(matrix, report.BehaviorMatrixEntry{
+			Adapter:            meta.Name,
+			Maturity:           meta.Maturity,
+			Method:             endpoint.Method,
+			Path:               endpoint.Path,
+			SupportedScenarios: append([]string(nil), endpoint.SupportedScenarios...),
+			Notes:              endpoint.Notes,
+		})
+	}
+	return matrix
+}
+
+func classifyAdapter(path string, adapters []report.AdapterStatus) (string, string) {
+	for _, adapter := range adapters {
+		if adapter.BasePath != "" && (path == adapter.BasePath || len(path) > len(adapter.BasePath) && path[:len(adapter.BasePath)+1] == adapter.BasePath+"/") {
+			return adapter.Name, adapter.Scenario
+		}
+	}
+	return "", ""
 }

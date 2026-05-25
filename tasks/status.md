@@ -22,7 +22,7 @@
 | Phase 1 | Stripe-like Minimal MVP | done | Stripe scenarios, webhook tests, report, AI-safe tests, Docker run |
 | Phase 2 | CLI UX | done | Empty directory init/up/run flow works in under 2 minutes |
 | Phase 3 | AI-safe mode | done | Warn/fail/redact/report/docs are explicit and tested |
-| Phase 4 | Trust reports and adapter contracts | pending | Report explains supported/unsupported behavior before adding more adapters |
+| Phase 4 | Trust reports and adapter contracts | done | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters use the adapter contract and have examples |
 | Phase 6 | Distribution | pending | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 
@@ -94,12 +94,12 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P4-T01 | Add adapter metadata contract | pending | Adapter tests assert capabilities, scenarios, endpoints, maturity are discoverable |
-| P4-T02 | Add scenario coverage report | pending | Report tests assert per-adapter scenario matrix |
-| P4-T03 | Record unsupported endpoint attempts | pending | HTTP tests assert 404/405 entries appear in report |
-| P4-T04 | Add request replay log metadata | pending | Recorder tests assert stable request ids and replay-safe data |
-| P4-T05 | Add behavior matrix and maturity levels | pending | Report tests assert endpoints, scenarios, maturity, and support status |
-| P4-T06 | Add machine-readable and text report modes | pending | CLI tests assert JSON and text report output |
+| P4-T01 | Add adapter metadata contract | done | Adapter tests assert capabilities, scenarios, endpoints, maturity are discoverable |
+| P4-T02 | Add scenario coverage report | done | Report tests assert per-adapter scenario matrix |
+| P4-T03 | Record unsupported endpoint attempts | done | HTTP tests assert 404/405 entries appear in report |
+| P4-T04 | Add request replay log metadata | done | Recorder tests assert stable request ids and replay-safe data |
+| P4-T05 | Add behavior matrix and maturity levels | done | Report tests assert endpoints, scenarios, maturity, and support status |
+| P4-T06 | Add machine-readable and text report modes | done | CLI tests assert JSON and text report output |
 
 ## Phase 5 Tasks
 

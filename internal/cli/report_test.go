@@ -40,3 +40,23 @@ func TestReportCommandPrintsTextSummary(t *testing.T) {
 		}
 	}
 }
+
+func TestReportCommandPrintsJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"mode":"ai-safe","safety":{"mode":"ai-safe","safe":true},"adapters":[],"requests":[],"safety_warnings":[]}`))
+	}))
+	defer server.Close()
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"report", "--url", server.URL, "--format", "json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute report: %v", err)
+	}
+	if !strings.Contains(out.String(), `"mode": "ai-safe"`) {
+		t.Fatalf("json report output missing mode:\n%s", out.String())
+	}
+}

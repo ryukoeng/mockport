@@ -27,3 +27,26 @@ func TestRecorderStoresRequestsAndSafety(t *testing.T) {
 		t.Fatalf("real-looking secret count = %d, want 1", snapshot.Safety.RealLookingSecrets)
 	}
 }
+
+func TestRecorderStoresReplayMetadataAndUnsupportedEndpoints(t *testing.T) {
+	rec := NewRecorder()
+	rec.RecordRequestWithDetails(http.MethodPost, "/stripe/not-supported", 404, "stripe", "payment_success", "unsupported_endpoint")
+
+	snapshot := rec.Snapshot()
+	if len(snapshot.Requests) != 1 {
+		t.Fatalf("request count = %d, want 1", len(snapshot.Requests))
+	}
+	req := snapshot.Requests[0]
+	if req.ID != 1 {
+		t.Fatalf("request id = %d, want 1", req.ID)
+	}
+	if req.Timestamp == "" {
+		t.Fatal("request timestamp is empty")
+	}
+	if req.Adapter != "stripe" || req.Scenario != "payment_success" {
+		t.Fatalf("request metadata = %#v", req)
+	}
+	if len(snapshot.UnsupportedEndpoints) != 1 {
+		t.Fatalf("unsupported endpoints = %d, want 1", len(snapshot.UnsupportedEndpoints))
+	}
+}

@@ -105,6 +105,25 @@ func TestWebhookSender(t *testing.T) {
 	}
 }
 
+func TestMetadata(t *testing.T) {
+	meta := New().Metadata()
+	if meta.Name != "stripe" {
+		t.Fatalf("name = %q, want stripe", meta.Name)
+	}
+	if meta.Maturity != "partial" {
+		t.Fatalf("maturity = %q, want partial", meta.Maturity)
+	}
+	if len(meta.Capabilities) == 0 {
+		t.Fatal("expected capabilities")
+	}
+	if len(meta.Scenarios) != 5 {
+		t.Fatalf("scenario count = %d, want 5", len(meta.Scenarios))
+	}
+	if len(meta.Endpoints) != 5 {
+		t.Fatalf("endpoint count = %d, want 5", len(meta.Endpoints))
+	}
+}
+
 func performStripeRequest(t *testing.T, cfg adapter.Config, method, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	mux := http.NewServeMux()

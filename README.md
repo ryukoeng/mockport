@@ -57,6 +57,10 @@ MVP:
 
 - Stripe-like payment adapter
 
+| Adapter | Base path | Maturity | Capabilities |
+| --- | --- | --- | --- |
+| Stripe-like | `/stripe` | `partial` | checkout sessions, payment intents, webhooks |
+
 Later:
 
 - OpenAI-compatible API

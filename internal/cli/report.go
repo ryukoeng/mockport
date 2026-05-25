@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 func newReportCommand() *cobra.Command {
 	var reportURL string
+	var format string
 	cmd := &cobra.Command{
 		Use:   "report",
 		Short: "Print Mockport request and safety report",
@@ -30,31 +32,24 @@ func newReportCommand() *cobra.Command {
 			if err := json.NewDecoder(resp.Body).Decode(&snapshot); err != nil {
 				return fmt.Errorf("decode report: %w", err)
 			}
-			printReport(cmd, snapshot)
+			switch format {
+			case "text":
+				fmt.Fprint(cmd.OutOrStdout(), report.RenderText(snapshot))
+			case "json":
+				var buf bytes.Buffer
+				encoder := json.NewEncoder(&buf)
+				encoder.SetIndent("", "  ")
+				if err := encoder.Encode(snapshot); err != nil {
+					return fmt.Errorf("encode report: %w", err)
+				}
+				fmt.Fprint(cmd.OutOrStdout(), buf.String())
+			default:
+				return fmt.Errorf("unsupported report format %q", format)
+			}
 			return nil
 		},
 	}
 	cmd.Flags().StringVar(&reportURL, "url", "http://localhost:43101/_mockport/report", "Mockport report endpoint URL")
+	cmd.Flags().StringVar(&format, "format", "text", "Report format: text or json")
 	return cmd
-}
-
-func printReport(cmd *cobra.Command, snapshot report.Snapshot) {
-	out := cmd.OutOrStdout()
-	fmt.Fprintln(out, "Mockport Report")
-	fmt.Fprintln(out)
-	fmt.Fprintf(out, "Mode: %s\n", snapshot.Mode)
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Adapters:")
-	for _, adapter := range snapshot.Adapters {
-		if adapter.Enabled {
-			fmt.Fprintf(out, "- %s enabled at %s\n", adapter.Name, adapter.BasePath)
-		}
-	}
-	fmt.Fprintln(out)
-	fmt.Fprintln(out, "Requests:")
-	for _, request := range snapshot.Requests {
-		fmt.Fprintf(out, "- %s %s -> %d\n", request.Method, request.Path, request.Status)
-	}
-	fmt.Fprintln(out)
-	fmt.Fprintf(out, "Safety warnings: %d\n", len(snapshot.SafetyWarnings))
 }
