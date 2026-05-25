@@ -25,6 +25,10 @@
 | Phase 4 | Trust reports and adapter contracts | done | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | done | OpenAI, GitHub OAuth, Slack-like adapters, examples, multi-adapter CLI, Docker smoke |
 | Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
+| Phase 7 | Public OSS hardening | pending | Public trust files, contribution surface, first-run install path, public CI gates |
+| Phase 8 | First public release | pending | v0.1.0 GitHub Release and GHCR image are published and install-verified |
+| Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready |
+| Phase 10 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
 
 ## Phase 0 Tasks
 
@@ -122,6 +126,40 @@
 | P6-T04 | Add Homebrew formula template | done | Template test asserts version/url/sha placeholders |
 | P6-T05 | Add npm wrapper design scaffold | done | Package tests assert wrapper delegates to binary or Docker |
 | P6-T06 | Add docs site scaffold | done | Docs build check renders quickstart and adapter pages |
+
+## Phase 7 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P7-T01 | Add public trust artifacts | pending | Static trust check fails until LICENSE/SECURITY/CONTRIBUTING/CODE_OF_CONDUCT exist |
+| P7-T02 | Add GitHub collaboration surface | pending | Static trust check asserts issue and PR templates exist |
+| P7-T03 | Fix README first-run install path | pending | README command audit starts from no preinstalled `mockport` |
+| P7-T04 | Add public CI gates | pending | CI runs trust and distribution static checks |
+
+## Phase 8 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P8-T01 | Add release readiness audit | pending | Release verification script checks archive names, checksums, version, image |
+| P8-T02 | Publish `v0.1.0` GitHub Release | pending | Release workflow produces archives and `checksums.txt` |
+| P8-T03 | Verify GHCR publish | pending | Docker pull and smoke use GHCR image, not local build |
+| P8-T04 | Update release install docs | pending | README install audit passes from a temporary directory |
+
+## Phase 9 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P9-T01 | Build public docs information architecture | pending | Docs link/path check asserts expected pages |
+| P9-T02 | Add example-driven onboarding docs | pending | Example configs load and smoke path is covered |
+| P9-T03 | Add public positioning and limitations | pending | Markdown/link checks cover comparison and limitations pages |
+
+## Phase 10 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P10-T01 | Add maintenance policy | pending | Static maintenance check asserts policy, roadmap, maintainer guide |
+| P10-T02 | Add dependency and CI maintenance | pending | Dependabot config and scheduled checks are validated statically |
+| P10-T03 | Define adapter contribution quality bar | pending | Public trust/docs checks cover adapter PR criteria |
 
 ## Verification Notes
 

@@ -1,6 +1,6 @@
 # Mockport Task Board
 
-この `tasks/` ディレクトリは、Mockport を Phase 0 から Phase 6 まで TDD ベースで実装するための作業ボードです。
+この `tasks/` ディレクトリは、Mockport を Phase 0 から公開 OSS 運用まで TDD ベースで実装するための作業ボードです。
 
 ## 方針
 
@@ -24,6 +24,10 @@ tasks/
   phase4_trust_reports.md
   phase5_additional_adapters.md
   phase6_distribution.md
+  phase7_public_oss_hardening.md
+  phase8_first_public_release.md
+  phase9_public_docs_and_discovery.md
+  phase10_community_and_maintenance.md
 ```
 
 ## Status の意味
@@ -65,6 +69,14 @@ Phase 4 は「adapter を増やす前に、対応範囲、未対応 endpoint、s
 Phase 5 は「Phase 4 の metadata/report contract に沿って、OpenAI-compatible、GitHub OAuth-like、Slack-like の built-in adapters を追加する」までです。
 
 Phase 6 は「GHCR、GitHub release binaries、Homebrew tap 下準備、npm wrapper 下準備、docs site の配布面を検証できる」までです。
+
+Phase 7 は「公開前に必要な LICENSE、SECURITY、CONTRIBUTING、issue/PR templates、public CI gate を揃える」までです。
+
+Phase 8 は「初回 public release として GitHub Release、checksums、GHCR image を実際に公開し、clean install を検証する」までです。
+
+Phase 9 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
+
+Phase 10 は「Dependabot、compatibility policy、maintainer guide、adapter contribution quality bar を整え、継続運用できる」までです。
 
 ## 参照資料
 
