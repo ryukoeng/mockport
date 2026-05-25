@@ -51,22 +51,23 @@ docker run --rm -p 43101:43101 \
   mockport:local
 ```
 
-## Supported Adapters
+## Services
 
-MVP:
+Supported:
 
-- Stripe-like payment adapter
+| Service | Adapter | Base path | Maturity | Supported workflows |
+| --- | --- | --- | --- | --- |
+| Stripe-like payments | `stripe` | `/stripe` | `partial` | checkout sessions, payment intents, fake signed webhooks, success/failure/auth/rate-limit/timeout scenarios |
 
-| Adapter | Base path | Maturity | Capabilities |
+Planned:
+
+| Service | Planned adapter | Target workflows | Status |
 | --- | --- | --- | --- |
-| Stripe-like | `/stripe` | `partial` | checkout sessions, payment intents, webhooks |
-
-Later:
-
-- OpenAI-compatible API
-- GitHub OAuth
-- LINE Messaging or Slack
-- SendGrid
+| OpenAI-compatible API | `openai` | models, chat completions, responses, auth error, rate limit, context length error | Planned for Phase 5 |
+| GitHub OAuth-like API | `github-oauth` | authorize, access token exchange, user profile, invalid code, expired token, missing scope | Planned for Phase 5 |
+| Slack-like messaging API | `slack` | auth test, message posting, auth error, rate limit, delivery failure | Planned for Phase 5 |
+| LINE Messaging-like API | `line` | message push/reply, webhook signature, delivery failure, rate limit | Later candidate |
+| SendGrid-like email API | `sendgrid` | email send success/failure, auth error, rate limit, webhook events | Later candidate |
 
 ## AI-safe By Default
 
