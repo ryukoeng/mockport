@@ -1,6 +1,6 @@
 # Phase 0 Baseline Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Mockport の Go repository skeleton を作り、CLI から server を起動し、Docker 上で `/health` が 200 を返す状態にする。
 
@@ -36,9 +36,9 @@
 
 ## Task P0-T01: Repository Skeleton And Go Module
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Create Go module files**
+- [x] **Step 1: Create Go module files**
 
 Create `go.mod`:
 
@@ -71,7 +71,7 @@ func main() {
 }
 ```
 
-- [ ] **Step 2: Run compile check**
+- [x] **Step 2: Run compile check**
 
 Run:
 
@@ -81,7 +81,7 @@ go test ./...
 
 Expected: fail until `internal/cli` exists. This is the RED compile boundary for the first package.
 
-- [ ] **Step 3: Add minimal CLI package**
+- [x] **Step 3: Add minimal CLI package**
 
 Create `internal/cli/root.go`:
 
@@ -103,7 +103,7 @@ func NewRootCommand() *cobra.Command {
 }
 ```
 
-- [ ] **Step 4: Verify package compiles**
+- [x] **Step 4: Verify package compiles**
 
 Run:
 
@@ -116,9 +116,9 @@ Expected: PASS.
 
 ## Task P0-T02: Root Command And Version Command
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing CLI tests**
+- [x] **Step 1: Write failing CLI tests**
 
 Create `internal/cli/root_test.go`:
 
@@ -165,7 +165,7 @@ func TestVersionCommandPrintsVersion(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -175,7 +175,7 @@ go test ./internal/cli -run 'TestRootCommandShowsHelp|TestVersionCommandPrintsVe
 
 Expected: `TestVersionCommandPrintsVersion` fails because `version` is not registered.
 
-- [ ] **Step 3: Implement version command**
+- [x] **Step 3: Implement version command**
 
 Create `internal/cli/version.go`:
 
@@ -203,7 +203,7 @@ func newVersionCommand() *cobra.Command {
 
 Modify `internal/cli/root.go` so `NewRootCommand` registers `newVersionCommand()`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -215,9 +215,9 @@ Expected: PASS.
 
 ## Task P0-T03: Config Defaults And YAML Loader
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing config tests**
+- [x] **Step 1: Write failing config tests**
 
 Create `internal/config/config_test.go`:
 
@@ -265,7 +265,7 @@ func TestLoadRejectsInvalidPort(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -275,11 +275,11 @@ go test ./internal/config -v
 
 Expected: compile failure because `LoadFile` and config types do not exist.
 
-- [ ] **Step 3: Implement config package**
+- [x] **Step 3: Implement config package**
 
 Create `internal/config/config.go`, `loader.go`, and `validate.go` with `Config`, `ServerConfig`, `AdapterConfig`, `LoadFile`, `ApplyDefaults`, and `Validate`. `Validate` must reject ports outside `1..65535`, unsupported modes outside `ai-safe`, `local`, `strict`, and enabled adapters with empty `base_path`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -291,9 +291,9 @@ Expected: PASS.
 
 ## Task P0-T04: Security Detector Primitives
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing security tests**
+- [x] **Step 1: Write failing security tests**
 
 Create `internal/security/secrets_test.go`:
 
@@ -336,7 +336,7 @@ func TestRedactSecret(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -346,11 +346,11 @@ go test ./internal/security -v
 
 Expected: compile failure because functions do not exist.
 
-- [ ] **Step 3: Implement security primitives**
+- [x] **Step 3: Implement security primitives**
 
 Create `internal/security/secrets.go` with prefix-based detection for `sk_live_`, `sk_test_`, `AKIA`, `ASIA`, `ghp_`, `github_pat_`, `xoxb-`, `xoxp-`, `AIza`, `whsec_`; allow fake prefixes `mockport_`, `local_`, `fake_`, `dummy_`; redact real-looking values without printing the value.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -362,9 +362,9 @@ Expected: PASS.
 
 ## Task P0-T05: HTTP Server And Health Endpoint
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing server test**
+- [x] **Step 1: Write failing server test**
 
 Create `internal/server/server_test.go`:
 
@@ -399,7 +399,7 @@ func TestHealthReturnsOK(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -409,11 +409,11 @@ go test ./internal/server -run TestHealthReturnsOK -v
 
 Expected: compile failure because `NewHandler` does not exist.
 
-- [ ] **Step 3: Implement health handler**
+- [x] **Step 3: Implement health handler**
 
 Create `internal/server/health.go` and `internal/server/server.go`. `NewHandler` must return an `http.Handler` with `GET /health` returning `{"status":"ok"}` and `Content-Type: application/json`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -425,13 +425,13 @@ Expected: PASS.
 
 ## Task P0-T06: `mockport run`
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing run command test**
+- [x] **Step 1: Write failing run command test**
 
 Add a CLI test that `mockport run --config missing.yml` returns a non-nil error containing `load config`. This keeps the command test short and avoids long-running server lifecycle in Phase 0 CLI tests.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -441,11 +441,11 @@ go test ./internal/cli -run TestRunCommandRejectsMissingConfig -v
 
 Expected: fail because `run` is not registered.
 
-- [ ] **Step 3: Implement run command**
+- [x] **Step 3: Implement run command**
 
 Create `internal/cli/run.go`. It must load config via `config.LoadFile`, create `server.NewHandler()`, and call `http.ListenAndServe` on `host:port`. Keep graceful shutdown improvement for later unless tests require it.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -457,9 +457,9 @@ Expected: PASS.
 
 ## Task P0-T07: Docker, Makefile, CI
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Add build assets**
+- [x] **Step 1: Add build assets**
 
 Create `Makefile`, `docker/Dockerfile`, `.dockerignore`, and `.github/workflows/ci.yml` from the documentation templates. Keep Docker entrypoint as:
 
@@ -468,7 +468,7 @@ ENTRYPOINT ["/mockport"]
 CMD ["run", "--config", "/etc/mockport/mockport.yml"]
 ```
 
-- [ ] **Step 2: Verify local commands**
+- [x] **Step 2: Verify local commands**
 
 Run:
 
@@ -483,21 +483,21 @@ Expected: all commands pass.
 
 ## Task P0-T08: Root README
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Create README**
+- [x] **Step 1: Create README**
 
 Create `README.md` from `mockport_docs/docs/13_readme_draft.md`, but limit supported adapters to Stripe-like payment adapter for the current state.
 
-- [ ] **Step 2: Verify docs command consistency**
+- [x] **Step 2: Verify docs command consistency**
 
 Run every command listed in the README that does not require a long-running foreground server. For server commands, verify the binary accepts the command and fails with useful errors when config is missing.
 
 ## Phase 0 Exit
 
-- [ ] `go test ./...` passes.
-- [ ] `go vet ./...` passes.
-- [ ] `go build ./cmd/mockport` passes.
-- [ ] `docker build -t mockport:local -f docker/Dockerfile .` passes.
-- [ ] `/health` returns 200 when server is running.
-- [ ] `tasks/status.md` Phase 0 summary is updated to `done`.
+- [x] `go test ./...` passes.
+- [x] `go vet ./...` passes.
+- [x] `go build ./cmd/mockport` passes.
+- [x] `docker build -t mockport:local -f docker/Dockerfile .` passes.
+- [x] `/health` returns 200 when server is running.
+- [x] `tasks/status.md` Phase 0 summary is updated to `done`.

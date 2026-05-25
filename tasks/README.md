@@ -21,8 +21,8 @@ tasks/
   phase1_stripe_minimal_mvp.md
   phase2_cli_ux.md
   phase3_ai_safe_mode.md
-  phase4_additional_adapters.md
-  phase5_compatibility_reports.md
+  phase4_trust_reports.md
+  phase5_additional_adapters.md
   phase6_distribution.md
 ```
 
@@ -35,7 +35,7 @@ blocked      外部要因または設計判断待ち
 done         完了、検証済み
 ```
 
-各タスクは `tasks/status.md` の表と、Phase ファイル内のチェックボックスの両方で管理します。作業開始時に status を `in_progress` に変更し、検証コマンドが通ったら `done` にします。
+進捗の正本は `tasks/status.md` です。Phase ファイルは実行計画として使い、作業開始時に `tasks/status.md` の status を `in_progress` に変更し、検証コマンドが通ったら `done` にします。Phase ファイル内の `Status` とチェックボックスは、実行時に可能な範囲で同期します。
 
 ## TDD 作成方法
 
@@ -60,9 +60,9 @@ Phase 2 は「空ディレクトリから `mockport init` と `mockport up/run` 
 
 Phase 3 は「AI-safe mode が警告、strict fail、redaction、report、docs で明確に差別化される」までです。
 
-Phase 4 は「OpenAI-compatible、GitHub OAuth-like、Slack-like の built-in adapters を追加し、各 adapter の代表シナリオが動く」までです。
+Phase 4 は「adapter を増やす前に、対応範囲、未対応 endpoint、scenario coverage、maturity を report で説明できる trust foundation」を作るまでです。
 
-Phase 5 は「report が対応範囲、未対応 endpoint、request replay、adapter maturity を説明できる」までです。
+Phase 5 は「Phase 4 の metadata/report contract に沿って、OpenAI-compatible、GitHub OAuth-like、Slack-like の built-in adapters を追加する」までです。
 
 Phase 6 は「GHCR、GitHub release binaries、Homebrew tap 下準備、npm wrapper 下準備、docs site の配布面を検証できる」までです。
 

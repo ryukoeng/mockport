@@ -1,6 +1,6 @@
 # Phase 1 Stripe Minimal MVP Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Stripe-like adapter を built-in adapter として追加し、Minimal MVP の success/failure/webhook/report/AI-safe 検証を Docker-first で満たす。
 
@@ -40,9 +40,9 @@
 
 ## Task P1-T01: Adapter Registry
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing registry test**
+- [x] **Step 1: Write failing registry test**
 
 Create `internal/adapter/registry_test.go`:
 
@@ -74,7 +74,7 @@ func TestRegistryReturnsRegisteredAdapter(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -84,7 +84,7 @@ go test ./internal/adapter -v
 
 Expected: compile failure because registry does not exist.
 
-- [ ] **Step 3: Implement registry**
+- [x] **Step 3: Implement registry**
 
 Create `internal/adapter/adapter.go` and `registry.go` with the documented minimal interface:
 
@@ -98,7 +98,7 @@ type Adapter interface {
 
 `Config` should include `BasePath`, `Scenario`, `FakeSecret`, `WebhookTargetURL`, and `WebhookSigningSecret`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -110,9 +110,9 @@ Expected: PASS.
 
 ## Task P1-T02: Request Recorder And Report Model
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing report test**
+- [x] **Step 1: Write failing report test**
 
 Create `internal/report/recorder_test.go`:
 
@@ -142,7 +142,7 @@ func TestRecorderStoresRequestsAndSafety(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -152,11 +152,11 @@ go test ./internal/report -v
 
 Expected: compile failure because recorder does not exist.
 
-- [ ] **Step 3: Implement recorder**
+- [x] **Step 3: Implement recorder**
 
 Create `internal/report/report.go` and `recorder.go`. Use a mutex-protected in-memory recorder with `RecordRequest`, `RecordSafetyWarning`, and `Snapshot`. Do not store request bodies in Minimal MVP.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -168,9 +168,9 @@ Expected: PASS.
 
 ## Task P1-T03: Stripe Checkout Session Scenarios
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing Stripe checkout tests**
+- [x] **Step 1: Write failing Stripe checkout tests**
 
 Create `adapters/stripe/adapter_test.go` with tests for:
 
@@ -181,7 +181,7 @@ POST /stripe/v1/checkout/sessions with scenario payment_failed -> 402, error cod
 
 Use `httptest.NewRecorder` and register the adapter on a fresh `http.ServeMux`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -191,11 +191,11 @@ go test ./adapters/stripe -run Checkout -v
 
 Expected: compile failure because adapter does not exist.
 
-- [ ] **Step 3: Implement checkout routes**
+- [x] **Step 3: Implement checkout routes**
 
 Create `adapters/stripe/adapter.go`, `routes.go`, `models.go`, and `scenarios.go`. Implement `Name() string` returning `stripe`, `Register`, and JSON response builders for `payment_success` and `payment_failed`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -207,9 +207,9 @@ Expected: PASS.
 
 ## Task P1-T04: Stripe Payment Intent And Error Scenarios
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing payment intent tests**
+- [x] **Step 1: Write failing payment intent tests**
 
 Add tests for:
 
@@ -221,7 +221,7 @@ POST /stripe/v1/payment_intents with rate_limited -> 429
 GET /stripe/v1/payment_intents/pi_mockport -> 200
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -231,11 +231,11 @@ go test ./adapters/stripe -run PaymentIntent -v
 
 Expected: fail because payment intent routes are missing.
 
-- [ ] **Step 3: Implement payment intent routes**
+- [x] **Step 3: Implement payment intent routes**
 
 Extend Stripe routes to handle `POST /v1/payment_intents` and `GET /v1/payment_intents/{id}`. Use deterministic IDs such as `pi_mockport_success` and `pi_mockport_failed`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -247,13 +247,13 @@ Expected: PASS.
 
 ## Task P1-T05: Timeout Scenario
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing timeout test**
+- [x] **Step 1: Write failing timeout test**
 
 Add a test that configures scenario `timeout`, performs `POST /stripe/v1/checkout/sessions`, and asserts the handler returns HTTP 504 with an error code `mockport_timeout`. Keep the test fast; do not sleep for multiple seconds.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -263,7 +263,7 @@ go test ./adapters/stripe -run Timeout -v
 
 Expected: fail because timeout scenario is not implemented.
 
-- [ ] **Step 3: Implement timeout response**
+- [x] **Step 3: Implement timeout response**
 
 Map scenario `timeout` to status 504 with JSON body:
 
@@ -271,7 +271,7 @@ Map scenario `timeout` to status 504 with JSON body:
 {"error":{"type":"api_error","code":"mockport_timeout","message":"Mockport simulated timeout"}}
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -283,13 +283,13 @@ Expected: PASS.
 
 ## Task P1-T06: Webhook Sender Endpoint
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing webhook test**
+- [x] **Step 1: Write failing webhook test**
 
 Add a test with an `httptest.Server` target URL. Register Stripe adapter with `WebhookTargetURL` and `WebhookSigningSecret`, then POST `/stripe/test/webhook/send`. Assert target receives one request with `Stripe-Signature` header and event type `checkout.session.completed`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -299,11 +299,11 @@ go test ./adapters/stripe -run Webhook -v
 
 Expected: fail because webhook endpoint is missing.
 
-- [ ] **Step 3: Implement webhook sender**
+- [x] **Step 3: Implement webhook sender**
 
 Create `webhook.go` and `signatures.go`. Generate HMAC SHA-256 signature with fake signing secret and send JSON event to configured target. Return 202 on successful send and 400 if target URL is missing.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -315,9 +315,9 @@ Expected: PASS.
 
 ## Task P1-T07: AI-safe Validation And Strict Mode
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing config/security tests**
+- [x] **Step 1: Write failing config/security tests**
 
 Add tests that:
 
@@ -328,7 +328,7 @@ mode strict + https://api.stripe.com fails validation
 mode ai-safe + mockport_stripe_secret passes without warning
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -338,11 +338,11 @@ go test ./internal/config ./internal/security -run 'Strict|AISafe|URL' -v
 
 Expected: fail because config validation does not inspect adapter secrets or URLs.
 
-- [ ] **Step 3: Implement validation**
+- [x] **Step 3: Implement validation**
 
 Add URL detection for `https://api.stripe.com`, `https://api.openai.com`, `https://api.github.com`, `https://api.line.me`, and `https://slack.com/api`. In `strict`, return an error. In `ai-safe`, return config plus warnings for the report layer.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -354,13 +354,13 @@ Expected: PASS.
 
 ## Task P1-T08: `/_mockport/report` Endpoint
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing server report test**
+- [x] **Step 1: Write failing server report test**
 
 Create `internal/server/report_test.go`. Use a recorder, serve one Stripe request, then GET `/_mockport/report`. Assert JSON contains mode, enabled adapters, request path, response status, and safety warning count.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -370,11 +370,11 @@ go test ./internal/server -run Report -v
 
 Expected: fail because report endpoint is missing.
 
-- [ ] **Step 3: Implement report route and middleware**
+- [x] **Step 3: Implement report route and middleware**
 
 Update server construction to accept config, registry, and recorder. Wrap handlers so response status is recorded. Register `GET /_mockport/report`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -386,9 +386,9 @@ Expected: PASS.
 
 ## Task P1-T09: `mockport init`
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Write failing init tests**
+- [x] **Step 1: Write failing init tests**
 
 Create `internal/cli/init_test.go`. In `t.TempDir()`, run `mockport init --adapter stripe` and assert these files exist:
 
@@ -400,7 +400,7 @@ docker-compose.mockport.yml
 
 Assert `.env.mockport` contains `STRIPE_API_URL=http://localhost:43101/stripe` and `STRIPE_SECRET_KEY=mockport_stripe_secret`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -410,11 +410,11 @@ go test ./internal/cli -run Init -v
 
 Expected: fail because `init` is not registered.
 
-- [ ] **Step 3: Implement init command**
+- [x] **Step 3: Implement init command**
 
 Create `internal/cli/init.go`. Support only `--adapter stripe` in Minimal MVP. Write deterministic files matching `mockport_docs/configs/mockport.example.yml`, `mockport_docs/configs/env.mockport.example`, and `mockport_docs/examples/docker-compose.mockport.yml`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run:
 
@@ -426,13 +426,13 @@ Expected: PASS.
 
 ## Task P1-T10: Minimal MVP Documentation And Verification
 
-**Status:** pending
+**Status:** done
 
-- [ ] **Step 1: Add examples**
+- [x] **Step 1: Add examples**
 
 Create `examples/stripe-checkout/` with `README.md`, `mockport.yml`, `.env.mockport.example`, and `docker-compose.yml`.
 
-- [ ] **Step 2: Verify commands**
+- [x] **Step 2: Verify commands**
 
 Run:
 
@@ -457,14 +457,14 @@ Expected: all commands pass; health returns 200; checkout returns Stripe-like JS
 
 ## Phase 1 Exit
 
-- [ ] `go test ./...` passes.
-- [ ] `go vet ./...` passes.
-- [ ] `go build ./cmd/mockport` passes.
-- [ ] Docker image builds.
-- [ ] Docker container serves `/health`.
-- [ ] Stripe checkout success returns 200.
-- [ ] Stripe failure returns 402.
-- [ ] Webhook sender posts to target URL.
-- [ ] `/_mockport/report` shows requests and safety warnings.
-- [ ] README quickstart is accurate.
-- [ ] `tasks/status.md` Phase 1 summary is updated to `done`.
+- [x] `go test ./...` passes.
+- [x] `go vet ./...` passes.
+- [x] `go build ./cmd/mockport` passes.
+- [x] Docker image builds.
+- [x] Docker container serves `/health`.
+- [x] Stripe checkout success returns 200.
+- [x] Stripe failure returns 402.
+- [x] Webhook sender posts to target URL.
+- [x] `/_mockport/report` shows requests and safety warnings.
+- [x] README quickstart is accurate.
+- [x] `tasks/status.md` Phase 1 summary is updated to `done`.

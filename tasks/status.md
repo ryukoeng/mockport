@@ -22,8 +22,8 @@
 | Phase 1 | Stripe-like Minimal MVP | done | Stripe scenarios, webhook tests, report, AI-safe tests, Docker run |
 | Phase 2 | CLI UX | pending | Empty directory init/up/run flow works in under 2 minutes |
 | Phase 3 | AI-safe mode | pending | Warn/fail/redact/report/docs are explicit and tested |
-| Phase 4 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters have examples and scenario tests |
-| Phase 5 | Compatibility and reports | pending | Report explains supported/unsupported behavior and replay metadata |
+| Phase 4 | Trust reports and adapter contracts | pending | Report explains supported/unsupported behavior before adding more adapters |
+| Phase 5 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters use the adapter contract and have examples |
 | Phase 6 | Distribution | pending | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 
 ## Phase 0 Tasks
@@ -94,23 +94,23 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P4-T01 | Generalize adapter scenario metadata | pending | Adapter tests assert capabilities/scenarios are discoverable |
-| P4-T02 | Add OpenAI-compatible adapter | pending | HTTP tests cover models, chat success, auth, rate limit |
-| P4-T03 | Add GitHub OAuth-like adapter | pending | HTTP tests cover authorize, token, user, invalid code |
-| P4-T04 | Add Slack-like messaging adapter | pending | HTTP tests cover auth.test, chat.postMessage, rate limit |
-| P4-T05 | Extend `mockport init/add` for multiple adapters | pending | CLI tests assert multi-adapter config/env generation |
-| P4-T06 | Add examples for each adapter | pending | Example configs load and adapter routes respond |
+| P4-T01 | Add adapter metadata contract | pending | Adapter tests assert capabilities, scenarios, endpoints, maturity are discoverable |
+| P4-T02 | Add scenario coverage report | pending | Report tests assert per-adapter scenario matrix |
+| P4-T03 | Record unsupported endpoint attempts | pending | HTTP tests assert 404/405 entries appear in report |
+| P4-T04 | Add request replay log metadata | pending | Recorder tests assert stable request ids and replay-safe data |
+| P4-T05 | Add behavior matrix and maturity levels | pending | Report tests assert endpoints, scenarios, maturity, and support status |
+| P4-T06 | Add machine-readable and text report modes | pending | CLI tests assert JSON and text report output |
 
 ## Phase 5 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P5-T01 | Add scenario coverage report | pending | Report tests assert per-adapter scenario matrix |
-| P5-T02 | Record unsupported endpoint attempts | pending | HTTP tests assert 404/405 entries appear in report |
-| P5-T03 | Add request replay log metadata | pending | Recorder tests assert stable request ids and replay-safe data |
-| P5-T04 | Add behavior matrix | pending | Report tests assert supported endpoints and scenario statuses |
-| P5-T05 | Add adapter maturity levels | pending | Adapter tests assert maturity values in report |
-| P5-T06 | Add machine-readable and text report modes | pending | CLI tests assert JSON and text report output |
+| P5-T01 | Add OpenAI-compatible adapter | pending | HTTP tests cover models, chat success, auth, rate limit |
+| P5-T02 | Add GitHub OAuth-like adapter | pending | HTTP tests cover authorize, token, user, invalid code |
+| P5-T03 | Add Slack-like messaging adapter | pending | HTTP tests cover auth.test, chat.postMessage, rate limit |
+| P5-T04 | Extend `mockport init/add` for multiple adapters | pending | CLI tests assert multi-adapter config/env generation |
+| P5-T05 | Add examples for each adapter | pending | Example configs load and adapter routes respond |
+| P5-T06 | Add cross-adapter smoke coverage | pending | Docker smoke validates multiple adapters in one config |
 
 ## Phase 6 Tasks
 
