@@ -1,0 +1,112 @@
+# 09. Docker Runtime
+
+## Docker Engine version
+
+Recommended Docker Engine: `29.5.2` or later in the 29.x stable line.
+
+## Runtime strategy
+
+Mockport should be Docker-first.
+
+Primary usage:
+
+```bash
+docker run --rm -p 43101:43101 \
+  -v $(pwd)/mockport.yml:/etc/mockport/mockport.yml \
+  ghcr.io/albert-einshutoin/mockport:latest
+```
+
+## Docker Compose usage
+
+```yaml
+services:
+  mockport:
+    image: ghcr.io/albert-einshutoin/mockport:latest
+    ports:
+      - "43101:43101"
+    volumes:
+      - ./mockport.yml:/etc/mockport/mockport.yml
+```
+
+## Application env switching
+
+Production:
+
+```env
+STRIPE_API_URL=https://api.stripe.com
+STRIPE_SECRET_KEY=sk_live_xxx
+```
+
+Local/CI/AI:
+
+```env
+STRIPE_API_URL=http://mockport:43101/stripe
+STRIPE_SECRET_KEY=mockport_stripe_secret
+```
+
+## Initial image model
+
+Use one all-in-one image:
+
+```txt
+ghcr.io/albert-einshutoin/mockport:latest
+```
+
+All MVP adapters are compiled in, but disabled unless config enables them.
+
+## Future image model
+
+Later:
+
+```txt
+ghcr.io/mockport/mockport:latest
+ghcr.io/mockport/mockport-stripe:latest
+ghcr.io/mockport/mockport-openai:latest
+```
+
+Do not start with adapter-specific images unless image size becomes a problem.
+
+## Dockerfile
+
+Recommended:
+
+```dockerfile
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /mockport ./cmd/mockport
+
+FROM gcr.io/distroless/static-debian12
+
+COPY --from=builder /mockport /mockport
+
+EXPOSE 43101
+
+ENTRYPOINT ["/mockport"]
+CMD ["run", "--config", "/etc/mockport/mockport.yml"]
+```
+
+## Why distroless
+
+- smaller runtime surface
+- no shell by default
+- better security posture
+- suitable for static Go binaries
+
+## Build command
+
+```bash
+docker build -t mockport:local -f docker/Dockerfile .
+```
+
+## Run command
+
+```bash
+docker run --rm -p 43101:43101 \
+  -v $(pwd)/mockport.yml:/etc/mockport/mockport.yml \
+  mockport:local
+```

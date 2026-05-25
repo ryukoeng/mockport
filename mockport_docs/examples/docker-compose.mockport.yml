@@ -1,0 +1,7 @@
+services:
+  mockport:
+    image: ghcr.io/albert-einshutoin/mockport:latest
+    ports:
+      - "43101:43101"
+    volumes:
+      - ./mockport.yml:/etc/mockport/mockport.yml
