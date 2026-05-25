@@ -1,0 +1,21 @@
+{
+  "name": "@mockport/mockport",
+  "version": "0.0.0-experimental",
+  "description": "Experimental npm wrapper for Mockport. Docker or the Go binary remains the primary runtime.",
+  "license": "MIT",
+  "bin": {
+    "mockport": "bin/mockport.js"
+  },
+  "scripts": {
+    "test": "node test/wrapper.test.js"
+  },
+  "files": [
+    "bin/mockport.js",
+    "README.md"
+  ],
+  "keywords": [
+    "mockport",
+    "service-emulator",
+    "experimental"
+  ]
+}

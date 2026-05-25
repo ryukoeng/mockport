@@ -1,0 +1,16 @@
+class Mockport < Formula
+  desc "Secret-free service emulation for AI-native development"
+  homepage "https://github.com/albert-einshutoin/mockport"
+  version "__VERSION__"
+  url "__URL__"
+  sha256 "__SHA256__"
+  license "MIT"
+
+  def install
+    bin.install "mockport"
+  end
+
+  test do
+    system "#{bin}/mockport", "version"
+  end
+end

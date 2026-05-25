@@ -24,7 +24,7 @@
 | Phase 3 | AI-safe mode | done | Warn/fail/redact/report/docs are explicit and tested |
 | Phase 4 | Trust reports and adapter contracts | done | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | done | OpenAI, GitHub OAuth, Slack-like adapters, examples, multi-adapter CLI, Docker smoke |
-| Phase 6 | Distribution | pending | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
+| Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 
 ## Phase 0 Tasks
 
@@ -116,12 +116,12 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P6-T01 | Add release build workflow | pending | Workflow lint/static checks assert expected matrix targets |
-| P6-T02 | Add GHCR image workflow | pending | Workflow checks assert docker metadata and tags |
-| P6-T03 | Add release archives and checksums | pending | Local script test asserts archive names and checksum file |
-| P6-T04 | Add Homebrew formula template | pending | Template test asserts version/url/sha placeholders |
-| P6-T05 | Add npm wrapper design scaffold | pending | Package tests assert wrapper delegates to binary or Docker |
-| P6-T06 | Add docs site scaffold | pending | Docs build check renders quickstart and adapter pages |
+| P6-T01 | Add release build workflow | done | Workflow lint/static checks assert expected matrix targets |
+| P6-T02 | Add GHCR image workflow | done | Workflow checks assert docker metadata and tags |
+| P6-T03 | Add release archives and checksums | done | Local script test asserts archive names and checksum file |
+| P6-T04 | Add Homebrew formula template | done | Template test asserts version/url/sha placeholders |
+| P6-T05 | Add npm wrapper design scaffold | done | Package tests assert wrapper delegates to binary or Docker |
+| P6-T06 | Add docs site scaffold | done | Docs build check renders quickstart and adapter pages |
 
 ## Verification Notes
 
@@ -133,3 +133,7 @@
 - Passed with `mockport:local`: `GET /health`, `POST /stripe/v1/checkout/sessions`, `GET /_mockport/report`.
 - Passed: `bash scripts/smoke-empty-dir.sh`.
 - Passed: `bash scripts/smoke-multi-adapter.sh` with Stripe, OpenAI, GitHub OAuth, and Slack endpoints.
+- Passed: `bash scripts/check-distribution.sh`.
+- Passed: `bash scripts/test-release-archives.sh`.
+- Passed: `(cd packaging/npm && npm test)`.
+- Passed: `docker build -t mockport:local -f docker/Dockerfile .`.

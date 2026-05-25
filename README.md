@@ -51,6 +51,19 @@ docker run --rm -p 43101:43101 \
   mockport:local
 ```
 
+## Install And Distribution
+
+Mockport is Docker-first. Release binaries and packaging scaffolds are prepared for OSS distribution.
+
+| Channel | Status | Notes |
+| --- | --- | --- |
+| Docker / GHCR | Planned | `ghcr.io/albert-einshutoin/mockport` workflow publishes semver tags and `latest` |
+| GitHub release archives | Planned | `mockport_<version>_<os>_<arch>.tar.gz` with `checksums.txt` |
+| Homebrew | Template | Formula template is under `packaging/homebrew/` |
+| npm | Experimental wrapper | Convenience wrapper only; Go binary and Docker remain primary |
+
+Docs site source lives under `docs/site/`.
+
 ## Services
 
 Supported:
