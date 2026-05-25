@@ -9,19 +9,7 @@ import (
 )
 
 func TestInitGeneratesStripeFiles(t *testing.T) {
-	dir := t.TempDir()
-	oldwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("get cwd: %v", err)
-	}
-	defer func() {
-		if err := os.Chdir(oldwd); err != nil {
-			t.Fatalf("restore cwd: %v", err)
-		}
-	}()
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("chdir temp: %v", err)
-	}
+	dir := chdirTemp(t)
 
 	cmd := NewRootCommand()
 	var out bytes.Buffer
@@ -48,4 +36,84 @@ func TestInitGeneratesStripeFiles(t *testing.T) {
 	if !strings.Contains(env, "STRIPE_SECRET_KEY=mockport_stripe_secret") {
 		t.Fatalf("env missing fake Stripe key: %s", env)
 	}
+	got := out.String()
+	for _, want := range []string{
+		"docker compose -f docker-compose.mockport.yml up",
+		"curl http://localhost:43101/health",
+		"mockport report",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("init output missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestInitDoesNotOverwriteExistingFiles(t *testing.T) {
+	dir := chdirTemp(t)
+	existingPath := filepath.Join(dir, "mockport.yml")
+	existing := "custom: keep-me\n"
+	if err := os.WriteFile(existingPath, []byte(existing), 0o644); err != nil {
+		t.Fatalf("write existing config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"init", "--adapter", "stripe"})
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("init returned nil error for existing file")
+	}
+
+	data, err := os.ReadFile(existingPath)
+	if err != nil {
+		t.Fatalf("read existing config: %v", err)
+	}
+	if string(data) != existing {
+		t.Fatalf("existing file was overwritten: %q", string(data))
+	}
+}
+
+func TestInitForceOverwritesExistingFiles(t *testing.T) {
+	dir := chdirTemp(t)
+	existingPath := filepath.Join(dir, "mockport.yml")
+	if err := os.WriteFile(existingPath, []byte("custom: replace-me\n"), 0o644); err != nil {
+		t.Fatalf("write existing config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--force"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute init --force: %v", err)
+	}
+
+	data, err := os.ReadFile(existingPath)
+	if err != nil {
+		t.Fatalf("read overwritten config: %v", err)
+	}
+	if !strings.Contains(string(data), "mode: ai-safe") {
+		t.Fatalf("mockport.yml was not replaced with generated config: %s", string(data))
+	}
+}
+
+func chdirTemp(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	oldwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get cwd: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(oldwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	})
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("chdir temp: %v", err)
+	}
+	return dir
 }

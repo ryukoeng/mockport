@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,8 @@ func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Stripe-Signature", signPayload(secret, nowUnix(), payload))
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
 		rt.writeStripeError(w, http.StatusBadGateway, "api_error", "webhook_send_failed", "failed to send webhook")
 		return

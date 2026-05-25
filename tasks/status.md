@@ -20,7 +20,7 @@
 | --- | --- | --- | --- |
 | Phase 0 | Repository skeleton, CLI, config, server, health, Docker, CI | done | Go 1.26.3 test/vet/build, Docker build, `/health` 200 |
 | Phase 1 | Stripe-like Minimal MVP | done | Stripe scenarios, webhook tests, report, AI-safe tests, Docker run |
-| Phase 2 | CLI UX | pending | Empty directory init/up/run flow works in under 2 minutes |
+| Phase 2 | CLI UX | done | Empty directory init/up/run flow works in under 2 minutes |
 | Phase 3 | AI-safe mode | pending | Warn/fail/redact/report/docs are explicit and tested |
 | Phase 4 | Trust reports and adapter contracts | pending | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | pending | OpenAI, GitHub OAuth, Slack-like adapters use the adapter contract and have examples |
@@ -72,12 +72,12 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P2-T01 | Protect generated files from accidental overwrite | pending | CLI tests assert existing files are not overwritten without `--force` |
-| P2-T02 | Add `mockport init --force` | pending | CLI tests assert `--force` overwrites generated files |
-| P2-T03 | Add `mockport up` command | pending | CLI tests assert compose command construction |
-| P2-T04 | Add `mockport report --url` command | pending | CLI tests use `httptest` report endpoint |
-| P2-T05 | Add user-facing init/run success output | pending | CLI tests assert next-step output |
-| P2-T06 | Add empty-directory E2E script/doc | pending | Shell smoke test validates init + Docker run path |
+| P2-T01 | Protect generated files from accidental overwrite | done | CLI tests assert existing files are not overwritten without `--force` |
+| P2-T02 | Add `mockport init --force` | done | CLI tests assert `--force` overwrites generated files |
+| P2-T03 | Add `mockport up` command | done | CLI tests assert compose command construction |
+| P2-T04 | Add `mockport report --url` command | done | CLI tests use `httptest` report endpoint |
+| P2-T05 | Add user-facing init/run success output | done | CLI tests assert next-step output |
+| P2-T06 | Add empty-directory E2E script/doc | done | Shell smoke test validates init + Docker run path |
 
 ## Phase 3 Tasks
 

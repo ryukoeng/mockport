@@ -44,6 +44,7 @@ const defaultCompose = `services:
 
 func newInitCommand() *cobra.Command {
 	var adapterName string
+	var force bool
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Generate Mockport local files",
@@ -56,15 +57,30 @@ func newInitCommand() *cobra.Command {
 				".env.mockport":               defaultEnvMockport,
 				"docker-compose.mockport.yml": defaultCompose,
 			}
+			if !force {
+				for path := range files {
+					if _, err := os.Stat(path); err == nil {
+						return fmt.Errorf("%s already exists; rerun with --force to overwrite", path)
+					} else if !os.IsNotExist(err) {
+						return fmt.Errorf("check %s: %w", path, err)
+					}
+				}
+			}
 			for path, content := range files {
 				if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 					return fmt.Errorf("write %s: %w", path, err)
 				}
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "Generated mockport.yml, .env.mockport, docker-compose.mockport.yml")
+			fmt.Fprintln(cmd.OutOrStdout())
+			fmt.Fprintln(cmd.OutOrStdout(), "Next steps:")
+			fmt.Fprintln(cmd.OutOrStdout(), "  docker compose -f docker-compose.mockport.yml up")
+			fmt.Fprintln(cmd.OutOrStdout(), "  curl http://localhost:43101/health")
+			fmt.Fprintln(cmd.OutOrStdout(), "  mockport report")
 			return nil
 		},
 	}
 	cmd.Flags().StringVar(&adapterName, "adapter", "stripe", "Adapter to initialize")
+	cmd.Flags().BoolVar(&force, "force", false, "Overwrite generated files if they already exist")
 	return cmd
 }

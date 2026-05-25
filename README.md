@@ -11,6 +11,8 @@ mockport init --adapter stripe
 docker compose -f docker-compose.mockport.yml up
 ```
 
+`mockport init` protects existing generated files by default. Use `--force` only when you intentionally want to replace `mockport.yml`, `.env.mockport`, and `docker-compose.mockport.yml`.
+
 Application `.env`:
 
 ```env
@@ -28,8 +30,18 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 View the request and safety report:
 
 ```bash
-curl http://localhost:43101/_mockport/report
+mockport report
 ```
+
+## Source Smoke Test
+
+From a checkout of this repository:
+
+```bash
+bash scripts/smoke-empty-dir.sh
+```
+
+The smoke test builds the local Docker image, creates a temporary empty directory, runs `mockport init --adapter stripe`, starts Docker Compose, checks `/health`, posts a Stripe-like checkout request, and prints `mockport report`.
 
 ## Docker
 
