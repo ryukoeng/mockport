@@ -179,6 +179,15 @@
 | P11-T02 | Add dependency and CI maintenance | done | Dependabot config, scheduled checks, and Node.js 24-compatible Actions are validated |
 | P11-T03 | Define adapter contribution quality bar | done | Public trust/docs checks cover adapter PR criteria |
 
+## Public Preview Follow-up Backlog
+
+| Issue | Priority | Destination | Status |
+| --- | --- | --- | --- |
+| [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 17 | open |
+| [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Public preview follow-up | open |
+| [#5](https://github.com/albert-einshutoin/mockport/issues/5) Clarify scenario policy: built-in scenarios vs user-defined scenarios | medium | Phase 12 | open |
+| [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Before next adapter wave | open |
+
 ## Phase 12 Tasks
 
 | ID | Task | Status | Test First |

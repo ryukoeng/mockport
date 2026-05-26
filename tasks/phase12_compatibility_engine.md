@@ -28,6 +28,7 @@
 
 - [ ] Write failing tests for levels: `wire`, `sdk`, `workflow`, `error`, `state`, `contract`.
 - [ ] Implement compatibility manifest structs with adapter, provider version, SDK versions, endpoints, scenarios, unsupported behavior.
+- [ ] Clarify built-in scenario policy versus user-defined scenarios before scoring scenario coverage. See [issue #5](https://github.com/albert-einshutoin/mockport/issues/5).
 - [ ] Add validation for required fields and duplicate endpoint ids.
 - [ ] Run `/usr/local/go/bin/go test ./internal/compat -v`.
 

@@ -13,6 +13,13 @@ Mockport is a Docker-first local API environment for AI-native development and C
 - Phase 13: sanitized fixture and provider spec snapshot policy.
 - Phase 14: SDK contract harness foundation.
 
+## Public Preview Follow-up
+
+- [#6](https://github.com/albert-einshutoin/mockport/issues/6): Add SSE-compatible streaming response for OpenAI `stream_success`.
+- [#8](https://github.com/albert-einshutoin/mockport/issues/8): Improve `mockport up` Docker Compose UX with clearer errors and `--detach` / `--build`.
+- [#5](https://github.com/albert-einshutoin/mockport/issues/5): Clarify built-in scenario policy versus user-defined scenarios.
+- [#7](https://github.com/albert-einshutoin/mockport/issues/7): Track adapter helper duplication before adding more adapters.
+
 ## Adapter Direction
 
 Current adapters:

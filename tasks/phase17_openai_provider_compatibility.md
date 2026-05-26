@@ -41,7 +41,7 @@
 **Status:** pending
 
 - [ ] Add fixtures for auth errors, rate limits, context length, invalid model, malformed messages/input.
-- [ ] Implement streaming chunk shape and terminal events.
+- [ ] Implement SSE-compatible streaming response for `stream_success`, including streaming chunk shape and terminal events. See [issue #6](https://github.com/albert-einshutoin/mockport/issues/6).
 - [ ] Add unsupported parameter reporting.
 - [ ] Run adapter tests, SDK contracts, and compatibility report.
 
