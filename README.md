@@ -4,6 +4,8 @@ Secret-free service emulation for AI-native development.
 
 Mockport runs local Docker-based emulators for external services. The Minimal MVP supports a Stripe-like payment adapter so local development, CI, and AI coding workflows can test payment integration paths without real Stripe secrets.
 
+For public preview scope, support matrix, examples, and limitations, see [Mockport Docs](docs/site/index.md).
+
 ## Quickstart
 
 No local install required:

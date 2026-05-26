@@ -27,7 +27,7 @@
 | Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 | Phase 7 | Public OSS hardening | done | Public trust files, contribution surface, first-run install path, public CI gates |
 | Phase 8 | Public env safety | done | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
-| Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
+| Phase 9 | Public docs and discovery | done | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | pending | Preview GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
 | Phase 12 | Compatibility engine | pending | Compatibility manifests, scores, and reports define provider-compatible local API |
@@ -158,9 +158,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P9-T01 | Build public docs information architecture | pending | Docs link/path check asserts expected pages |
-| P9-T02 | Add example-driven onboarding docs | pending | Example configs load and smoke path is covered |
-| P9-T03 | Add public positioning and limitations | pending | Markdown/link checks cover comparison and limitations pages |
+| P9-T01 | Build public docs information architecture | done | Docs link/path check asserts expected pages |
+| P9-T02 | Add example-driven onboarding docs | done | Example configs load and smoke path is covered |
+| P9-T03 | Add public positioning and limitations | done | Markdown/link checks cover comparison and limitations pages |
 
 ## Phase 10 Tasks
 
@@ -270,3 +270,5 @@
 - Passed: README first-run Docker audit: build `mockport:local`, run with `configs/mockport.example.yml`, `GET /health`, `POST /stripe/v1/checkout/sessions`, `GET /_mockport/report`.
 - Passed: `bash scripts/check-public-env.sh`.
 - Passed: `bash scripts/smoke-empty-dir.sh` with public env safe-to-commit report field.
+- Passed: `bash scripts/check-doc-links.sh`.
+- Passed: `bash scripts/smoke-multi-adapter.sh`.

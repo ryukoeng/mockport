@@ -23,34 +23,34 @@
 
 ## Task P9-T01: Public Docs Information Architecture
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add docs index sections for install, quickstart, adapters, support matrix, examples, limitations, reports, distribution.
-- [ ] Add `support-matrix.md` with endpoint/scenario/maturity table for each adapter.
-- [ ] Add `limitations.md` with: "Mockport targets provider-compatible local APIs for selected workflows. It does not reproduce provider internals or undocumented behavior."
-- [ ] Run docs path check.
+- [x] Add docs index sections for install, quickstart, adapters, support matrix, examples, limitations, reports, distribution.
+- [x] Add `support-matrix.md` with endpoint/scenario/maturity table for each adapter.
+- [x] Add `limitations.md` with: "Mockport targets provider-compatible local APIs for selected workflows. It does not reproduce provider internals or undocumented behavior."
+- [x] Run docs path check.
 
 ## Task P9-T02: Example-driven Onboarding
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add `examples.md` linking Stripe, OpenAI, GitHub OAuth, Slack, and multi-adapter examples.
-- [ ] Add copy-paste commands for each example.
-- [ ] Verify each example config loads with Go tests or shell check.
-- [ ] Run smoke script for multi-adapter path.
+- [x] Add `examples.md` linking Stripe, OpenAI, GitHub OAuth, Slack, and multi-adapter examples.
+- [x] Add copy-paste commands for each example.
+- [x] Verify each example config loads with Go tests or shell check.
+- [x] Run smoke script for multi-adapter path.
 
 ## Task P9-T03: Public Positioning
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add `comparison.md` explaining Mockport vs full provider sandbox, WireMock, and hand-written test doubles.
-- [ ] Keep claims factual and tied to implemented behavior.
-- [ ] Update README intro to point readers to docs instead of becoming too long.
-- [ ] Run markdown/link checks.
+- [x] Add `comparison.md` explaining Mockport vs full provider sandbox, WireMock, and hand-written test doubles.
+- [x] Keep claims factual and tied to implemented behavior.
+- [x] Update README intro to point readers to docs instead of becoming too long.
+- [x] Run markdown/link checks.
 
 ## Phase 9 Exit
 
-- [ ] Public docs explain install, examples, support matrix, limitations, reports, and distribution before preview release.
-- [ ] Adapter limitations are visible before adoption.
-- [ ] Example commands are tested or covered by smoke checks.
-- [ ] README is concise and points to docs.
+- [x] Public docs explain install, examples, support matrix, limitations, reports, and distribution before preview release.
+- [x] Adapter limitations are visible before adoption.
+- [x] Example commands are tested or covered by smoke checks.
+- [x] README is concise and points to docs.
