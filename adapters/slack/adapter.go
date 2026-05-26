@@ -1,7 +1,11 @@
 package slack
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
@@ -38,10 +42,15 @@ func (a Adapter) FakeEnv(cfg adapter.Config) map[string]string {
 
 func (a Adapter) Metadata() adapter.Metadata {
 	return adapter.Metadata{
-		Name:         "slack",
-		Maturity:     "experimental",
-		Capabilities: []string{"auth_test", "chat_post_message"},
+		Name:            "slack",
+		Maturity:        "workflow-compatible",
+		ProviderVersion: "2025-02-01",
+		Levels:          []string{"wire", "client", "workflow", "state", "error"},
+		Capabilities:    []string{"auth_test", "chat_post_message", "chat_update", "chat_delete", "conversations_list", "conversations_history", "events_url_verification", "events_message_callback"},
 		StatefulResources: []string{
+			"channel",
+			"user",
+			"bot",
 			"message",
 		},
 		Reset: true,
@@ -50,11 +59,18 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Name: "auth_error", Supported: true},
 			{Name: "rate_limited", Supported: true},
 			{Name: "delivery_failed", Supported: true},
+			{Name: "channel_not_found", Supported: true},
+			{Name: "not_in_channel", Supported: true},
 		},
 		Endpoints: []adapter.Endpoint{
 			{Method: http.MethodPost, Path: "/slack/api/auth.test", SupportedScenarios: []string{"message_success", "auth_error"}, Notes: "Slack-like auth test"},
 			{Method: http.MethodPost, Path: "/slack/api/chat.postMessage", SupportedScenarios: []string{"message_success", "auth_error", "rate_limited", "delivery_failed"}, Notes: "Slack-like message post"},
-			{Method: http.MethodGet, Path: "/slack/api/conversations.history", SupportedScenarios: []string{"message_success"}, Notes: "Deterministic Slack-like channel history"},
+			{Method: http.MethodPost, Path: "/slack/api/chat.update", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Slack-like message update"},
+			{Method: http.MethodPost, Path: "/slack/api/chat.delete", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Slack-like message delete"},
+			{Method: http.MethodPost, Path: "/slack/api/conversations.list", SupportedScenarios: []string{"message_success", "auth_error"}, Notes: "Slack-like conversation listing"},
+			{Method: http.MethodGet, Path: "/slack/api/conversations.history", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Deterministic Slack-like channel history"},
+			{Method: http.MethodPost, Path: "/slack/api/conversations.history", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Deterministic Slack-like channel history"},
+			{Method: http.MethodPost, Path: "/slack/events", SupportedScenarios: []string{"message_success", "auth_error"}, Notes: "Slack-like Events API URL verification and message callback subset"},
 		},
 	}
 }
@@ -72,8 +88,16 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeAuthTest(w)
 	case req.Method == http.MethodPost && path == "/api/chat.postMessage":
 		r.writePostMessage(w, req)
-	case req.Method == http.MethodGet && path == "/api/conversations.history":
+	case req.Method == http.MethodPost && path == "/api/chat.update":
+		r.writeUpdateMessage(w, req)
+	case req.Method == http.MethodPost && path == "/api/chat.delete":
+		r.writeDeleteMessage(w, req)
+	case req.Method == http.MethodPost && path == "/api/conversations.list":
+		r.writeConversationsList(w)
+	case (req.Method == http.MethodGet || req.Method == http.MethodPost) && path == "/api/conversations.history":
 		r.writeHistory(w, req)
+	case req.Method == http.MethodPost && path == "/events":
+		r.writeEvent(w, req)
 	default:
 		http.NotFound(w, req)
 	}
@@ -81,25 +105,42 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 
 func (r *routes) writeAuthTest(w http.ResponseWriter) {
 	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
-		writeJSON(w, http.StatusUnauthorized, map[string]interface{}{"ok": false, "error": "invalid_auth"})
+		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "user_id": "U_MOCKPORT", "team": "Mockport"})
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"url":     "https://mockport.slack.test/",
+		"team":    "Mockport",
+		"team_id": "T_MOCKPORT",
+		"user":    "mockport-bot",
+		"user_id": "U_MOCKPORT",
+		"bot_id":  "B_MOCKPORT",
+	})
 }
 
 func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 	switch normalizeScenario(r.cfg.Scenario) {
 	case "auth_error":
-		writeJSON(w, http.StatusUnauthorized, map[string]interface{}{"ok": false, "error": "invalid_auth"})
+		writeSlackError(w, http.StatusOK, "invalid_auth")
 	case "rate_limited":
-		writeJSON(w, http.StatusTooManyRequests, map[string]interface{}{"ok": false, "error": "ratelimited"})
+		w.Header().Set("Retry-After", "1")
+		writeSlackError(w, http.StatusTooManyRequests, "ratelimited")
 	case "delivery_failed":
-		writeJSON(w, http.StatusBadGateway, map[string]interface{}{"ok": false, "error": "message_delivery_failed"})
+		writeSlackError(w, http.StatusOK, "message_delivery_failed")
+	case "channel_not_found":
+		writeSlackError(w, http.StatusOK, "channel_not_found")
+	case "not_in_channel":
+		writeSlackError(w, http.StatusOK, "not_in_channel")
 	default:
 		_ = req.ParseForm()
 		channel := req.Form.Get("channel")
 		if channel == "" {
 			channel = "C_MOCKPORT"
+		}
+		if !knownChannel(channel) {
+			writeSlackError(w, http.StatusOK, "channel_not_found")
+			return
 		}
 		text := req.Form.Get("text")
 		if text == "" {
@@ -107,28 +148,215 @@ func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 		}
 		message, _ := r.store.Create("slack", "message", map[string]any{
 			"channel": channel,
+			"deleted": false,
 			"text":    text,
+			"team":    "T_MOCKPORT",
 			"user":    "U_MOCKPORT",
 		})
-		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "channel": channel, "ts": message.ID})
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"ok":      true,
+			"channel": channel,
+			"ts":      message.ID,
+			"message": messageBody(message.ID, message.Data),
+		})
 	}
 }
 
+func (r *routes) writeUpdateMessage(w http.ResponseWriter, req *http.Request) {
+	if !r.validateWriteScenario(w) {
+		return
+	}
+	_ = req.ParseForm()
+	channel := defaultChannel(req.Form.Get("channel"))
+	if !knownChannel(channel) {
+		writeSlackError(w, http.StatusOK, "channel_not_found")
+		return
+	}
+	ts := req.Form.Get("ts")
+	resource, ok := r.store.Get("slack", "message", ts)
+	if !ok || resource.Data["channel"] != channel || resource.Data["deleted"] == true {
+		writeSlackError(w, http.StatusOK, "message_not_found")
+		return
+	}
+	text := req.Form.Get("text")
+	if text == "" {
+		text = "Mockport message"
+	}
+	resource.Data["text"] = text
+	r.store.Update("slack", "message", ts, resource.Data)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"channel": channel,
+		"ts":      ts,
+		"message": messageBody(ts, resource.Data),
+	})
+}
+
+func (r *routes) writeDeleteMessage(w http.ResponseWriter, req *http.Request) {
+	if !r.validateWriteScenario(w) {
+		return
+	}
+	_ = req.ParseForm()
+	channel := defaultChannel(req.Form.Get("channel"))
+	if !knownChannel(channel) {
+		writeSlackError(w, http.StatusOK, "channel_not_found")
+		return
+	}
+	ts := req.Form.Get("ts")
+	resource, ok := r.store.Get("slack", "message", ts)
+	if !ok || resource.Data["channel"] != channel {
+		writeSlackError(w, http.StatusOK, "message_not_found")
+		return
+	}
+	resource.Data["deleted"] = true
+	r.store.Update("slack", "message", ts, resource.Data)
+	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "channel": channel, "ts": ts})
+}
+
+func (r *routes) writeConversationsList(w http.ResponseWriter) {
+	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+		writeSlackError(w, http.StatusOK, "invalid_auth")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ok": true,
+		"channels": []map[string]interface{}{{
+			"id":         "C_MOCKPORT",
+			"name":       "mockport",
+			"is_channel": true,
+			"is_member":  true,
+		}},
+		"response_metadata": map[string]string{"next_cursor": ""},
+	})
+}
+
 func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
+	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+		writeSlackError(w, http.StatusOK, "invalid_auth")
+		return
+	}
+	_ = req.ParseForm()
 	channel := req.URL.Query().Get("channel")
+	if channel == "" {
+		channel = req.Form.Get("channel")
+	}
+	channel = defaultChannel(channel)
+	if !knownChannel(channel) {
+		writeSlackError(w, http.StatusOK, "channel_not_found")
+		return
+	}
 	var messages []map[string]interface{}
 	for _, resource := range r.store.List("slack", "message") {
 		if channel != "" && resource.Data["channel"] != channel {
 			continue
 		}
-		messages = append(messages, map[string]interface{}{
-			"type": "message",
-			"ts":   resource.ID,
-			"user": resource.Data["user"],
-			"text": resource.Data["text"],
-		})
+		if resource.Data["deleted"] == true {
+			continue
+		}
+		messages = append(messages, messageBody(resource.ID, resource.Data))
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "messages": messages})
+}
+
+func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
+	raw, err := io.ReadAll(req.Body)
+	if err != nil {
+		writeSlackError(w, http.StatusBadRequest, "invalid_payload")
+		return
+	}
+	if !r.validSignature(req, raw) {
+		writeSlackError(w, http.StatusUnauthorized, "invalid_signature")
+		return
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		writeSlackError(w, http.StatusBadRequest, "invalid_payload")
+		return
+	}
+	switch payload["type"] {
+	case "url_verification":
+		writeJSON(w, http.StatusOK, map[string]interface{}{"challenge": payload["challenge"]})
+	case "event_callback":
+		if event, ok := payload["event"].(map[string]any); ok && event["type"] == "message" {
+			channel, _ := event["channel"].(string)
+			channel = defaultChannel(channel)
+			text, _ := event["text"].(string)
+			if text == "" {
+				text = "Mockport event message"
+			}
+			user, _ := event["user"].(string)
+			if user == "" {
+				user = "U_MOCKPORT"
+			}
+			_, _ = r.store.Create("slack", "message", map[string]any{
+				"channel": channel,
+				"deleted": false,
+				"text":    text,
+				"team":    "T_MOCKPORT",
+				"user":    user,
+			})
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true})
+	default:
+		writeSlackError(w, http.StatusOK, "unsupported_event")
+	}
+}
+
+func (r *routes) validSignature(req *http.Request, raw []byte) bool {
+	secret := r.cfg.FakeSecret
+	if secret == "" {
+		secret = "mockport_slack_signing_secret"
+	}
+	signature := req.Header.Get("X-Slack-Signature")
+	timestamp := req.Header.Get("X-Slack-Request-Timestamp")
+	if signature == "" || timestamp == "" {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write([]byte("v0:" + timestamp + ":" + string(raw)))
+	want := "v0=" + hex.EncodeToString(mac.Sum(nil))
+	return hmac.Equal([]byte(signature), []byte(want))
+}
+
+func (r *routes) validateWriteScenario(w http.ResponseWriter) bool {
+	switch normalizeScenario(r.cfg.Scenario) {
+	case "auth_error":
+		writeSlackError(w, http.StatusOK, "invalid_auth")
+	case "rate_limited":
+		w.Header().Set("Retry-After", "1")
+		writeSlackError(w, http.StatusTooManyRequests, "ratelimited")
+	case "delivery_failed":
+		writeSlackError(w, http.StatusOK, "message_delivery_failed")
+	case "channel_not_found":
+		writeSlackError(w, http.StatusOK, "channel_not_found")
+	case "not_in_channel":
+		writeSlackError(w, http.StatusOK, "not_in_channel")
+	default:
+		return true
+	}
+	return false
+}
+
+func defaultChannel(channel string) string {
+	if channel == "" {
+		return "C_MOCKPORT"
+	}
+	return channel
+}
+
+func knownChannel(channel string) bool {
+	return channel == "C_MOCKPORT" || channel == "C_TEST"
+}
+
+func messageBody(ts string, data map[string]any) map[string]interface{} {
+	return map[string]interface{}{
+		"type":    "message",
+		"team":    data["team"],
+		"channel": data["channel"],
+		"ts":      ts,
+		"user":    data["user"],
+		"text":    data["text"],
+	}
 }
 
 func normalizeScenario(s string) string {
@@ -142,4 +370,8 @@ func writeJSON(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+func writeSlackError(w http.ResponseWriter, status int, code string) {
+	writeJSON(w, status, map[string]interface{}{"ok": false, "error": code})
 }

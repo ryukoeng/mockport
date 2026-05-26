@@ -1,0 +1,75 @@
+"use strict";
+
+async function runSlackSmoke(options) {
+  const baseURL = new URL("/slack/api/", options.baseURL).toString();
+  const token = "mockport_slack_token";
+
+  const auth = await slackAPI(baseURL, "auth.test", token, {});
+  assertEqual(auth.ok, true, "auth ok");
+  assertEqual(auth.user_id, "U_MOCKPORT", "auth user");
+  assertEqual(auth.team_id, "T_MOCKPORT", "auth team id");
+
+  const channels = await slackAPI(baseURL, "conversations.list", token, {});
+  assertEqual(channels.ok, true, "channels ok");
+  assertEqual(channels.channels[0].id, "C_MOCKPORT", "default channel id");
+
+  const posted = await slackAPI(baseURL, "chat.postMessage", token, {
+    channel: "C_MOCKPORT",
+    text: "hello from client",
+  });
+  assertEqual(posted.ok, true, "post ok");
+  assertEqual(posted.message.text, "hello from client", "post text");
+
+  const updated = await slackAPI(baseURL, "chat.update", token, {
+    channel: "C_MOCKPORT",
+    ts: posted.ts,
+    text: "edited from client",
+  });
+  assertEqual(updated.ok, true, "update ok");
+  assertEqual(updated.message.text, "edited from client", "update text");
+
+  const history = await slackAPI(baseURL, "conversations.history", token, {
+    channel: "C_MOCKPORT",
+  });
+  assertEqual(history.ok, true, "history ok");
+  assertEqual(history.messages[0].text, "edited from client", "history text");
+
+  const deleted = await slackAPI(baseURL, "chat.delete", token, {
+    channel: "C_MOCKPORT",
+    ts: posted.ts,
+  });
+  assertEqual(deleted.ok, true, "delete ok");
+
+  return {
+    provider: "slack",
+    baseURL: options.baseURL,
+    status: "client-ok",
+    team: auth.team_id,
+    channel: posted.channel,
+    message: posted.ts,
+  };
+}
+
+async function slackAPI(baseURL, method, token, params) {
+  const response = await fetch(new URL(method, baseURL), {
+    method: "POST",
+    headers: {
+      "authorization": `Bearer ${token}`,
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(params),
+  });
+  const body = await response.json();
+  if (!response.ok || body.ok !== true) {
+    throw new Error(`${method} failed: status=${response.status} body=${JSON.stringify(body)}`);
+  }
+  return body;
+}
+
+function assertEqual(got, want, label) {
+  if (got !== want) {
+    throw new Error(`${label}: got ${got}, want ${want}`);
+  }
+}
+
+module.exports = { runSlackSmoke };

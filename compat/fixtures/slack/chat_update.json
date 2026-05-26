@@ -1,0 +1,51 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack chat.update method",
+    "url_or_path": "https://api.slack.com/methods/chat.update",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat.update",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_MOCKPORT",
+      "ts": "slack_message_000001",
+      "text": "edited from client"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": true,
+      "channel": "C_MOCKPORT",
+      "ts": "slack_message_000001",
+      "message": {
+        "type": "message",
+        "team": "T_MOCKPORT",
+        "channel": "C_MOCKPORT",
+        "ts": "slack_message_000001",
+        "user": "U_MOCKPORT",
+        "text": "edited from client"
+      }
+    }
+  },
+  "normalization": [
+    "message timestamp is deterministic fake state",
+    "update mutates local Mockport state only",
+    "Slack edit history is not modeled"
+  ]
+}

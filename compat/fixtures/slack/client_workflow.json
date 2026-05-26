@@ -1,0 +1,40 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "sdk",
+    "title": "Mockport Slack client contract smoke",
+    "url_or_path": "contract/sdk/slack-smoke.test.js",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "CLIENT",
+    "path": "auth.test/conversations.list/chat.postMessage/chat.update/conversations.history/chat.delete smoke",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "workflow": "authenticate, list channels, post message, update message, read history, delete message"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "status": "client-ok",
+      "provider": "slack"
+    }
+  },
+  "normalization": [
+    "client evidence is produced against local Mockport only",
+    "workspace IDs use deterministic Mockport values",
+    "no external Slack API calls are made"
+  ]
+}

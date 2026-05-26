@@ -1,0 +1,42 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack Web API rate limits",
+    "url_or_path": "https://api.slack.com/apis/rate-limits",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "rate_limited",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat.postMessage",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_MOCKPORT",
+      "text": "hello"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "Content-Type": "application/json",
+      "Retry-After": "1"
+    },
+    "body": {
+      "ok": false,
+      "error": "ratelimited"
+    }
+  },
+  "normalization": [
+    "retry delay is deterministic",
+    "token and channel are fake local values",
+    "rate limiting is scenario-driven only"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack Web API errors",
+    "url_or_path": "https://api.slack.com/web",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "auth_error",
+  "request": {
+    "method": "POST",
+    "path": "/api/auth.test",
+    "headers": {
+      "Authorization": "Bearer invalid"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": false,
+      "error": "invalid_auth"
+    }
+  },
+  "normalization": [
+    "token is deterministic fake invalid data",
+    "Slack-style ok false response is retained",
+    "no external Slack calls are made"
+  ]
+}

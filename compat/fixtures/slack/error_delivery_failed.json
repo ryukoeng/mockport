@@ -1,0 +1,41 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack chat.postMessage method errors",
+    "url_or_path": "https://api.slack.com/methods/chat.postMessage",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "delivery_failed",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat.postMessage",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_MOCKPORT",
+      "text": "hello"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": false,
+      "error": "message_delivery_failed"
+    }
+  },
+  "normalization": [
+    "delivery failure is synthetic and deterministic",
+    "no real Slack delivery is attempted",
+    "Slack-style ok false response is retained"
+  ]
+}

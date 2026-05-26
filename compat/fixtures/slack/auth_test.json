@@ -1,0 +1,42 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack auth.test method",
+    "url_or_path": "https://api.slack.com/methods/auth.test",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "POST",
+    "path": "/api/auth.test",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": true,
+      "team": "Mockport",
+      "team_id": "T_MOCKPORT",
+      "user": "mockport-bot",
+      "user_id": "U_MOCKPORT",
+      "bot_id": "B_MOCKPORT"
+    }
+  },
+  "normalization": [
+    "token uses the mockport_ fake namespace",
+    "workspace and bot identities are deterministic fake data",
+    "only common public auth.test fields are retained"
+  ]
+}

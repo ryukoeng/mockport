@@ -1,0 +1,46 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack Events API message event",
+    "url_or_path": "https://api.slack.com/events/message",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "POST",
+    "path": "/events",
+    "headers": {
+      "X-Slack-Request-Timestamp": "1710000000",
+      "X-Slack-Signature": "v0=mockport_signature"
+    },
+    "body": {
+      "type": "event_callback",
+      "event": {
+        "type": "message",
+        "channel": "C_MOCKPORT",
+        "text": "event hello",
+        "user": "U_EVENT"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": true
+    }
+  },
+  "normalization": [
+    "event identity is deterministic fake data",
+    "message event is persisted to local Mockport history",
+    "Slack retry and app subscription behavior are not modeled"
+  ]
+}

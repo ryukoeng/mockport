@@ -1,0 +1,41 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack verifying requests from Slack",
+    "url_or_path": "https://api.slack.com/authentication/verifying-requests-from-slack",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "auth_error",
+  "request": {
+    "method": "POST",
+    "path": "/events",
+    "headers": {
+      "X-Slack-Request-Timestamp": "1710000000",
+      "X-Slack-Signature": "v0=invalid"
+    },
+    "body": {
+      "type": "event_callback"
+    }
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": false,
+      "error": "invalid_signature"
+    }
+  },
+  "normalization": [
+    "signature value is deterministic fake invalid data",
+    "request verification uses local fake signing secret",
+    "no external Slack calls are made"
+  ]
+}

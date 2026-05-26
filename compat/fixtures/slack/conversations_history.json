@@ -1,0 +1,49 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack conversations.history method",
+    "url_or_path": "https://api.slack.com/methods/conversations.history",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "POST",
+    "path": "/api/conversations.history",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_MOCKPORT"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": true,
+      "messages": [
+        {
+          "type": "message",
+          "team": "T_MOCKPORT",
+          "channel": "C_MOCKPORT",
+          "ts": "slack_message_000001",
+          "user": "U_MOCKPORT",
+          "text": "edited from client"
+        }
+      ]
+    }
+  },
+  "normalization": [
+    "history is backed by local deterministic state",
+    "pagination and retention windows are omitted",
+    "deleted messages are hidden from history"
+  ]
+}

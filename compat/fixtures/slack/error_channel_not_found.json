@@ -1,0 +1,41 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack chat.postMessage method errors",
+    "url_or_path": "https://api.slack.com/methods/chat.postMessage",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "channel_not_found",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat.postMessage",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_UNKNOWN",
+      "text": "hello"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": false,
+      "error": "channel_not_found"
+    }
+  },
+  "normalization": [
+    "channel ID is deterministic fake invalid data",
+    "Slack-style ok false response is retained",
+    "workspace membership lookup is local only"
+  ]
+}

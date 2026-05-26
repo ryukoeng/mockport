@@ -1,0 +1,42 @@
+{
+  "provider": "slack",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "slack-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Slack chat.delete method",
+    "url_or_path": "https://api.slack.com/methods/chat.delete",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "message_success",
+  "request": {
+    "method": "POST",
+    "path": "/api/chat.delete",
+    "headers": {
+      "Authorization": "Bearer mockport_slack_token"
+    },
+    "body": {
+      "channel": "C_MOCKPORT",
+      "ts": "slack_message_000001"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "ok": true,
+      "channel": "C_MOCKPORT",
+      "ts": "slack_message_000001"
+    }
+  },
+  "normalization": [
+    "message timestamp is deterministic fake state",
+    "delete hides the message from local history",
+    "retention and audit logs are not modeled"
+  ]
+}

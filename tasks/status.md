@@ -39,7 +39,7 @@
 | Phase 18 | Stripe provider compatibility | done | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 19 | OpenAI provider compatibility | done | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 20 | GitHub OAuth provider compatibility | done | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
-| Phase 21 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
+| Phase 21 | Slack provider compatibility | done | Slack reaches workflow-compatible status with client contracts and support matrix |
 | Phase 22 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
 
 ## Phase 0 Tasks
@@ -267,9 +267,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P21-T01 | Add Slack client contract baseline | pending | Client smoke covers auth.test, chat.postMessage, conversations list/history where needed |
-| P21-T02 | Add Slack messaging and conversation state | pending | Tests cover channels, users, messages, timestamps, update/delete, and history |
-| P21-T03 | Add Slack error and rate limit fidelity | pending | Tests cover invalid_auth, channel_not_found, not_in_channel, rate_limited, delivery_failed |
+| P21-T01 | Add Slack client contract baseline | done | Client smoke covers auth.test, chat.postMessage, conversations list/history where needed |
+| P21-T02 | Add Slack messaging and conversation state | done | Tests cover channels, users, messages, timestamps, update/delete, and history |
+| P21-T03 | Add Slack error and rate limit fidelity | done | Tests cover invalid_auth, channel_not_found, not_in_channel, rate_limited, delivery_failed |
 
 ## Phase 22 Tasks
 
