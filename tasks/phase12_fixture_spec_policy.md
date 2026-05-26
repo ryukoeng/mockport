@@ -23,36 +23,36 @@
 
 ## Task P12-T01: Fixture Format And Scenario Policy
 
-**Status:** pending
+**Status:** done
 
-- [ ] Define sanitized fixture format for request, response, headers, status, provider version, SDK version, and source note.
-- [ ] Add example fixture with fake local credentials only.
-- [ ] Document which fields must be redacted or normalized.
-- [ ] Clarify built-in scenario policy versus user-defined scenarios before scoring scenario coverage. See [issue #5](https://github.com/albert-einshutoin/mockport/issues/5).
-- [ ] Run fixture format check.
+- [x] Define sanitized fixture format for request, response, headers, status, provider version, SDK version, and source note.
+- [x] Add example fixture with fake local credentials only.
+- [x] Document which fields must be redacted or normalized.
+- [x] Clarify built-in scenario policy versus user-defined scenarios before scoring scenario coverage. See [issue #5](https://github.com/albert-einshutoin/mockport/issues/5).
+- [x] Run fixture format check.
 
 ## Task P12-T02: Fixture Safety Check
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing scanner tests for real-looking secrets inside fixture files.
-- [ ] Add fixture checker that rejects real-looking secrets, production provider URLs, and missing source metadata.
-- [ ] Add CI-ready shell command.
-- [ ] Run `/usr/local/go/bin/go test ./internal/security -v` and `bash scripts/check-compat-fixtures.sh`.
+- [x] Write failing scanner tests for real-looking secrets inside fixture files.
+- [x] Add fixture checker that rejects real-looking secrets, production provider URLs, and missing source metadata.
+- [x] Add CI-ready shell command.
+- [x] Run `go test ./internal/security -v` and `bash scripts/check-compat-fixtures.sh`.
 
 ## Task P12-T03: Spec Snapshot Policy
 
-**Status:** pending
+**Status:** done
 
-- [ ] Document how AI-generated endpoint implementations must cite docs/spec/fixture source.
-- [ ] Define update policy when provider docs or SDK versions change.
-- [ ] Define when a fixture is enough and when SDK contract evidence is required.
-- [ ] Run docs/static checks.
+- [x] Document how AI-generated endpoint implementations must cite docs/spec/fixture source.
+- [x] Define update policy when provider docs or SDK versions change.
+- [x] Define when a fixture is enough and when SDK contract evidence is required.
+- [x] Run docs/static checks.
 
 ## Phase 12 Exit
 
-- [ ] Fixture format is documented.
-- [ ] Fixture checker prevents secret leakage.
-- [ ] Provider docs/spec/SDK source policy is explicit.
-- [ ] Built-in scenarios and user-defined scenarios have an explicit policy.
-- [ ] Later fidelity work has a safe evidence base.
+- [x] Fixture format is documented.
+- [x] Fixture checker prevents secret leakage.
+- [x] Provider docs/spec/SDK source policy is explicit.
+- [x] Built-in scenarios and user-defined scenarios have an explicit policy.
+- [x] Later fidelity work has a safe evidence base.

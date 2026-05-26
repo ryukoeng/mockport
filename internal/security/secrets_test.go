@@ -1,6 +1,8 @@
 package security
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -108,5 +110,153 @@ func TestScanPublicEnvAllowsMockportExamples(t *testing.T) {
 
 	if findings := ScanPublicEnv(env); len(findings) != 0 {
 		t.Fatalf("ScanPublicEnv() findings = %#v, want none", findings)
+	}
+}
+
+func TestScanFixtureContentRequiresSourceMetadata(t *testing.T) {
+	fixture := `{
+  "provider": "stripe",
+  "provider_version": "2026-05-26",
+  "sdk": {"name": "stripe-go", "version": "v83.0.0"},
+  "request": {"method": "POST", "path": "/v1/checkout/sessions"},
+  "response": {"status": 200}
+}`
+
+	findings := ScanFixtureContent("compat/fixtures/schema.example.json", fixture)
+	if len(findings) != 1 {
+		t.Fatalf("finding count = %d, want 1: %#v", len(findings), findings)
+	}
+	if findings[0].Field != "source" || findings[0].Reason != "missing source metadata" {
+		t.Fatalf("finding = %#v, want missing source metadata", findings[0])
+	}
+}
+
+func TestScanFixtureContentRequiresSourceMetadataFields(t *testing.T) {
+	fixture := `{
+  "provider": "stripe",
+  "provider_version": "2026-05-26",
+  "sdk": {"name": "stripe-go", "version": "v83.0.0"},
+  "source": {"type": "docs"},
+  "request": {"method": "POST", "path": "/v1/checkout/sessions"},
+  "response": {"status": 200}
+}`
+
+	findings := ScanFixtureContent("compat/fixtures/stripe/incomplete-source.json", fixture)
+	reasons := map[string]bool{}
+	for _, finding := range findings {
+		reasons[finding.Field+":"+finding.Reason] = true
+	}
+	for _, key := range []string{
+		"source.title:missing source metadata",
+		"source.url_or_path:missing source metadata",
+		"source.retrieved_at:missing source metadata",
+	} {
+		if !reasons[key] {
+			t.Fatalf("missing finding %q in %#v", key, findings)
+		}
+	}
+}
+
+func TestScanFixtureContentRejectsUnsafeValues(t *testing.T) {
+	fixture := `{
+  "provider": "stripe",
+  "provider_version": "2026-05-26",
+  "sdk": {"name": "stripe-go", "version": "v83.0.0"},
+  "source": {
+    "type": "docs",
+    "title": "Stripe Checkout Sessions",
+    "url_or_path": "https://docs.stripe.com/api/checkout/sessions",
+    "retrieved_at": "2026-05-26"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/v1/checkout/sessions",
+    "headers": {"Authorization": "Bearer sk_live_real"}
+  },
+  "response": {
+    "status": 200,
+    "body": {"livemode": false, "url": "https://api.stripe.com/v1/checkout/sessions"}
+  }
+}`
+
+	findings := ScanFixtureContent("compat/fixtures/stripe/unsafe.json", fixture)
+	if len(findings) != 2 {
+		t.Fatalf("finding count = %d, want 2: %#v", len(findings), findings)
+	}
+	reasons := map[string]bool{}
+	for _, finding := range findings {
+		reasons[finding.Reason] = true
+	}
+	if !reasons["real-looking provider secret"] || !reasons["production provider URL"] {
+		t.Fatalf("findings = %#v, want secret and production URL findings", findings)
+	}
+}
+
+func TestScanFixtureContentAllowsSanitizedFixture(t *testing.T) {
+	fixture := `{
+  "provider": "stripe",
+  "provider_version": "2026-05-26",
+  "sdk": {"name": "stripe-go", "version": "v83.0.0"},
+  "source": {
+    "type": "docs",
+    "title": "Stripe Checkout Sessions",
+    "url_or_path": "https://docs.stripe.com/api/checkout/sessions",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "payment_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/checkout/sessions",
+    "headers": {"Authorization": "Bearer mockport_stripe_secret"},
+    "body": {"mode": "payment"}
+  },
+  "response": {
+    "status": 200,
+    "headers": {"Content-Type": "application/json"},
+    "body": {"id": "cs_mockport_123", "livemode": false}
+  }
+}`
+
+	if findings := ScanFixtureContent("compat/fixtures/schema.example.json", fixture); len(findings) != 0 {
+		t.Fatalf("ScanFixtureContent() findings = %#v, want none", findings)
+	}
+}
+
+func TestSchemaExampleFixtureIsPublicSafe(t *testing.T) {
+	path := "../../compat/fixtures/schema.example.json"
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%q): %v", path, err)
+	}
+	if findings := ScanFixtureContent(path, string(content)); len(findings) != 0 {
+		t.Fatalf("schema example findings = %#v, want none", findings)
+	}
+}
+
+func TestCompatibilityFixtureFilesArePublicSafe(t *testing.T) {
+	root := "../../compat/fixtures"
+	var checked int
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() || filepath.Ext(path) != ".json" {
+			return nil
+		}
+		checked++
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if findings := ScanFixtureContent(path, string(content)); len(findings) != 0 {
+			t.Fatalf("%s findings = %#v, want none", path, findings)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("WalkDir(%q): %v", root, err)
+	}
+	if checked == 0 {
+		t.Fatalf("checked fixture count = 0, want at least one")
 	}
 }

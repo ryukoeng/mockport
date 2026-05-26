@@ -1,0 +1,45 @@
+{
+  "provider": "stripe",
+  "provider_version": "2026-05-26",
+  "sdk": {
+    "name": "stripe-go",
+    "version": "v83.0.0"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Stripe Checkout Sessions API",
+    "url_or_path": "https://docs.stripe.com/api/checkout/sessions",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "payment_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/checkout/sessions",
+    "headers": {
+      "Authorization": "Bearer mockport_stripe_secret",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "mode": "payment",
+      "success_url": "http://localhost:43101/success",
+      "cancel_url": "http://localhost:43101/cancel"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": "cs_mockport_123",
+      "object": "checkout.session",
+      "livemode": false,
+      "url": "http://localhost:43101/stripe/checkout/mockport"
+    }
+  },
+  "normalization": [
+    "credential values use the mockport_ fake namespace",
+    "redirect URLs use localhost",
+    "resource IDs use deterministic mockport IDs"
+  ]
+}

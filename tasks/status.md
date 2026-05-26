@@ -30,7 +30,7 @@
 | Phase 9 | Public docs and discovery | done | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | done | `v0.1.0-alpha` GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | done | Maintenance policy, Dependabot, roadmap, Node.js 24 Actions, and adapter contribution quality bar |
-| Phase 12 | Fixture, spec, and scenario policy | pending | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
+| Phase 12 | Fixture, spec, and scenario policy | done | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
 | Phase 13 | Public preview contract cleanup | pending | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
 | Phase 14 | Compatibility engine | pending | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
 | Phase 15 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
@@ -187,16 +187,16 @@
 | --- | --- | --- | --- |
 | [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 13 | open |
 | [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Phase 13 | open |
-| [#5](https://github.com/albert-einshutoin/mockport/issues/5) Clarify scenario policy: built-in scenarios vs user-defined scenarios | medium | Phase 12 | open |
+| [#5](https://github.com/albert-einshutoin/mockport/issues/5) Clarify scenario policy: built-in scenarios vs user-defined scenarios | medium | Phase 12 | done in docs/scenario-policy.md |
 | [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Phase 13 | open |
 
 ## Phase 12 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P12-T01 | Define fixture format and scenario policy | pending | Fixture check asserts source metadata, fake local credentials, and built-in/user-defined scenario rules |
-| P12-T02 | Add fixture safety check | pending | Scanner rejects real secrets and production provider URLs in fixtures |
-| P12-T03 | Add spec snapshot policy | pending | Docs/static checks cover source and update policy |
+| P12-T01 | Define fixture format and scenario policy | done | Fixture check asserts source metadata, fake local credentials, and built-in/user-defined scenario rules |
+| P12-T02 | Add fixture safety check | done | Scanner rejects real secrets and production provider URLs in fixtures |
+| P12-T03 | Add spec snapshot policy | done | Docs/static checks cover source and update policy |
 
 ## Phase 13 Tasks
 
