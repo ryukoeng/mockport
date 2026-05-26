@@ -1,12 +1,12 @@
 package githuboauth
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -41,9 +41,9 @@ func (a Adapter) FakeEnv(cfg adapter.Config) map[string]string {
 func (a Adapter) Metadata() adapter.Metadata {
 	return adapter.Metadata{
 		Name:            "github-oauth",
-		Maturity:        "workflow-compatible",
+		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2022-11-28",
-		Levels:          []string{"wire", "client", "workflow", "state", "error"},
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelClient, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities:    []string{"oauth_authorize", "oauth_token", "user_profile", "user_emails", "user_orgs"},
 		StatefulResources: []string{
 			"oauth_code",
@@ -135,7 +135,7 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 		_ = req.ParseForm()
 		code := req.Form.Get("code")
 		if code == "" {
-			writeJSON(w, http.StatusOK, map[string]interface{}{"access_token": "gho_mockport", "token_type": "bearer", "scope": "read:user"})
+			httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"access_token": "gho_mockport", "token_type": "bearer", "scope": "read:user"})
 			return
 		}
 		codeResource, ok := r.store.Get("github-oauth", "oauth_code", code)
@@ -153,7 +153,7 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			"user":       codeResource.Data["user"],
 			"expires_at": "2999-01-01T00:00:00Z",
 		})
-		writeJSON(w, http.StatusOK, map[string]interface{}{"access_token": token.ID, "token_type": "bearer", "scope": codeResource.Data["scope"]})
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"access_token": token.ID, "token_type": "bearer", "scope": codeResource.Data["scope"]})
 	}
 }
 
@@ -176,7 +176,7 @@ func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
 			"email": "mockport@example.test",
 			"scope": resource.Data["scope"],
 		}
-		writeJSON(w, http.StatusOK, body)
+		httpx.WriteJSON(w, http.StatusOK, body)
 	}
 }
 
@@ -190,7 +190,7 @@ func (r *routes) writeEmails(w http.ResponseWriter, req *http.Request) {
 		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
 		return
 	}
-	writeJSON(w, http.StatusOK, []map[string]interface{}{{
+	httpx.WriteJSON(w, http.StatusOK, []map[string]interface{}{{
 		"email":      "mockport@example.test",
 		"primary":    true,
 		"verified":   true,
@@ -208,7 +208,7 @@ func (r *routes) writeOrgs(w http.ResponseWriter, req *http.Request) {
 		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
 		return
 	}
-	writeJSON(w, http.StatusOK, []map[string]interface{}{{
+	httpx.WriteJSON(w, http.StatusOK, []map[string]interface{}{{
 		"login":       "mockport-org",
 		"id":          431010,
 		"description": "Mockport fake organization",
@@ -279,7 +279,7 @@ func normalizeScenario(s string) string {
 }
 
 func writeOAuthError(w http.ResponseWriter, status int, code, description string) {
-	writeJSON(w, status, map[string]string{
+	httpx.WriteJSON(w, status, map[string]string{
 		"error":             code,
 		"error_description": description,
 		"error_uri":         "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors",
@@ -287,15 +287,9 @@ func writeOAuthError(w http.ResponseWriter, status int, code, description string
 }
 
 func writeAPIError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{
+	httpx.WriteJSON(w, status, map[string]string{
 		"message":           message,
 		"documentation_url": "https://docs.github.com/rest",
 		"status":            http.StatusText(status),
 	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
 }

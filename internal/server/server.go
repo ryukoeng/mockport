@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/compat"
@@ -35,7 +36,14 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
 	}
 
-	for name, adapterCfg := range cfg.Adapters {
+	adapterNames := make([]string, 0, len(cfg.Adapters))
+	for name := range cfg.Adapters {
+		adapterNames = append(adapterNames, name)
+	}
+	sort.Strings(adapterNames)
+
+	for _, name := range adapterNames {
+		adapterCfg := cfg.Adapters[name]
 		if !adapterCfg.Enabled {
 			continue
 		}
@@ -49,7 +57,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 			BasePath:     adapterCfg.BasePath,
 			Enabled:      true,
 			Scenario:     adapterCfg.Scenario,
-			Maturity:     meta.Maturity,
+			Maturity:     string(meta.Maturity),
 			Capabilities: append([]string(nil), meta.Capabilities...),
 		})
 		coverage = append(coverage, scenarioCoverage(meta))
@@ -117,6 +125,10 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
+func (r *statusRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
+}
+
 func recordMiddleware(next http.Handler, rec *report.Recorder, adapters []report.AdapterStatus) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
@@ -145,7 +157,7 @@ func behaviorMatrix(meta adapter.Metadata) []report.BehaviorMatrixEntry {
 	for _, endpoint := range meta.Endpoints {
 		matrix = append(matrix, report.BehaviorMatrixEntry{
 			Adapter:            meta.Name,
-			Maturity:           meta.Maturity,
+			Maturity:           string(meta.Maturity),
 			Method:             endpoint.Method,
 			Path:               endpoint.Path,
 			SupportedScenarios: append([]string(nil), endpoint.SupportedScenarios...),

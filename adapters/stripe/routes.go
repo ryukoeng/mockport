@@ -1,13 +1,13 @@
 package stripe
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -293,8 +293,7 @@ func (rt *routes) writeJSON(w http.ResponseWriter, status int, body interface{})
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Request-Id", "req_mockport")
 	w.Header().Set("Stripe-Version", "2025-10-29.clover")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
+	httpx.WriteJSON(w, status, body)
 }
 
 func (rt *routes) writeValidationError(w http.ResponseWriter, field string) {

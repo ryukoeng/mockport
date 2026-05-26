@@ -19,10 +19,10 @@ type Adapter interface {
 
 type Metadata struct {
 	Name              string
-	Maturity          string
+	Maturity          Maturity
 	ProviderVersion   string
 	SDKVersions       []SDKVersion
-	Levels            []string
+	Levels            []Level
 	Capabilities      []string
 	Scenarios         []Scenario
 	Endpoints         []Endpoint
@@ -48,9 +48,31 @@ type Endpoint struct {
 	Notes              string
 }
 
-func ValidateMaturity(maturity string) bool {
+type Maturity string
+
+const (
+	MaturityExperimental       Maturity = "experimental"
+	MaturityPartial            Maturity = "partial"
+	MaturitySDKCompatible      Maturity = "sdk-compatible"
+	MaturityWorkflowCompatible Maturity = "workflow-compatible"
+	MaturityProviderCompatible Maturity = "provider-compatible"
+)
+
+type Level string
+
+const (
+	LevelWire     Level = "wire"
+	LevelSDK      Level = "sdk"
+	LevelClient   Level = "client"
+	LevelWorkflow Level = "workflow"
+	LevelState    Level = "state"
+	LevelError    Level = "error"
+	LevelContract Level = "contract"
+)
+
+func ValidateMaturity(maturity Maturity) bool {
 	switch maturity {
-	case "experimental", "partial", "sdk-compatible", "workflow-compatible", "provider-compatible":
+	case MaturityExperimental, MaturityPartial, MaturitySDKCompatible, MaturityWorkflowCompatible, MaturityProviderCompatible:
 		return true
 	default:
 		return false

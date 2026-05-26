@@ -41,6 +41,7 @@
 | Phase 20 | GitHub OAuth provider compatibility | done | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
 | Phase 21 | Slack provider compatibility | done | Slack reaches workflow-compatible status with client contracts and support matrix |
 | Phase 22 | Provider-compatible release track | done | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
+| Phase 22.1 | Go engineering hardening before docs alignment | done | Streaming middleware, typed metadata, deterministic reports, helper boundaries, and regexp cleanup are hardened before Phase 23 |
 | Phase 23 | Roadmap and docs alignment | pending | Roadmap, README, docs, changelog, and compatibility report explain the same current state |
 | Phase 24 | GitHub Actions execution recovery | pending | CI and compatibility workflows create observable GitHub Actions runs or the blocker is documented |
 | Phase 25 | SDK contract all-provider harness | pending | `run-sdk-contracts.sh all` runs every provider-specific contract, not a placeholder |
@@ -287,6 +288,17 @@
 | P22-T02 | Generate compatibility reports | done | Report generation tests assert adapter scores, SDK versions, known gaps |
 | P22-T03 | Define provider-compatible release criteria | done | Release check enforces minimum score and passing contracts before maturity promotion |
 
+## Phase 22.1 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P22.1-T01 | Preserve streaming through report middleware | done | Server test fails until `recordMiddleware` allows `http.ResponseController` flush through the wrapped writer |
+| P22.1-T02 | Flush OpenAI SSE chunks | done | OpenAI adapter test fails until `stream_success` calls a flush-capable response path |
+| P22.1-T03 | Add typed adapter metadata constants | done | Adapter tests fail/compile-fail until maturity and compatibility levels have typed constants |
+| P22.1-T04 | Make report adapter ordering deterministic | done | Server report test fails until adapters, coverage, compatibility, and state report entries are sorted by adapter name |
+| P22.1-T05 | Extract minimal adapter JSON helper | done | Existing adapter tests must pass after removing duplicated JSON writer implementations |
+| P22.1-T06 | Move repeated regexp compilation to package-level values | done | Existing state and compat tests must pass after package-level regexp cleanup |
+
 ## Phase 23 Tasks
 
 | ID | Task | Status | Test First |
@@ -379,3 +391,7 @@
 - Passed: `bash scripts/smoke-empty-dir.sh` with public env safe-to-commit report field.
 - Passed: `bash scripts/check-doc-links.sh`.
 - Passed: `bash scripts/smoke-multi-adapter.sh`.
+- Passed: Phase 22.1 RED checks for streaming middleware, OpenAI SSE flush, typed metadata constants, and deterministic report order.
+- Passed: `go test ./...` after Phase 22.1.
+- Passed: `go vet ./...` after Phase 22.1.
+- Passed: `go test -race ./...` after Phase 22.1.

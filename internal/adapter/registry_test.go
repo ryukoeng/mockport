@@ -13,7 +13,7 @@ func (a fakeAdapter) FakeEnv(cfg Config) map[string]string {
 	return map[string]string{"FAKE_URL": "http://localhost"}
 }
 func (a fakeAdapter) Metadata() Metadata {
-	return Metadata{Name: a.name, Maturity: "experimental"}
+	return Metadata{Name: a.name, Maturity: MaturityExperimental}
 }
 
 func TestRegistryReturnsRegisteredAdapter(t *testing.T) {
@@ -30,12 +30,32 @@ func TestRegistryReturnsRegisteredAdapter(t *testing.T) {
 }
 
 func TestValidateMaturity(t *testing.T) {
-	for _, maturity := range []string{"experimental", "partial", "sdk-compatible", "workflow-compatible", "provider-compatible"} {
+	for _, maturity := range []Maturity{
+		MaturityExperimental,
+		MaturityPartial,
+		MaturitySDKCompatible,
+		MaturityWorkflowCompatible,
+		MaturityProviderCompatible,
+	} {
 		if !ValidateMaturity(maturity) {
 			t.Fatalf("expected maturity %q to be valid", maturity)
 		}
 	}
-	if ValidateMaturity("complete") {
+	if ValidateMaturity(Maturity("complete")) {
 		t.Fatal("unexpected valid maturity for complete")
+	}
+}
+
+func TestCompatibilityLevelsAreTypedConstants(t *testing.T) {
+	meta := Metadata{
+		Name:     "fake",
+		Maturity: MaturityWorkflowCompatible,
+		Levels:   []Level{LevelWire, LevelSDK, LevelWorkflow, LevelState, LevelError},
+	}
+	if meta.Maturity != MaturityWorkflowCompatible {
+		t.Fatalf("maturity = %q", meta.Maturity)
+	}
+	if len(meta.Levels) != 5 || meta.Levels[0] != LevelWire {
+		t.Fatalf("levels = %#v", meta.Levels)
 	}
 }

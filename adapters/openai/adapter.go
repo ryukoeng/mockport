@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -50,10 +51,10 @@ func (a Adapter) Metadata() adapter.Metadata {
 	}
 	return adapter.Metadata{
 		Name:            "openai",
-		Maturity:        "workflow-compatible",
+		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-02-01",
 		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.39.0"}},
-		Levels:          []string{"wire", "sdk", "workflow", "state", "error"},
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities:    []string{"models", "chat_completions", "responses", "embeddings", "files", "batches"},
 		Scenarios:       scenarios,
 		StatefulResources: []string{
@@ -87,7 +88,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":
-		writeJSON(w, http.StatusOK, map[string]interface{}{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
 	case req.Method == http.MethodPost && path == "/v1/chat/completions":
 		r.writeCompletion(w, req, "chat.completion")
 	case req.Method == http.MethodPost && path == "/v1/responses":
@@ -178,14 +179,14 @@ func (r *routes) writeStatefulCompletion(w http.ResponseWriter, req *http.Reques
 	}
 	response := resource.Data
 	response["id"] = resource.ID
-	writeJSON(w, http.StatusOK, response)
+	httpx.WriteJSON(w, http.StatusOK, response)
 }
 
 func (r *routes) writeResponseLookup(w http.ResponseWriter, id string) {
 	if resource, ok := r.store.Get("openai", "response", id); ok {
 		body := resource.Data
 		body["id"] = resource.ID
-		writeJSON(w, http.StatusOK, body)
+		httpx.WriteJSON(w, http.StatusOK, body)
 		return
 	}
 	writeError(w, http.StatusNotFound, "not_found", "Mockport response not found")
@@ -239,7 +240,7 @@ func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
 	if payload["encoding_format"] == "base64" {
 		embedding = base64Embedding([]float32{0.01, 0.02, 0.03})
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":     resource.ID,
 		"object": "list",
 		"data": []map[string]interface{}{{
@@ -269,7 +270,7 @@ func (r *routes) writeFile(w http.ResponseWriter, req *http.Request) {
 	})
 	body := resource.Data
 	body["id"] = resource.ID
-	writeJSON(w, http.StatusOK, body)
+	httpx.WriteJSON(w, http.StatusOK, body)
 }
 
 func (r *routes) writeBatch(w http.ResponseWriter, req *http.Request) {
@@ -291,14 +292,14 @@ func (r *routes) writeBatch(w http.ResponseWriter, req *http.Request) {
 	})
 	body := resource.Data
 	body["id"] = resource.ID
-	writeJSON(w, http.StatusOK, body)
+	httpx.WriteJSON(w, http.StatusOK, body)
 }
 
 func (r *routes) writeBatchLookup(w http.ResponseWriter, id string) {
 	if resource, ok := r.store.Get("openai", "batch", id); ok {
 		body := resource.Data
 		body["id"] = resource.ID
-		writeJSON(w, http.StatusOK, body)
+		httpx.WriteJSON(w, http.StatusOK, body)
 		return
 	}
 	writeError(w, http.StatusNotFound, "not_found", "Mockport batch not found")
@@ -381,7 +382,9 @@ func writeChatCompletionStream(w http.ResponseWriter) {
 	}
 	data, _ := json.Marshal(chunk)
 	_, _ = fmt.Fprintf(w, "data: %s\n\n", data)
+	_ = http.NewResponseController(w).Flush()
 	_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
+	_ = http.NewResponseController(w).Flush()
 }
 
 func normalizeScenario(s string) string {
@@ -392,11 +395,5 @@ func normalizeScenario(s string) string {
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
-	writeJSON(w, status, map[string]interface{}{"error": map[string]string{"type": "mockport_error", "code": code, "message": message}})
-}
-
-func writeJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
+	httpx.WriteJSON(w, status, map[string]interface{}{"error": map[string]string{"type": "mockport_error", "code": code, "message": message}})
 }

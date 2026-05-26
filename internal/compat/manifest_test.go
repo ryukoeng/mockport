@@ -59,10 +59,10 @@ func TestManifestValidationRejectsInvalidLevels(t *testing.T) {
 func TestManifestFromAdapterMetadata(t *testing.T) {
 	meta := adapter.Metadata{
 		Name:            "openai",
-		Maturity:        "experimental",
+		Maturity:        adapter.MaturityExperimental,
 		ProviderVersion: "2025-10-29.clover",
 		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.0.0"}},
-		Levels:          []string{"wire", "sdk", "state"},
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelState},
 		Capabilities:    []string{"chat_completions"},
 		Scenarios:       []adapter.Scenario{{Name: "chat_success", Supported: true}},
 		Endpoints:       []adapter.Endpoint{{Method: http.MethodPost, Path: "/openai/v1/chat/completions", SupportedScenarios: []string{"chat_success"}}},

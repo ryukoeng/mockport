@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+var idInvalidChars = regexp.MustCompile(`[^a-z0-9_]+`)
+
 type Resource struct {
 	ID       string         `json:"id"`
 	Adapter  string         `json:"adapter"`
@@ -134,7 +136,7 @@ func (s scope) idPrefix() string {
 func sanitize(value string) string {
 	value = strings.ToLower(strings.TrimSpace(value))
 	value = strings.ReplaceAll(value, "-", "_")
-	value = regexp.MustCompile(`[^a-z0-9_]+`).ReplaceAllString(value, "_")
+	value = idInvalidChars.ReplaceAllString(value, "_")
 	value = strings.Trim(value, "_")
 	if value == "" {
 		return "resource"

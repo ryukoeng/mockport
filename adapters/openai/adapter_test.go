@@ -126,6 +126,18 @@ func TestChatCompletionStreamSuccessReturnsSSE(t *testing.T) {
 	}
 }
 
+func TestChatCompletionStreamSuccessFlushesSSE(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "stream_success"})
+	rec := &flushRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	req := httptest.NewRequest(http.MethodPost, "/openai/v1/chat/completions", nil)
+	mux.ServeHTTP(rec, req)
+
+	if !rec.flushed {
+		t.Fatalf("stream response did not flush")
+	}
+}
+
 func TestChatCompletionSuccessStillReturnsJSON(t *testing.T) {
 	rec := performRequest(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"}, http.MethodPost, "/openai/v1/chat/completions")
 	if contentType := rec.Header().Get("Content-Type"); !strings.HasPrefix(contentType, "application/json") {
@@ -134,6 +146,16 @@ func TestChatCompletionSuccessStillReturnsJSON(t *testing.T) {
 	if strings.Contains(rec.Body.String(), "data: [DONE]") {
 		t.Fatalf("non-stream response used SSE body: %s", rec.Body.String())
 	}
+}
+
+type flushRecorder struct {
+	*httptest.ResponseRecorder
+	flushed bool
+}
+
+func (r *flushRecorder) Flush() {
+	r.flushed = true
+	r.ResponseRecorder.Flush()
 }
 
 func TestEmbeddingsFilesAndBatchesAreStateful(t *testing.T) {

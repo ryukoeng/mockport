@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -43,9 +44,9 @@ func (a Adapter) FakeEnv(cfg adapter.Config) map[string]string {
 func (a Adapter) Metadata() adapter.Metadata {
 	return adapter.Metadata{
 		Name:            "slack",
-		Maturity:        "workflow-compatible",
+		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-02-01",
-		Levels:          []string{"wire", "client", "workflow", "state", "error"},
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelClient, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities:    []string{"auth_test", "chat_post_message", "chat_update", "chat_delete", "conversations_list", "conversations_history", "events_url_verification", "events_message_callback"},
 		StatefulResources: []string{
 			"channel",
@@ -108,7 +109,7 @@ func (r *routes) writeAuthTest(w http.ResponseWriter) {
 		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
 		"url":     "https://mockport.slack.test/",
 		"team":    "Mockport",
@@ -153,7 +154,7 @@ func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 			"team":    "T_MOCKPORT",
 			"user":    "U_MOCKPORT",
 		})
-		writeJSON(w, http.StatusOK, map[string]interface{}{
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"ok":      true,
 			"channel": channel,
 			"ts":      message.ID,
@@ -184,7 +185,7 @@ func (r *routes) writeUpdateMessage(w http.ResponseWriter, req *http.Request) {
 	}
 	resource.Data["text"] = text
 	r.store.Update("slack", "message", ts, resource.Data)
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
 		"channel": channel,
 		"ts":      ts,
@@ -210,7 +211,7 @@ func (r *routes) writeDeleteMessage(w http.ResponseWriter, req *http.Request) {
 	}
 	resource.Data["deleted"] = true
 	r.store.Update("slack", "message", ts, resource.Data)
-	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "channel": channel, "ts": ts})
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "channel": channel, "ts": ts})
 }
 
 func (r *routes) writeConversationsList(w http.ResponseWriter) {
@@ -218,7 +219,7 @@ func (r *routes) writeConversationsList(w http.ResponseWriter) {
 		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok": true,
 		"channels": []map[string]interface{}{{
 			"id":         "C_MOCKPORT",
@@ -255,7 +256,7 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 		}
 		messages = append(messages, messageBody(resource.ID, resource.Data))
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "messages": messages})
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "messages": messages})
 }
 
 func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
@@ -275,7 +276,7 @@ func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 	}
 	switch payload["type"] {
 	case "url_verification":
-		writeJSON(w, http.StatusOK, map[string]interface{}{"challenge": payload["challenge"]})
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"challenge": payload["challenge"]})
 	case "event_callback":
 		if event, ok := payload["event"].(map[string]any); ok && event["type"] == "message" {
 			channel, _ := event["channel"].(string)
@@ -296,7 +297,7 @@ func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 				"user":    user,
 			})
 		}
-		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true})
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true})
 	default:
 		writeSlackError(w, http.StatusOK, "unsupported_event")
 	}
@@ -366,12 +367,6 @@ func normalizeScenario(s string) string {
 	return s
 }
 
-func writeJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
-}
-
 func writeSlackError(w http.ResponseWriter, status int, code string) {
-	writeJSON(w, status, map[string]interface{}{"ok": false, "error": code})
+	httpx.WriteJSON(w, status, map[string]interface{}{"ok": false, "error": code})
 }

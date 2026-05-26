@@ -9,6 +9,8 @@ import (
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 )
 
+var endpointIDInvalidChars = regexp.MustCompile(`[^a-z0-9_]+`)
+
 type Level string
 
 const (
@@ -118,7 +120,7 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 	manifest := Manifest{
 		Adapter:         meta.Name,
 		ProviderVersion: providerVersion,
-		Maturity:        meta.Maturity,
+		Maturity:        string(meta.Maturity),
 		Levels:          metadataLevels(meta.Levels),
 	}
 	for _, sdk := range meta.SDKVersions {
@@ -144,7 +146,7 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 	return manifest
 }
 
-func metadataLevels(values []string) []Level {
+func metadataLevels(values []adapter.Level) []Level {
 	if len(values) == 0 {
 		return []Level{LevelWire}
 	}
@@ -165,7 +167,7 @@ func endpointID(method, path string) string {
 	value := strings.ToLower(method + "_" + strings.Trim(path, "/"))
 	value = strings.ReplaceAll(value, "/", "_")
 	value = strings.ReplaceAll(value, "-", "_")
-	value = regexp.MustCompile(`[^a-z0-9_]+`).ReplaceAllString(value, "_")
+	value = endpointIDInvalidChars.ReplaceAllString(value, "_")
 	value = strings.Trim(value, "_")
 	if value == "" {
 		return "endpoint"

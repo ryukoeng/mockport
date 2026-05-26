@@ -65,10 +65,10 @@ func (a Adapter) Metadata() adapter.Metadata {
 	scenarioNames := []string{"payment_success", "payment_failed", "auth_error", "rate_limited", "timeout"}
 	return adapter.Metadata{
 		Name:            "stripe",
-		Maturity:        "workflow-compatible",
+		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-10-29.clover",
 		SDKVersions:     []adapter.SDKVersion{{Name: "stripe", Version: "22.1.1"}},
-		Levels:          []string{"wire", "sdk", "workflow", "state", "error"},
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities: []string{
 			"checkout_sessions",
 			"payment_intents",

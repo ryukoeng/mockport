@@ -42,6 +42,7 @@ tasks/
   phase20_github_oauth_provider_compatibility.md
   phase21_slack_provider_compatibility.md
   phase22_provider_compatible_release_track.md
+  phase22_1_go_engineering_hardening.md
   phase23_roadmap_docs_alignment.md
   phase24_github_actions_execution_recovery.md
   phase25_sdk_contract_all_provider_harness.md
@@ -123,6 +124,8 @@ Phase 20 は「GitHub OAuth adapter を client/workflow-compatible local API に
 Phase 21 は「Slack adapter を client/workflow-compatible local API に引き上げる」までです。
 
 Phase 22 は「provider-compatible release track と compatibility report を継続運用する」までです。
+
+Phase 22.1 は「Phase 23 の docs alignment に入る前に、Go の `net/http` streaming、typed metadata、deterministic report、helper 境界、軽量 performance cleanup を固める」までです。
 
 Phase 23 は「Phase 22 完了後の実態に合わせて roadmap、README、docs、changelog、compatibility report の期待値差をなくす」までです。
 
