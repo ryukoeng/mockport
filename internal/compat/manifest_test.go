@@ -88,3 +88,25 @@ func TestManifestFromAdapterMetadata(t *testing.T) {
 		t.Fatalf("scenarios = %#v, want built-in scenario", manifest.Scenarios)
 	}
 }
+
+func TestManifestFromAdapterMetadataPreservesClientLevel(t *testing.T) {
+	meta := adapter.Metadata{
+		Name:            "slack",
+		Maturity:        adapter.MaturityWorkflowCompatible,
+		ProviderVersion: "2025-02-01",
+		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelClient, adapter.LevelWorkflow},
+		Scenarios:       []adapter.Scenario{{Name: "message_success", Supported: true}},
+		Endpoints:       []adapter.Endpoint{{Method: http.MethodPost, Path: "/slack/api/chat.postMessage", SupportedScenarios: []string{"message_success"}}},
+	}
+
+	manifest := FromMetadata(meta)
+	if len(manifest.Levels) != 3 {
+		t.Fatalf("levels = %#v, want client level preserved", manifest.Levels)
+	}
+	if manifest.Levels[1] != LevelClient {
+		t.Fatalf("levels = %#v, want client at index 1", manifest.Levels)
+	}
+	if err := manifest.Validate(); err != nil {
+		t.Fatalf("Validate() with client level error = %v", err)
+	}
+}

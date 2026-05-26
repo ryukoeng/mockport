@@ -3,6 +3,7 @@ package report
 import (
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestRecorderStoresRequestsAndSafety(t *testing.T) {
@@ -89,5 +90,19 @@ func TestRecorderStoresStateCoverage(t *testing.T) {
 	}
 	if len(got.StatefulResources) != 2 {
 		t.Fatalf("stateful resources = %#v", got.StatefulResources)
+	}
+}
+
+func TestRecorderUsesInjectedClockForDeterministicRequests(t *testing.T) {
+	rec := NewRecorder()
+	rec.SetClock(func() time.Time {
+		return time.Date(2026, 5, 26, 12, 0, 0, 0, time.UTC)
+	})
+
+	rec.RecordRequest(http.MethodGet, "/health", http.StatusOK)
+
+	snapshot := rec.Snapshot()
+	if got := snapshot.Requests[0].Timestamp; got != "2026-05-26T12:00:00Z" {
+		t.Fatalf("timestamp = %q", got)
 	}
 }

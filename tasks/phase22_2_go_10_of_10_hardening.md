@@ -37,31 +37,31 @@ Go 実装として 10/10 と言える状態は、次を満たすこと。
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P22.2-T01 | Align adapter and compatibility level types | pending | Compat test fails until `adapter.LevelClient` is either accepted by compat or removed from adapter metadata without silent data loss |
-| P22.2-T02 | Add metadata validation gate | pending | Adapter metadata validation test fails on invalid maturity, invalid level, empty provider version, duplicate scenarios, and duplicate endpoints |
-| P22.2-T03 | Add typed provider response models for core Stripe paths | pending | Stripe adapter tests fail until checkout session, payment intent, and Stripe error responses are encoded from typed structs |
-| P22.2-T04 | Add typed provider response models for core OpenAI paths | pending | OpenAI adapter tests fail until chat completion, response, embedding, and OpenAI error responses are encoded from typed structs |
-| P22.2-T05 | Add typed provider response models for OAuth and Slack core paths | pending | GitHub OAuth and Slack tests fail until token/user/message/error responses are encoded from typed structs |
-| P22.2-T06 | Restrict `map[string]any` to explicit dynamic boundaries | pending | Static Go test/check fails if new core response builders return raw `map[string]any` without an allowlist comment or helper |
-| P22.2-T07 | Introduce adapter HTTP error mapping boundary | pending | Handler tests fail until validation/state/idempotency errors are converted through typed error helpers instead of ad hoc response writes |
-| P22.2-T08 | Make JSON helper error-aware | pending | HTTP helper tests fail until JSON encode errors are observable and provider-specific headers remain intact |
-| P22.2-T09 | Add request body size limits | pending | Handler tests fail until oversized JSON/form/multipart requests return controlled 413/400 responses without unbounded reads |
-| P22.2-T10 | Add context-aware request handling guidelines and tests | pending | Webhook/client tests fail until request cancellation is propagated and long outbound work uses request context |
-| P22.2-T11 | Add graceful server shutdown to `mockport run` | pending | CLI/runtime test fails until `mockport run` uses `http.Server`, signal handling, and bounded shutdown |
-| P22.2-T12 | Improve listener and port error UX | pending | CLI test fails until bind failures return actionable errors with host/port context |
-| P22.2-T13 | Harden streaming behavior through middleware | pending | Server/OpenAI tests fail until SSE works through recorder middleware with flush, status recording, and report capture |
-| P22.2-T14 | Add deep clone guarantees for shared state | pending | State tests fail until nested maps/slices in resources cannot be mutated after create/get/list/update |
-| P22.2-T15 | Add registry duplicate and nil adapter protections | pending | Registry tests fail until duplicate names and nil/invalid adapters are rejected with clear errors |
-| P22.2-T16 | Replace large route switches where they reduce clarity | pending | Route registration tests fail until large adapters expose deterministic route tables or small handler groups without changing paths |
-| P22.2-T17 | Add table-driven conformance tests for every adapter metadata endpoint | pending | Metadata/report test fails until every declared endpoint has at least one matching handler test or documented unsupported behavior |
-| P22.2-T18 | Add package-level godoc for exported internal contracts | pending | Static doc check fails until exported adapter/compat/state/report contracts have concise comments |
-| P22.2-T19 | Add benchmark coverage for hot helpers | pending | Benchmark target fails until state store, report snapshot, compatibility conversion, and JSON helper benchmarks exist |
-| P22.2-T20 | Add staticcheck gate | pending | CI/static script fails until `staticcheck ./...` is installed or explicitly documented as unavailable in local-only fallback |
-| P22.2-T21 | Add govulncheck gate | pending | CI/static script fails until `govulncheck ./...` runs in CI or release readiness checks |
-| P22.2-T22 | Add race test gate to CI | pending | Workflow/static check fails until `go test -race ./...` is part of scheduled or pre-release CI |
-| P22.2-T23 | Add lint policy for ignored errors | pending | Static check fails until intentionally ignored errors are limited to documented, low-risk writes/closes or helper-level best-effort paths |
-| P22.2-T24 | Add deterministic test mode for timestamps and request IDs | pending | Report tests fail until time/request IDs can be injected or asserted deterministically without sleep/flaky behavior |
-| P22.2-T25 | Add Go engineering readiness report | pending | Script/test fails until it summarizes test/vet/race/staticcheck/govulncheck status and remaining accepted gaps |
+| P22.2-T01 | Align adapter and compatibility level types | done | Compat test fails until `adapter.LevelClient` is either accepted by compat or removed from adapter metadata without silent data loss |
+| P22.2-T02 | Add metadata validation gate | done | Adapter metadata validation test fails on invalid maturity, invalid level, empty provider version, duplicate scenarios, and duplicate endpoints |
+| P22.2-T03 | Add typed provider response models for core Stripe paths | done | Stripe adapter tests fail until checkout session, payment intent, and Stripe error responses are encoded from typed structs |
+| P22.2-T04 | Add typed provider response models for core OpenAI paths | done | OpenAI adapter tests fail until chat completion, response, embedding, and OpenAI error responses are encoded from typed structs |
+| P22.2-T05 | Add typed provider response models for OAuth and Slack core paths | done | GitHub OAuth and Slack tests fail until token/user/message/error responses are encoded from typed structs |
+| P22.2-T06 | Restrict `map[string]any` to explicit dynamic boundaries | done | Static Go test/check fails if new core response builders return raw `map[string]any` without an allowlist comment or helper |
+| P22.2-T07 | Introduce adapter HTTP error mapping boundary | done | Handler tests fail until validation/state/idempotency errors are converted through typed error helpers instead of ad hoc response writes |
+| P22.2-T08 | Make JSON helper error-aware | done | HTTP helper tests fail until JSON encode errors are observable and provider-specific headers remain intact |
+| P22.2-T09 | Add request body size limits | done | Handler tests fail until oversized JSON/form/multipart requests return controlled 413/400 responses without unbounded reads |
+| P22.2-T10 | Add context-aware request handling guidelines and tests | done | Webhook/client tests fail until request cancellation is propagated and long outbound work uses request context |
+| P22.2-T11 | Add graceful server shutdown to `mockport run` | done | CLI/runtime test fails until `mockport run` uses `http.Server`, signal handling, and bounded shutdown |
+| P22.2-T12 | Improve listener and port error UX | done | CLI test fails until bind failures return actionable errors with host/port context |
+| P22.2-T13 | Harden streaming behavior through middleware | done | Server/OpenAI tests fail until SSE works through recorder middleware with flush, status recording, and report capture |
+| P22.2-T14 | Add deep clone guarantees for shared state | done | State tests fail until nested maps/slices in resources cannot be mutated after create/get/list/update |
+| P22.2-T15 | Add registry duplicate and nil adapter protections | done | Registry tests fail until duplicate names and nil/invalid adapters are rejected with clear errors |
+| P22.2-T16 | Replace large route switches where they reduce clarity | done | Route registration tests fail until large adapters expose deterministic route tables or small handler groups without changing paths |
+| P22.2-T17 | Add table-driven conformance tests for every adapter metadata endpoint | done | Metadata/report test fails until every declared endpoint has at least one matching handler test or documented unsupported behavior |
+| P22.2-T18 | Add package-level godoc for exported internal contracts | done | Static doc check fails until exported adapter/compat/state/report contracts have concise comments |
+| P22.2-T19 | Add benchmark coverage for hot helpers | done | Benchmark target fails until state store, report snapshot, compatibility conversion, and JSON helper benchmarks exist |
+| P22.2-T20 | Add staticcheck gate | done | CI/static script fails until `staticcheck ./...` is installed or explicitly documented as unavailable in local-only fallback |
+| P22.2-T21 | Add govulncheck gate | done | CI/static script fails until `govulncheck ./...` runs in CI or release readiness checks |
+| P22.2-T22 | Add race test gate to CI | done | Workflow/static check fails until `go test -race ./...` is part of scheduled or pre-release CI |
+| P22.2-T23 | Add lint policy for ignored errors | done | Static check fails until intentionally ignored errors are limited to documented, low-risk writes/closes or helper-level best-effort paths |
+| P22.2-T24 | Add deterministic test mode for timestamps and request IDs | done | Report tests fail until time/request IDs can be injected or asserted deterministically without sleep/flaky behavior |
+| P22.2-T25 | Add Go engineering readiness report | done | Script/test fails until it summarizes test/vet/race/staticcheck/govulncheck status and remaining accepted gaps |
 
 ## Acceptance Criteria
 

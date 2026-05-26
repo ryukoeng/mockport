@@ -10,3 +10,23 @@ type stripeError struct {
 	Param   string `json:"param,omitempty"`
 	Message string `json:"message"`
 }
+
+type checkoutSessionResponse struct {
+	ID                string `json:"id,omitempty"`
+	Object            string `json:"object"`
+	PaymentStatus     string `json:"payment_status"`
+	ClientReferenceID string `json:"client_reference_id,omitempty"`
+}
+
+type paymentIntentResponse struct {
+	ID       string `json:"id,omitempty"`
+	Object   string `json:"object"`
+	Status   string `json:"status"`
+	Amount   int    `json:"amount,omitempty"`
+	Currency string `json:"currency,omitempty"`
+}
+
+type listResponse struct {
+	Object string `json:"object"`
+	Data   any    `json:"data"`
+}

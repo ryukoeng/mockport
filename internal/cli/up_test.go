@@ -137,7 +137,7 @@ func TestUpCommandExplainsMissingDocker(t *testing.T) {
 	if err == nil {
 		t.Fatal("execute up returned nil, want error")
 	}
-	if !strings.Contains(err.Error(), "Docker is required") || !strings.Contains(err.Error(), "docker compose") {
+	if !strings.Contains(strings.ToLower(err.Error()), "docker is required") || !strings.Contains(err.Error(), "docker compose") {
 		t.Fatalf("error = %q, want Docker guidance", err.Error())
 	}
 }

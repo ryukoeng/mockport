@@ -31,10 +31,7 @@ func TestConfiguredHandlerServesMultipleAdapters(t *testing.T) {
 		t.Fatalf("validate config: %v", err)
 	}
 	reg := adapter.NewRegistry()
-	reg.Register(stripe.New())
-	reg.Register(openai.New())
-	reg.Register(githuboauth.New())
-	reg.Register(slack.New())
+	registerTestAdapters(t, reg)
 	handler, err := NewConfiguredHandler(cfg, reg, report.NewRecorder())
 	if err != nil {
 		t.Fatalf("new handler: %v", err)
@@ -88,10 +85,7 @@ func TestConfiguredHandlerReportOrderIsDeterministic(t *testing.T) {
 	want := []string{"github-oauth", "openai", "slack", "stripe"}
 	for i := 0; i < 25; i++ {
 		reg := adapter.NewRegistry()
-		reg.Register(stripe.New())
-		reg.Register(openai.New())
-		reg.Register(githuboauth.New())
-		reg.Register(slack.New())
+		registerTestAdapters(t, reg)
 		handler, err := NewConfiguredHandler(cfg, reg, report.NewRecorder())
 		if err != nil {
 			t.Fatalf("new handler: %v", err)
@@ -109,6 +103,15 @@ func TestConfiguredHandlerReportOrderIsDeterministic(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("adapter order = %#v, want %#v", got, want)
+		}
+	}
+}
+
+func registerTestAdapters(t *testing.T, reg *adapter.Registry) {
+	t.Helper()
+	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New()} {
+		if err := reg.Register(adapterImpl); err != nil {
+			t.Fatalf("register %s: %v", adapterImpl.Name(), err)
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package githuboauth
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -75,6 +76,7 @@ type routes struct {
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
+	httpx.LimitRequestBody(w, req)
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/login/oauth/authorize":
@@ -132,10 +134,12 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 	case "redirect_uri_mismatch":
 		writeOAuthError(w, http.StatusBadRequest, "redirect_uri_mismatch", "The redirect_uri does not match the authorization request.")
 	default:
-		_ = req.ParseForm()
+		if !parseOAuthForm(w, req) {
+			return
+		}
 		code := req.Form.Get("code")
 		if code == "" {
-			httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"access_token": "gho_mockport", "token_type": "bearer", "scope": "read:user"})
+			httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: "gho_mockport", TokenType: "bearer", Scope: "read:user"})
 			return
 		}
 		codeResource, ok := r.store.Get("github-oauth", "oauth_code", code)
@@ -153,7 +157,7 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			"user":       codeResource.Data["user"],
 			"expires_at": "2999-01-01T00:00:00Z",
 		})
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"access_token": token.ID, "token_type": "bearer", "scope": codeResource.Data["scope"]})
+		httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: token.ID, TokenType: "bearer", Scope: codeResource.Data["scope"]})
 	}
 }
 
@@ -169,14 +173,13 @@ func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
 			writeAPIError(w, http.StatusUnauthorized, "Bad credentials")
 			return
 		}
-		body := map[string]interface{}{
-			"login": "mockport-user",
-			"id":    43101,
-			"name":  "Mockport User",
-			"email": "mockport@example.test",
-			"scope": resource.Data["scope"],
-		}
-		httpx.WriteJSON(w, http.StatusOK, body)
+		httpx.WriteJSON(w, http.StatusOK, userResponse{
+			Login: "mockport-user",
+			ID:    43101,
+			Name:  "Mockport User",
+			Email: "mockport@example.test",
+			Scope: resource.Data["scope"],
+		})
 	}
 }
 
@@ -190,12 +193,7 @@ func (r *routes) writeEmails(w http.ResponseWriter, req *http.Request) {
 		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, []map[string]interface{}{{
-		"email":      "mockport@example.test",
-		"primary":    true,
-		"verified":   true,
-		"visibility": "public",
-	}})
+	httpx.WriteJSON(w, http.StatusOK, []emailResponse{{Email: "mockport@example.test", Primary: true, Verified: true, Visibility: "public"}})
 }
 
 func (r *routes) writeOrgs(w http.ResponseWriter, req *http.Request) {
@@ -208,11 +206,7 @@ func (r *routes) writeOrgs(w http.ResponseWriter, req *http.Request) {
 		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, []map[string]interface{}{{
-		"login":       "mockport-org",
-		"id":          431010,
-		"description": "Mockport fake organization",
-	}})
+	httpx.WriteJSON(w, http.StatusOK, []orgResponse{{Login: "mockport-org", ID: 431010, Description: "Mockport fake organization"}})
 }
 
 func (r *routes) tokenResource(req *http.Request) (state.Resource, bool) {
@@ -279,17 +273,29 @@ func normalizeScenario(s string) string {
 }
 
 func writeOAuthError(w http.ResponseWriter, status int, code, description string) {
-	httpx.WriteJSON(w, status, map[string]string{
-		"error":             code,
-		"error_description": description,
-		"error_uri":         "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors",
+	httpx.WriteJSON(w, status, oauthErrorResponse{
+		Error:            code,
+		ErrorDescription: description,
+		ErrorURI:         "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors",
 	})
 }
 
 func writeAPIError(w http.ResponseWriter, status int, message string) {
-	httpx.WriteJSON(w, status, map[string]string{
-		"message":           message,
-		"documentation_url": "https://docs.github.com/rest",
-		"status":            http.StatusText(status),
+	httpx.WriteJSON(w, status, apiErrorResponse{
+		Message:          message,
+		DocumentationURL: "https://docs.github.com/rest",
+		Status:           http.StatusText(status),
 	})
+}
+
+func parseOAuthForm(w http.ResponseWriter, req *http.Request) bool {
+	if err := req.ParseForm(); err != nil {
+		if httpx.IsRequestBodyTooLarge(err) || errors.Is(err, httpx.ErrRequestBodyTooLarge) {
+			writeOAuthError(w, http.StatusRequestEntityTooLarge, "request_too_large", "Request body is too large.")
+			return false
+		}
+		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "Request body is invalid.")
+		return false
+	}
+	return true
 }

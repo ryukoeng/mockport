@@ -89,3 +89,33 @@ func TestStoreIsConcurrencySafeForDeterministicIDs(t *testing.T) {
 		}
 	}
 }
+
+func TestStoreDeepClonesNestedData(t *testing.T) {
+	store := NewStore()
+	created, err := store.Create("stripe", "checkout_session", map[string]any{
+		"metadata": map[string]any{"order": "one"},
+		"items":    []any{map[string]any{"sku": "sku_1"}},
+	})
+	if err != nil {
+		t.Fatalf("create resource: %v", err)
+	}
+	created.Data["metadata"].(map[string]any)["order"] = "mutated"
+	created.Data["items"].([]any)[0].(map[string]any)["sku"] = "mutated"
+
+	got, ok := store.Get("stripe", "checkout_session", created.ID)
+	if !ok {
+		t.Fatal("resource not found")
+	}
+	if got.Data["metadata"].(map[string]any)["order"] != "one" {
+		t.Fatalf("metadata was mutated through clone: %#v", got.Data)
+	}
+	if got.Data["items"].([]any)[0].(map[string]any)["sku"] != "sku_1" {
+		t.Fatalf("items were mutated through clone: %#v", got.Data)
+	}
+
+	got.Data["metadata"].(map[string]any)["order"] = "get-mutated"
+	again, _ := store.Get("stripe", "checkout_session", created.ID)
+	if again.Data["metadata"].(map[string]any)["order"] != "one" {
+		t.Fatalf("stored data mutated through get clone: %#v", again.Data)
+	}
+}

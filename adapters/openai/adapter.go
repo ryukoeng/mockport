@@ -85,6 +85,7 @@ type routes struct {
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
+	httpx.LimitRequestBody(w, req)
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":
@@ -130,6 +131,10 @@ func (r *routes) writeCompletion(w http.ResponseWriter, req *http.Request, objec
 func (r *routes) writeStatefulCompletion(w http.ResponseWriter, req *http.Request, object string) {
 	payload, err := decodePayload(req)
 	if err != nil {
+		if httpx.IsRequestBodyTooLarge(err) {
+			writeError(w, http.StatusRequestEntityTooLarge, "request_too_large", "Request body is too large")
+			return
+		}
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be JSON")
 		return
 	}
@@ -192,31 +197,32 @@ func (r *routes) writeResponseLookup(w http.ResponseWriter, id string) {
 	writeError(w, http.StatusNotFound, "not_found", "Mockport response not found")
 }
 
-func completionBody(object string) map[string]interface{} {
-	body := map[string]interface{}{
-		"object": object,
-		"choices": []map[string]interface{}{{
-			"index": 0,
-			"message": map[string]string{
-				"role":    "assistant",
-				"content": "Mockport response",
-			},
+func completionBody(object string) map[string]any {
+	body := dataFromStruct(chatCompletion{
+		Object: object,
+		Choices: []chatChoice{{
+			Index:   0,
+			Message: chatMessage{Role: "assistant", Content: "Mockport response"},
 		}},
-	}
+	})
 	if object == "response" {
-		body["output_text"] = "Mockport response"
-		body["status"] = "completed"
-		body["output"] = []map[string]interface{}{{
-			"id":     "msg_mockport",
-			"type":   "message",
-			"status": "completed",
-			"role":   "assistant",
-			"content": []map[string]interface{}{{
-				"type":        "output_text",
-				"text":        "Mockport response",
-				"annotations": []interface{}{},
+		body = dataFromStruct(responseBody{
+			Object:     object,
+			Choices:    []chatChoice{{Index: 0, Message: chatMessage{Role: "assistant", Content: "Mockport response"}}},
+			OutputText: "Mockport response",
+			Status:     "completed",
+			Output: []outputItem{{
+				ID:     "msg_mockport",
+				Type:   "message",
+				Status: "completed",
+				Role:   "assistant",
+				Content: []outputContent{{
+					Type:        "output_text",
+					Text:        "Mockport response",
+					Annotations: []any{},
+				}},
 			}},
-		}}
+		})
 	}
 	return body
 }
@@ -224,6 +230,10 @@ func completionBody(object string) map[string]interface{} {
 func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
 	payload, err := decodePayload(req)
 	if err != nil {
+		if httpx.IsRequestBodyTooLarge(err) {
+			writeError(w, http.StatusRequestEntityTooLarge, "request_too_large", "Request body is too large")
+			return
+		}
 		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be JSON")
 		return
 	}
@@ -240,16 +250,12 @@ func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
 	if payload["encoding_format"] == "base64" {
 		embedding = base64Embedding([]float32{0.01, 0.02, 0.03})
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"id":     resource.ID,
-		"object": "list",
-		"data": []map[string]interface{}{{
-			"object":    "embedding",
-			"index":     0,
-			"embedding": embedding,
-		}},
-		"model": payload["model"],
-		"usage": map[string]int{"prompt_tokens": 1, "total_tokens": 1},
+	httpx.WriteJSON(w, http.StatusOK, embeddingResponse{
+		ID:     resource.ID,
+		Object: "list",
+		Data:   []embeddingData{{Object: "embedding", Index: 0, Embedding: embedding}},
+		Model:  payload["model"],
+		Usage:  usage{PromptTokens: 1, TotalTokens: 1},
 	})
 }
 
@@ -395,5 +401,12 @@ func normalizeScenario(s string) string {
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
-	httpx.WriteJSON(w, status, map[string]interface{}{"error": map[string]string{"type": "mockport_error", "code": code, "message": message}})
+	httpx.WriteJSON(w, status, errorBody{Error: errorDetail{Type: "mockport_error", Code: code, Message: message}})
+}
+
+func dataFromStruct(value any) map[string]any {
+	encoded, _ := json.Marshal(value)
+	var decoded map[string]any
+	_ = json.Unmarshal(encoded, &decoded)
+	return decoded
 }

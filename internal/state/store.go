@@ -155,7 +155,28 @@ func cloneData(data map[string]any) map[string]any {
 	}
 	out := make(map[string]any, len(data))
 	for name, value := range data {
-		out[name] = value
+		out[name] = cloneValue(value)
 	}
 	return out
+}
+
+func cloneValue(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		return cloneData(typed)
+	case []any:
+		out := make([]any, len(typed))
+		for i, entry := range typed {
+			out[i] = cloneValue(entry)
+		}
+		return out
+	case []map[string]any:
+		out := make([]map[string]any, len(typed))
+		for i, entry := range typed {
+			out[i] = cloneData(entry)
+		}
+		return out
+	default:
+		return value
+	}
 }

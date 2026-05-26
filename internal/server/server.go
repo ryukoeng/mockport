@@ -52,6 +52,9 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 			return nil, fmt.Errorf("adapter %s is enabled but not registered", name)
 		}
 		meta := registered.Metadata()
+		if err := adapter.ValidateMetadata(meta); err != nil {
+			return nil, fmt.Errorf("adapter %s metadata: %w", name, err)
+		}
 		adapterStatuses = append(adapterStatuses, report.AdapterStatus{
 			Name:         name,
 			BasePath:     adapterCfg.BasePath,

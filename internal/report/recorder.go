@@ -8,6 +8,7 @@ import (
 
 type Recorder struct {
 	mu             sync.Mutex
+	now            func() time.Time
 	mode           string
 	adapters       []AdapterStatus
 	requests       []Request
@@ -20,7 +21,17 @@ type Recorder struct {
 }
 
 func NewRecorder() *Recorder {
-	return &Recorder{}
+	return &Recorder{now: time.Now}
+}
+
+func (r *Recorder) SetClock(now func() time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if now == nil {
+		r.now = time.Now
+		return
+	}
+	r.now = now
 }
 
 func (r *Recorder) SetMode(mode string) {
@@ -67,9 +78,13 @@ func (r *Recorder) RecordRequestWithDetails(method, path string, status int, ada
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.nextID++
+	now := r.now
+	if now == nil {
+		now = time.Now
+	}
 	r.requests = append(r.requests, Request{
 		ID:        r.nextID,
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Timestamp: now().UTC().Format(time.RFC3339),
 		Method:    method,
 		Path:      path,
 		Status:    status,

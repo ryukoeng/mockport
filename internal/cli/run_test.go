@@ -2,10 +2,14 @@ package cli
 
 import (
 	"bytes"
+	"context"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestRunCommandRejectsMissingConfig(t *testing.T) {
@@ -106,3 +110,46 @@ adapters:
 		t.Fatalf("error leaked secret value: %q", err.Error())
 	}
 }
+
+func TestServeHTTPShutsDownWhenContextIsCanceled(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- serveHTTP(ctx, listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNoContent)
+		}))
+	}()
+
+	resp, err := http.Get("http://" + listener.Addr().String())
+	if err != nil {
+		t.Fatalf("get server: %v", err)
+	}
+	_ = resp.Body.Close()
+	cancel()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("serveHTTP returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("serveHTTP did not shut down")
+	}
+}
+
+func TestFormatListenErrorIncludesAddress(t *testing.T) {
+	err := formatListenError("127.0.0.1:43101", errAddressInUse{})
+	if !strings.Contains(err.Error(), "127.0.0.1:43101") || !strings.Contains(err.Error(), "address already in use") {
+		t.Fatalf("error = %q", err.Error())
+	}
+}
+
+type errAddressInUse struct{}
+
+func (errAddressInUse) Error() string   { return "bind: address already in use" }
+func (errAddressInUse) Timeout() bool   { return false }
+func (errAddressInUse) Temporary() bool { return false }

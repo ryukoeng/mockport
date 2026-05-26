@@ -195,6 +195,18 @@ func TestStripeValidationAndErrorHeaders(t *testing.T) {
 	assertStripeErrorCode(t, malformed, "resource_missing")
 }
 
+func TestStripeRejectsOversizedFormBody(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
+	body := "amount=1200&currency=usd&metadata=" + strings.Repeat("x", 1<<20)
+
+	rec := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/payment_intents", body, nil)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusRequestEntityTooLarge, rec.Body.String())
+	}
+	assertStripeErrorCode(t, rec, "request_too_large")
+}
+
 func TestTimeoutScenario(t *testing.T) {
 	rec := performStripeRequest(t, adapter.Config{BasePath: "/stripe", Scenario: "timeout"}, http.MethodPost, "/stripe/v1/checkout/sessions")
 	if rec.Code != http.StatusGatewayTimeout {
@@ -294,8 +306,7 @@ func createStripeResource(t *testing.T, mux http.Handler, path, body string) map
 }
 
 func serveStripeRequest(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
-	var reader *strings.Reader
-	reader = strings.NewReader(body)
+	reader := strings.NewReader(body)
 	req := httptest.NewRequest(method, path, reader)
 	if body != "" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

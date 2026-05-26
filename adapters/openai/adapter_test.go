@@ -210,6 +210,18 @@ func TestOpenAIValidationAndInvalidModelErrors(t *testing.T) {
 	assertErrorCode(t, unsupported, "unsupported_parameter")
 }
 
+func TestOpenAIRejectsOversizedJSONBody(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+	body := `{"model":"gpt-mockport","messages":[{"role":"user","content":"` + strings.Repeat("x", 1<<20) + `"}]}`
+
+	rec := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/chat/completions", body)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusRequestEntityTooLarge, rec.Body.String())
+	}
+	assertErrorCode(t, rec, "request_too_large")
+}
+
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
 	if meta.Name != "openai" {

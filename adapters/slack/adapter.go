@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -83,6 +84,7 @@ type routes struct {
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
+	httpx.LimitRequestBody(w, req)
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodPost && path == "/api/auth.test":
@@ -109,14 +111,9 @@ func (r *routes) writeAuthTest(w http.ResponseWriter) {
 		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"ok":      true,
-		"url":     "https://mockport.slack.test/",
-		"team":    "Mockport",
-		"team_id": "T_MOCKPORT",
-		"user":    "mockport-bot",
-		"user_id": "U_MOCKPORT",
-		"bot_id":  "B_MOCKPORT",
+	httpx.WriteJSON(w, http.StatusOK, authTestResponse{
+		OK: true, URL: "https://mockport.slack.test/", Team: "Mockport", TeamID: "T_MOCKPORT",
+		User: "mockport-bot", UserID: "U_MOCKPORT", BotID: "B_MOCKPORT",
 	})
 }
 
@@ -134,7 +131,9 @@ func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 	case "not_in_channel":
 		writeSlackError(w, http.StatusOK, "not_in_channel")
 	default:
-		_ = req.ParseForm()
+		if !parseSlackForm(w, req) {
+			return
+		}
 		channel := req.Form.Get("channel")
 		if channel == "" {
 			channel = "C_MOCKPORT"
@@ -154,12 +153,7 @@ func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 			"team":    "T_MOCKPORT",
 			"user":    "U_MOCKPORT",
 		})
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"ok":      true,
-			"channel": channel,
-			"ts":      message.ID,
-			"message": messageBody(message.ID, message.Data),
-		})
+		httpx.WriteJSON(w, http.StatusOK, postMessageResponse{OK: true, Channel: channel, TS: message.ID, Message: messageBody(message.ID, message.Data)})
 	}
 }
 
@@ -167,7 +161,9 @@ func (r *routes) writeUpdateMessage(w http.ResponseWriter, req *http.Request) {
 	if !r.validateWriteScenario(w) {
 		return
 	}
-	_ = req.ParseForm()
+	if !parseSlackForm(w, req) {
+		return
+	}
 	channel := defaultChannel(req.Form.Get("channel"))
 	if !knownChannel(channel) {
 		writeSlackError(w, http.StatusOK, "channel_not_found")
@@ -185,19 +181,16 @@ func (r *routes) writeUpdateMessage(w http.ResponseWriter, req *http.Request) {
 	}
 	resource.Data["text"] = text
 	r.store.Update("slack", "message", ts, resource.Data)
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"ok":      true,
-		"channel": channel,
-		"ts":      ts,
-		"message": messageBody(ts, resource.Data),
-	})
+	httpx.WriteJSON(w, http.StatusOK, postMessageResponse{OK: true, Channel: channel, TS: ts, Message: messageBody(ts, resource.Data)})
 }
 
 func (r *routes) writeDeleteMessage(w http.ResponseWriter, req *http.Request) {
 	if !r.validateWriteScenario(w) {
 		return
 	}
-	_ = req.ParseForm()
+	if !parseSlackForm(w, req) {
+		return
+	}
 	channel := defaultChannel(req.Form.Get("channel"))
 	if !knownChannel(channel) {
 		writeSlackError(w, http.StatusOK, "channel_not_found")
@@ -211,7 +204,11 @@ func (r *routes) writeDeleteMessage(w http.ResponseWriter, req *http.Request) {
 	}
 	resource.Data["deleted"] = true
 	r.store.Update("slack", "message", ts, resource.Data)
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "channel": channel, "ts": ts})
+	httpx.WriteJSON(w, http.StatusOK, struct {
+		OK      bool   `json:"ok"`
+		Channel string `json:"channel"`
+		TS      string `json:"ts"`
+	}{OK: true, Channel: channel, TS: ts})
 }
 
 func (r *routes) writeConversationsList(w http.ResponseWriter) {
@@ -219,15 +216,10 @@ func (r *routes) writeConversationsList(w http.ResponseWriter) {
 		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"ok": true,
-		"channels": []map[string]interface{}{{
-			"id":         "C_MOCKPORT",
-			"name":       "mockport",
-			"is_channel": true,
-			"is_member":  true,
-		}},
-		"response_metadata": map[string]string{"next_cursor": ""},
+	httpx.WriteJSON(w, http.StatusOK, conversationsListResponse{
+		OK:               true,
+		Channels:         []channelData{{ID: "C_MOCKPORT", Name: "mockport", IsChannel: true, IsMember: true}},
+		ResponseMetadata: responseMetadata{NextCursor: ""},
 	})
 }
 
@@ -236,7 +228,9 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 		writeSlackError(w, http.StatusOK, "invalid_auth")
 		return
 	}
-	_ = req.ParseForm()
+	if !parseSlackForm(w, req) {
+		return
+	}
 	channel := req.URL.Query().Get("channel")
 	if channel == "" {
 		channel = req.Form.Get("channel")
@@ -246,7 +240,7 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 		writeSlackError(w, http.StatusOK, "channel_not_found")
 		return
 	}
-	var messages []map[string]interface{}
+	var messages []messageData
 	for _, resource := range r.store.List("slack", "message") {
 		if channel != "" && resource.Data["channel"] != channel {
 			continue
@@ -262,6 +256,10 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 	raw, err := io.ReadAll(req.Body)
 	if err != nil {
+		if httpx.IsRequestBodyTooLarge(err) {
+			writeSlackError(w, http.StatusRequestEntityTooLarge, "request_too_large")
+			return
+		}
 		writeSlackError(w, http.StatusBadRequest, "invalid_payload")
 		return
 	}
@@ -349,15 +347,8 @@ func knownChannel(channel string) bool {
 	return channel == "C_MOCKPORT" || channel == "C_TEST"
 }
 
-func messageBody(ts string, data map[string]any) map[string]interface{} {
-	return map[string]interface{}{
-		"type":    "message",
-		"team":    data["team"],
-		"channel": data["channel"],
-		"ts":      ts,
-		"user":    data["user"],
-		"text":    data["text"],
-	}
+func messageBody(ts string, data map[string]any) messageData {
+	return messageData{Type: "message", Team: data["team"], Channel: data["channel"], TS: ts, User: data["user"], Text: data["text"]}
 }
 
 func normalizeScenario(s string) string {
@@ -368,5 +359,17 @@ func normalizeScenario(s string) string {
 }
 
 func writeSlackError(w http.ResponseWriter, status int, code string) {
-	httpx.WriteJSON(w, status, map[string]interface{}{"ok": false, "error": code})
+	httpx.WriteJSON(w, status, slackErrorResponse{OK: false, Error: code})
+}
+
+func parseSlackForm(w http.ResponseWriter, req *http.Request) bool {
+	if err := req.ParseForm(); err != nil {
+		if httpx.IsRequestBodyTooLarge(err) || errors.Is(err, httpx.ErrRequestBodyTooLarge) {
+			writeSlackError(w, http.StatusRequestEntityTooLarge, "request_too_large")
+			return false
+		}
+		writeSlackError(w, http.StatusBadRequest, "invalid_payload")
+		return false
+	}
+	return true
 }

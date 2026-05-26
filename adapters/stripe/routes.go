@@ -1,6 +1,7 @@
 package stripe
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -19,69 +20,77 @@ type routes struct {
 }
 
 func (rt *routes) handle(w http.ResponseWriter, r *http.Request) {
+	httpx.LimitRequestBody(w, r)
 	path := strings.TrimPrefix(r.URL.Path, rt.basePath)
 	rt.handlePath(w, r, path)
 }
 
 func (rt *routes) handleRoot(w http.ResponseWriter, r *http.Request) {
+	httpx.LimitRequestBody(w, r)
 	rt.handlePath(w, r, r.URL.Path)
 }
 
 func (rt *routes) handlePath(w http.ResponseWriter, r *http.Request, path string) {
-	switch {
-	case r.Method == http.MethodPost && path == "/v1/checkout/sessions":
-		rt.writeCheckoutSession(w, r)
-	case r.Method == http.MethodGet && path == "/v1/checkout/sessions":
-		rt.writeList(w, "checkout_session")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/checkout/sessions/"):
-		rt.writeResource(w, "checkout_session", strings.TrimPrefix(path, "/v1/checkout/sessions/"), fallbackCheckoutSession)
-	case r.Method == http.MethodPost && path == "/v1/payment_intents":
-		rt.writePaymentIntent(w, r)
-	case r.Method == http.MethodGet && path == "/v1/payment_intents":
-		rt.writeList(w, "payment_intent")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/payment_intents/"):
-		rt.writeResource(w, "payment_intent", strings.TrimPrefix(path, "/v1/payment_intents/"), fallbackPaymentIntent)
-	case r.Method == http.MethodPost && path == "/v1/customers":
-		rt.writeGenericResource(w, r, "customer", map[string]interface{}{"object": "customer"}, nil)
-	case r.Method == http.MethodGet && path == "/v1/customers":
-		rt.writeList(w, "customer")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/customers/"):
-		rt.writeResource(w, "customer", strings.TrimPrefix(path, "/v1/customers/"), nil)
-	case r.Method == http.MethodPost && path == "/v1/products":
-		rt.writeGenericResource(w, r, "product", map[string]interface{}{"object": "product", "active": true}, []string{"name"})
-	case r.Method == http.MethodGet && path == "/v1/products":
-		rt.writeList(w, "product")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/products/"):
-		rt.writeResource(w, "product", strings.TrimPrefix(path, "/v1/products/"), nil)
-	case r.Method == http.MethodPost && path == "/v1/prices":
-		rt.writeGenericResource(w, r, "price", map[string]interface{}{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})
-	case r.Method == http.MethodGet && path == "/v1/prices":
-		rt.writeList(w, "price")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/prices/"):
-		rt.writeResource(w, "price", strings.TrimPrefix(path, "/v1/prices/"), nil)
-	case r.Method == http.MethodPost && path == "/v1/subscriptions":
-		rt.writeGenericResource(w, r, "subscription", map[string]interface{}{"object": "subscription", "status": "active"}, []string{"customer"})
-	case r.Method == http.MethodGet && path == "/v1/subscriptions":
-		rt.writeList(w, "subscription")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/subscriptions/"):
-		rt.writeResource(w, "subscription", strings.TrimPrefix(path, "/v1/subscriptions/"), nil)
-	case r.Method == http.MethodPost && path == "/v1/invoices":
-		rt.writeGenericResource(w, r, "invoice", map[string]interface{}{"object": "invoice", "status": "draft"}, []string{"customer"})
-	case r.Method == http.MethodGet && path == "/v1/invoices":
-		rt.writeList(w, "invoice")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/invoices/"):
-		rt.writeResource(w, "invoice", strings.TrimPrefix(path, "/v1/invoices/"), nil)
-	case r.Method == http.MethodPost && path == "/v1/refunds":
-		rt.writeGenericResource(w, r, "refund", map[string]interface{}{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})
-	case r.Method == http.MethodGet && path == "/v1/refunds":
-		rt.writeList(w, "refund")
-	case r.Method == http.MethodGet && strings.HasPrefix(path, "/v1/refunds/"):
-		rt.writeResource(w, "refund", strings.TrimPrefix(path, "/v1/refunds/"), nil)
-	case r.Method == http.MethodPost && path == "/test/webhook/send":
-		rt.sendWebhook(w, r)
-	default:
-		http.NotFound(w, r)
+	for _, route := range rt.routes() {
+		if route.matches(r.Method, path) {
+			route.handle(w, r, path)
+			return
+		}
 	}
+	http.NotFound(w, r)
+}
+
+type routeEntry struct {
+	method string
+	path   string
+	prefix bool
+	handle func(http.ResponseWriter, *http.Request, string)
+}
+
+func (r routeEntry) matches(method, path string) bool {
+	if method != r.method {
+		return false
+	}
+	if r.prefix {
+		return strings.HasPrefix(path, r.path)
+	}
+	return path == r.path
+}
+
+func (rt *routes) routes() []routeEntry {
+	resource := func(resourceType, path string, fallback func(string) map[string]interface{}, body map[string]interface{}, required []string) []routeEntry {
+		return []routeEntry{
+			{method: http.MethodPost, path: path, handle: func(w http.ResponseWriter, r *http.Request, _ string) {
+				rt.writeGenericResource(w, r, resourceType, body, required)
+			}},
+			{method: http.MethodGet, path: path, handle: func(w http.ResponseWriter, _ *http.Request, _ string) {
+				rt.writeList(w, resourceType)
+			}},
+			{method: http.MethodGet, path: path + "/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
+				rt.writeResource(w, resourceType, strings.TrimPrefix(requestPath, path+"/"), fallback)
+			}},
+		}
+	}
+	routes := []routeEntry{
+		{method: http.MethodPost, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writeCheckoutSession(w, r) }},
+		{method: http.MethodGet, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "checkout_session") }},
+		{method: http.MethodGet, path: "/v1/checkout/sessions/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
+			rt.writeResource(w, "checkout_session", strings.TrimPrefix(requestPath, "/v1/checkout/sessions/"), fallbackCheckoutSession)
+		}},
+		{method: http.MethodPost, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writePaymentIntent(w, r) }},
+		{method: http.MethodGet, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "payment_intent") }},
+		{method: http.MethodGet, path: "/v1/payment_intents/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
+			rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
+		}},
+		{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
+	}
+	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]interface{}{"object": "customer"}, nil)...)
+	routes = append(routes, resource("product", "/v1/products", nil, map[string]interface{}{"object": "product", "active": true}, []string{"name"})...)
+	routes = append(routes, resource("price", "/v1/prices", nil, map[string]interface{}{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})...)
+	routes = append(routes, resource("subscription", "/v1/subscriptions", nil, map[string]interface{}{"object": "subscription", "status": "active"}, []string{"customer"})...)
+	routes = append(routes, resource("invoice", "/v1/invoices", nil, map[string]interface{}{"object": "invoice", "status": "draft"}, []string{"customer"})...)
+	routes = append(routes, resource("refund", "/v1/refunds", nil, map[string]interface{}{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})...)
+	return routes
 }
 
 func (rt *routes) writeCheckoutSession(w http.ResponseWriter, r *http.Request) {
@@ -96,10 +105,10 @@ func (rt *routes) writeCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		rt.writeStripeError(w, http.StatusGatewayTimeout, "api_error", "mockport_timeout", "Mockport simulated timeout")
 	default:
 		fields := formFields(r)
-		body := map[string]interface{}{
-			"object":         "checkout.session",
-			"payment_status": "paid",
+		if !rt.validateFormFields(w, fields) {
+			return
 		}
+		body := stripeDataFromStruct(checkoutSessionResponse{Object: "checkout.session", PaymentStatus: "paid"})
 		if clientReferenceID := fields.Get("client_reference_id"); clientReferenceID != "" {
 			body["client_reference_id"] = clientReferenceID
 		}
@@ -119,16 +128,16 @@ func (rt *routes) writePaymentIntent(w http.ResponseWriter, r *http.Request) {
 		rt.writeStripeError(w, http.StatusGatewayTimeout, "api_error", "mockport_timeout", "Mockport simulated timeout")
 	default:
 		fields := formFields(r)
+		if !rt.validateFormFields(w, fields) {
+			return
+		}
 		if !fields.Empty() {
 			if missing := missingFields(fields, "amount", "currency"); len(missing) > 0 {
 				rt.writeValidationError(w, missing[0])
 				return
 			}
 		}
-		body := map[string]interface{}{
-			"object": "payment_intent",
-			"status": "succeeded",
-		}
+		body := stripeDataFromStruct(paymentIntentResponse{Object: "payment_intent", Status: "succeeded"})
 		if amount := fields.Get("amount"); amount != "" {
 			if parsed, err := strconv.Atoi(amount); err == nil {
 				body["amount"] = parsed
@@ -143,6 +152,9 @@ func (rt *routes) writePaymentIntent(w http.ResponseWriter, r *http.Request) {
 
 func (rt *routes) writeGenericResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]interface{}, required []string) {
 	fields := formFields(r)
+	if !rt.validateFormFields(w, fields) {
+		return
+	}
 	if !fields.Empty() {
 		if missing := missingFields(fields, required...); len(missing) > 0 {
 			rt.writeValidationError(w, missing[0])
@@ -217,10 +229,7 @@ func (rt *routes) writeList(w http.ResponseWriter, resourceType string) {
 		body["id"] = resource.ID
 		data = append(data, body)
 	}
-	rt.writeJSON(w, http.StatusOK, map[string]interface{}{
-		"object": "list",
-		"data":   data,
-	})
+	rt.writeJSON(w, http.StatusOK, listResponse{Object: "list", Data: data})
 }
 
 func fallbackCheckoutSession(id string) map[string]interface{} {
@@ -241,15 +250,23 @@ func fallbackPaymentIntent(id string) map[string]interface{} {
 
 func formFields(r *http.Request) formValues {
 	if err := r.ParseForm(); err != nil {
-		return emptyValues{}
+		return emptyValues{err: err}
 	}
 	return urlValues{values: r.Form}
+}
+
+func stripeDataFromStruct(value any) map[string]any {
+	encoded, _ := json.Marshal(value)
+	var decoded map[string]any
+	_ = json.Unmarshal(encoded, &decoded)
+	return decoded
 }
 
 type formValues interface {
 	Get(string) string
 	Keys() []string
 	Empty() bool
+	Err() error
 }
 
 type urlValues struct {
@@ -273,12 +290,26 @@ func (v urlValues) Keys() []string {
 }
 
 func (v urlValues) Empty() bool { return len(v.values) == 0 }
+func (v urlValues) Err() error  { return nil }
 
-type emptyValues struct{}
+type emptyValues struct{ err error }
 
 func (emptyValues) Get(string) string { return "" }
 func (emptyValues) Keys() []string    { return nil }
 func (emptyValues) Empty() bool       { return true }
+func (v emptyValues) Err() error      { return v.err }
+
+func (rt *routes) validateFormFields(w http.ResponseWriter, fields formValues) bool {
+	if fields.Err() == nil {
+		return true
+	}
+	if httpx.IsRequestBodyTooLarge(fields.Err()) {
+		rt.writeStripeError(w, http.StatusRequestEntityTooLarge, "invalid_request_error", "request_too_large", "Request body is too large")
+		return false
+	}
+	rt.writeStripeError(w, http.StatusBadRequest, "invalid_request_error", "invalid_request", "Request body is invalid")
+	return false
+}
 
 func requestFingerprint(r *http.Request) string {
 	_ = r.ParseForm()

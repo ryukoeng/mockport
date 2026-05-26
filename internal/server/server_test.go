@@ -48,3 +48,25 @@ func TestRecordMiddlewareAllowsResponseControllerFlush(t *testing.T) {
 		t.Fatalf("body = %q, want flushed", rec.Body.String())
 	}
 }
+
+func TestRecordMiddlewareRecordsStreamingRequestAfterFlush(t *testing.T) {
+	recorder := report.NewRecorder()
+	handler := recordMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("data: ok\n\n"))
+		_ = http.NewResponseController(w).Flush()
+	}), recorder, []report.AdapterStatus{{Name: "openai", BasePath: "/openai", Scenario: "stream_success"}})
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/openai/v1/chat/completions", nil))
+
+	snapshot := recorder.Snapshot()
+	if len(snapshot.Requests) != 1 {
+		t.Fatalf("requests = %#v, want one", snapshot.Requests)
+	}
+	got := snapshot.Requests[0]
+	if got.Status != http.StatusOK || got.Adapter != "openai" || got.Scenario != "stream_success" {
+		t.Fatalf("request = %#v", got)
+	}
+}

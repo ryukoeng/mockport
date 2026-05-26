@@ -16,6 +16,7 @@ type Level string
 const (
 	LevelWire     Level = "wire"
 	LevelSDK      Level = "sdk"
+	LevelClient   Level = "client"
 	LevelWorkflow Level = "workflow"
 	LevelError    Level = "error"
 	LevelState    Level = "state"
@@ -105,7 +106,7 @@ func (m Manifest) Validate() error {
 
 func ValidLevel(level Level) bool {
 	switch level {
-	case LevelWire, LevelSDK, LevelWorkflow, LevelError, LevelState, LevelContract:
+	case LevelWire, LevelSDK, LevelClient, LevelWorkflow, LevelError, LevelState, LevelContract:
 		return true
 	default:
 		return false

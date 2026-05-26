@@ -24,7 +24,9 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 		t.Fatalf("validate config: %v", err)
 	}
 	reg := adapter.NewRegistry()
-	reg.Register(stripe.New())
+	if err := reg.Register(stripe.New()); err != nil {
+		t.Fatalf("register stripe: %v", err)
+	}
 	recorder := report.NewRecorder()
 	handler, err := NewConfiguredHandler(cfg, reg, recorder)
 	if err != nil {
@@ -104,7 +106,9 @@ func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {
 		t.Fatalf("validate config: %v", err)
 	}
 	reg := adapter.NewRegistry()
-	reg.Register(stripe.New())
+	if err := reg.Register(stripe.New()); err != nil {
+		t.Fatalf("register stripe: %v", err)
+	}
 	handler, err := NewConfiguredHandler(cfg, reg, report.NewRecorder())
 	if err != nil {
 		t.Fatalf("new handler: %v", err)

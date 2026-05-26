@@ -43,7 +43,7 @@ func newUpCommand() *cobra.Command {
 			}
 			if err := runCommand(cmd.Context(), "docker", composeArgs...); err != nil {
 				if strings.Contains(err.Error(), "executable file not found") || strings.Contains(err.Error(), "not found in $PATH") {
-					return fmt.Errorf("Docker is required to run `mockport up`; install Docker and ensure `docker compose` is available: %w", err)
+					return fmt.Errorf("docker is required to run `mockport up`; install Docker and ensure `docker compose` is available: %w", err)
 				}
 				return err
 			}
