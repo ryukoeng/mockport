@@ -42,6 +42,14 @@ tasks/
   phase20_github_oauth_provider_compatibility.md
   phase21_slack_provider_compatibility.md
   phase22_provider_compatible_release_track.md
+  phase23_roadmap_docs_alignment.md
+  phase24_github_actions_execution_recovery.md
+  phase25_sdk_contract_all_provider_harness.md
+  phase26_provider_compatible_manifest_promotion.md
+  phase27_stripe_provider_compatible_track.md
+  phase28_openai_provider_compatible_track.md
+  phase29_oauth_slack_client_evidence.md
+  phase30_v0_2_preview_release.md
 ```
 
 ## Status の意味
@@ -115,6 +123,22 @@ Phase 20 は「GitHub OAuth adapter を client/workflow-compatible local API に
 Phase 21 は「Slack adapter を client/workflow-compatible local API に引き上げる」までです。
 
 Phase 22 は「provider-compatible release track と compatibility report を継続運用する」までです。
+
+Phase 23 は「Phase 22 完了後の実態に合わせて roadmap、README、docs、changelog、compatibility report の期待値差をなくす」までです。
+
+Phase 24 は「push 後に GitHub Actions run が作成されない問題を実測調査し、CI と compatibility workflow が観測可能に実行される状態へ戻す」までです。
+
+Phase 25 は「`run-sdk-contracts.sh all` を placeholder から全 provider contract の実行入口へ昇格する」までです。
+
+Phase 26 は「provider-compatible 昇格を versioned manifest と automated release check で制御し、主観的な maturity promotion を防ぐ」までです。
+
+Phase 27 は「Stripe first 方針に従い、Stripe の選定 workflow を最初の provider-compatible 候補として深掘りする」までです。
+
+Phase 28 は「OpenAI の選定 workflow について、real inference をしない前提で SDK、streaming、state、error の contract evidence を強化する」までです。
+
+Phase 29 は「GitHub OAuth と Slack の client/SDK evidence を強化し、score と maturity をより説明可能にする」までです。
+
+Phase 30 は「Phase 23-29 の成果を `v0.2.0-preview` として公開し、release artifact、GHCR、compatibility report、post-release smoke を検証する」までです。
 
 ## 参照資料
 
