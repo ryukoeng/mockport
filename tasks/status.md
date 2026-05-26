@@ -34,7 +34,7 @@
 | Phase 13 | Public preview contract cleanup | done | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
 | Phase 14 | Compatibility engine | done | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
 | Phase 15 | SDK contract harness foundation | done | Pinned SDK contract runner reaches local Mockport without external provider calls |
-| Phase 16 | State foundation | pending | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
+| Phase 16 | State foundation | done | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
 | Phase 17 | Adapter state adoption | pending | Major adapters adopt fake state without breaking scenario-compatible behavior |
 | Phase 18 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 19 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
@@ -227,9 +227,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P16-T01 | Add deterministic state store | pending | Store tests cover create/retrieve/list/update/delete and reset |
-| P16-T02 | Add idempotency and validation primitives | pending | State tests cover replay, conflict detection, and missing required field errors |
-| P16-T03 | Add state coverage report hooks | pending | Report tests assert stateful resources, idempotency support, and reset behavior |
+| P16-T01 | Add deterministic state store | done | Store tests cover create/retrieve/list/update/delete and reset |
+| P16-T02 | Add idempotency and validation primitives | done | State tests cover replay, conflict detection, and missing required field errors |
+| P16-T03 | Add state coverage report hooks | done | Report tests assert stateful resources, idempotency support, and reset behavior |
 
 ## Phase 17 Tasks
 

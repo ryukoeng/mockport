@@ -18,11 +18,14 @@ type Adapter interface {
 }
 
 type Metadata struct {
-	Name         string
-	Maturity     string
-	Capabilities []string
-	Scenarios    []Scenario
-	Endpoints    []Endpoint
+	Name              string
+	Maturity          string
+	Capabilities      []string
+	Scenarios         []Scenario
+	Endpoints         []Endpoint
+	StatefulResources []string
+	Idempotency       bool
+	Reset             bool
 }
 
 type Scenario struct {

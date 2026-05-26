@@ -69,3 +69,25 @@ func TestRecorderStoresCompatibility(t *testing.T) {
 		t.Fatalf("compatibility = %#v", snapshot.Compatibility[0])
 	}
 }
+
+func TestRecorderStoresStateCoverage(t *testing.T) {
+	rec := NewRecorder()
+	rec.SetStateCoverage([]StateCoverageStatus{{
+		Adapter:           "stripe",
+		StatefulResources: []string{"checkout_session", "payment_intent"},
+		Idempotency:       true,
+		Reset:             true,
+	}})
+
+	snapshot := rec.Snapshot()
+	if len(snapshot.StateCoverage) != 1 {
+		t.Fatalf("state coverage count = %d, want 1", len(snapshot.StateCoverage))
+	}
+	got := snapshot.StateCoverage[0]
+	if got.Adapter != "stripe" || !got.Idempotency || !got.Reset {
+		t.Fatalf("state coverage = %#v", got)
+	}
+	if len(got.StatefulResources) != 2 {
+		t.Fatalf("stateful resources = %#v", got.StatefulResources)
+	}
+}

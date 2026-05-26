@@ -29,6 +29,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	var coverage []report.ScenarioCoverage
 	var matrix []report.BehaviorMatrixEntry
 	var compatibility []report.CompatibilityStatus
+	var state []report.StateCoverageStatus
 	for warningIdx := range cfg.SafetyWarnings {
 		warning := cfg.SafetyWarnings[warningIdx]
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
@@ -54,6 +55,9 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		coverage = append(coverage, scenarioCoverage(meta))
 		matrix = append(matrix, behaviorMatrix(meta)...)
 		compatibility = append(compatibility, compatibilityStatus(compat.FromMetadata(meta)))
+		if stateStatus, ok := stateCoverage(meta); ok {
+			state = append(state, stateStatus)
+		}
 		if err := registered.Register(mux, adapter.Config{
 			BasePath:             adapterCfg.BasePath,
 			Scenario:             adapterCfg.Scenario,
@@ -68,6 +72,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	rec.SetScenarioCoverage(coverage)
 	rec.SetBehaviorMatrix(matrix)
 	rec.SetCompatibility(compatibility)
+	rec.SetStateCoverage(state)
 	mux.HandleFunc("/_mockport/report", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -148,6 +153,18 @@ func behaviorMatrix(meta adapter.Metadata) []report.BehaviorMatrixEntry {
 		})
 	}
 	return matrix
+}
+
+func stateCoverage(meta adapter.Metadata) (report.StateCoverageStatus, bool) {
+	if len(meta.StatefulResources) == 0 && !meta.Idempotency && !meta.Reset {
+		return report.StateCoverageStatus{}, false
+	}
+	return report.StateCoverageStatus{
+		Adapter:           meta.Name,
+		StatefulResources: append([]string(nil), meta.StatefulResources...),
+		Idempotency:       meta.Idempotency,
+		Reset:             meta.Reset,
+	}, true
 }
 
 func classifyAdapter(path string, adapters []report.AdapterStatus) (string, string) {

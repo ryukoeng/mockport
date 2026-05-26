@@ -14,6 +14,7 @@ func TestRenderTextIncludesTrustFields(t *testing.T) {
 		ScenarioCoverage:     []ScenarioCoverage{{Adapter: "stripe", Scenarios: []ScenarioSupport{{Name: "payment_success", Supported: true}}}},
 		BehaviorMatrix:       []BehaviorMatrixEntry{{Adapter: "stripe", Method: "POST", Path: "/stripe/v1/checkout/sessions", Maturity: "partial"}},
 		Compatibility:        []CompatibilityStatus{{Adapter: "stripe", Level: "wire", Score: 80, ProviderVersion: "2026-05-26", UnsupportedEndpoints: []string{"/stripe/v1/not-supported"}}},
+		StateCoverage:        []StateCoverageStatus{{Adapter: "stripe", StatefulResources: []string{"checkout_session"}, Idempotency: true, Reset: true}},
 		UnsupportedEndpoints: []UnsupportedEndpoint{{Method: "POST", Path: "/stripe/v1/not-supported", Status: 404, Reason: "unsupported_endpoint"}},
 		SafetyWarnings:       []SafetyWarning{{Field: "stripe.fake_secret", Category: "real_looking_secret", Message: "real-looking secret detected"}},
 	})
@@ -27,6 +28,8 @@ func TestRenderTextIncludesTrustFields(t *testing.T) {
 		"Behavior matrix:",
 		"Compatibility:",
 		"stripe level=wire score=80 provider=2026-05-26 unsupported=1",
+		"State coverage:",
+		"stripe resources=checkout_session idempotency=true reset=true",
 		"Unsupported endpoints: 1",
 	} {
 		if !strings.Contains(text, want) {

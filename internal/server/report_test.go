@@ -122,3 +122,27 @@ func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {
 		t.Fatalf("request metadata = %#v", snapshot.Requests[0])
 	}
 }
+
+func TestStateCoverageFromAdapterMetadata(t *testing.T) {
+	got, ok := stateCoverage(adapter.Metadata{
+		Name:              "stripe",
+		StatefulResources: []string{"checkout_session", "payment_intent"},
+		Idempotency:       true,
+		Reset:             true,
+	})
+	if !ok {
+		t.Fatal("state coverage ok = false, want true")
+	}
+	if got.Adapter != "stripe" || !got.Idempotency || !got.Reset {
+		t.Fatalf("state coverage = %#v", got)
+	}
+	if len(got.StatefulResources) != 2 {
+		t.Fatalf("resources = %#v", got.StatefulResources)
+	}
+}
+
+func TestStateCoverageSkipsStatelessAdapterMetadata(t *testing.T) {
+	if got, ok := stateCoverage(adapter.Metadata{Name: "openai"}); ok {
+		t.Fatalf("state coverage = %#v, want skipped", got)
+	}
+}

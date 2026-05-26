@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 func RenderText(snapshot Snapshot) string {
@@ -48,6 +49,11 @@ func RenderText(snapshot Snapshot) string {
 	fmt.Fprintln(&out, "Compatibility:")
 	for _, compatibility := range snapshot.Compatibility {
 		fmt.Fprintf(&out, "- %s level=%s score=%d provider=%s unsupported=%d\n", compatibility.Adapter, compatibility.Level, compatibility.Score, compatibility.ProviderVersion, len(compatibility.UnsupportedEndpoints))
+	}
+	fmt.Fprintln(&out)
+	fmt.Fprintln(&out, "State coverage:")
+	for _, coverage := range snapshot.StateCoverage {
+		fmt.Fprintf(&out, "- %s resources=%s idempotency=%v reset=%v\n", coverage.Adapter, strings.Join(coverage.StatefulResources, ","), coverage.Idempotency, coverage.Reset)
 	}
 	fmt.Fprintln(&out)
 	fmt.Fprintf(&out, "Unsupported endpoints: %d\n", len(snapshot.UnsupportedEndpoints))

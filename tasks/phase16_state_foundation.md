@@ -22,34 +22,34 @@
 
 ## Task P16-T01: Deterministic State Store
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for create/retrieve/list/update/delete semantics.
-- [ ] Implement concurrency-safe in-memory store with deterministic IDs per adapter and resource type.
-- [ ] Add reset support for test isolation.
-- [ ] Run `/usr/local/go/bin/go test ./internal/state -v`.
+- [x] Write failing tests for create/retrieve/list/update/delete semantics.
+- [x] Implement concurrency-safe in-memory store with deterministic IDs per adapter and resource type.
+- [x] Add reset support for test isolation.
+- [x] Run `/usr/local/go/bin/go test ./internal/state -v`.
 
 ## Task P16-T02: Idempotency And Validation Primitives
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for idempotency replay, conflict detection, and missing required field errors.
-- [ ] Implement provider-neutral primitives that adapters can map to provider-shaped errors.
-- [ ] Document where provider-specific error shape remains adapter-owned.
-- [ ] Run `/usr/local/go/bin/go test ./internal/state -v`.
+- [x] Write failing tests for idempotency replay, conflict detection, and missing required field errors.
+- [x] Implement provider-neutral primitives that adapters can map to provider-shaped errors.
+- [x] Document where provider-specific error shape remains adapter-owned.
+- [x] Run `/usr/local/go/bin/go test ./internal/state -v`.
 
 ## Task P16-T03: State Coverage Reporting Hooks
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add report metadata for stateful resources, idempotency support, and reset behavior.
-- [ ] Add text/JSON report tests for state coverage.
-- [ ] Document state model limitations.
-- [ ] Run `/usr/local/go/bin/go test ./internal/report ./internal/state -v`.
+- [x] Add report metadata for stateful resources, idempotency support, and reset behavior.
+- [x] Add text/JSON report tests for state coverage.
+- [x] Document state model limitations.
+- [x] Run `/usr/local/go/bin/go test ./internal/report ./internal/state -v`.
 
 ## Phase 16 Exit
 
-- [ ] Deterministic state store exists and is tested.
-- [ ] Idempotency and validation primitives are available for adapters.
-- [ ] Report can identify stateful workflow coverage.
-- [ ] Adapter-wide migration is intentionally left for Phase 17.
+- [x] Deterministic state store exists and is tested.
+- [x] Idempotency and validation primitives are available for adapters.
+- [x] Report can identify stateful workflow coverage.
+- [x] Adapter-wide migration is intentionally left for Phase 17.

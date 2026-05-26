@@ -9,6 +9,7 @@ type Snapshot struct {
 	ScenarioCoverage     []ScenarioCoverage    `json:"scenario_coverage"`
 	BehaviorMatrix       []BehaviorMatrixEntry `json:"behavior_matrix"`
 	Compatibility        []CompatibilityStatus `json:"compatibility,omitempty"`
+	StateCoverage        []StateCoverageStatus `json:"state_coverage,omitempty"`
 	UnsupportedEndpoints []UnsupportedEndpoint `json:"unsupported_endpoints"`
 }
 
@@ -84,4 +85,11 @@ type CompatibilityStatus struct {
 	ProviderVersion      string   `json:"provider_version"`
 	SDKVersions          []string `json:"sdk_versions,omitempty"`
 	UnsupportedEndpoints []string `json:"unsupported_endpoints,omitempty"`
+}
+
+type StateCoverageStatus struct {
+	Adapter           string   `json:"adapter"`
+	StatefulResources []string `json:"stateful_resources,omitempty"`
+	Idempotency       bool     `json:"idempotency"`
+	Reset             bool     `json:"reset"`
 }
