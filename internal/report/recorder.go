@@ -14,6 +14,7 @@ type Recorder struct {
 	safetyWarnings []SafetyWarning
 	coverage       []ScenarioCoverage
 	matrix         []BehaviorMatrixEntry
+	compatibility  []CompatibilityStatus
 	nextID         int64
 }
 
@@ -43,6 +44,12 @@ func (r *Recorder) SetBehaviorMatrix(matrix []BehaviorMatrixEntry) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.matrix = append([]BehaviorMatrixEntry(nil), matrix...)
+}
+
+func (r *Recorder) SetCompatibility(compatibility []CompatibilityStatus) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.compatibility = append([]CompatibilityStatus(nil), compatibility...)
 }
 
 func (r *Recorder) RecordRequest(method, path string, status int) {
@@ -82,6 +89,7 @@ func (r *Recorder) Snapshot() Snapshot {
 		SafetyWarnings:       append([]SafetyWarning(nil), r.safetyWarnings...),
 		ScenarioCoverage:     append([]ScenarioCoverage(nil), r.coverage...),
 		BehaviorMatrix:       append([]BehaviorMatrixEntry(nil), r.matrix...),
+		Compatibility:        append([]CompatibilityStatus(nil), r.compatibility...),
 		UnsupportedEndpoints: unsupportedEndpoints(r.requests),
 	}
 }

@@ -45,6 +45,11 @@ func RenderText(snapshot Snapshot) string {
 		fmt.Fprintf(&out, "- %s %s %s maturity=%s\n", behavior.Adapter, behavior.Method, behavior.Path, behavior.Maturity)
 	}
 	fmt.Fprintln(&out)
+	fmt.Fprintln(&out, "Compatibility:")
+	for _, compatibility := range snapshot.Compatibility {
+		fmt.Fprintf(&out, "- %s level=%s score=%d provider=%s unsupported=%d\n", compatibility.Adapter, compatibility.Level, compatibility.Score, compatibility.ProviderVersion, len(compatibility.UnsupportedEndpoints))
+	}
+	fmt.Fprintln(&out)
 	fmt.Fprintf(&out, "Unsupported endpoints: %d\n", len(snapshot.UnsupportedEndpoints))
 	fmt.Fprintf(&out, "Safety warnings: %d\n", len(snapshot.SafetyWarnings))
 	return out.String()

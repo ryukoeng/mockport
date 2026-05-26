@@ -39,7 +39,7 @@ type Endpoint struct {
 
 func ValidateMaturity(maturity string) bool {
 	switch maturity {
-	case "experimental", "partial", "common-path", "contract-tested", "sandbox-verified":
+	case "experimental", "partial", "sdk-compatible", "workflow-compatible", "provider-compatible":
 		return true
 	default:
 		return false

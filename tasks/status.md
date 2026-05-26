@@ -32,7 +32,7 @@
 | Phase 11 | Community and maintenance | done | Maintenance policy, Dependabot, roadmap, Node.js 24 Actions, and adapter contribution quality bar |
 | Phase 12 | Fixture, spec, and scenario policy | done | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
 | Phase 13 | Public preview contract cleanup | done | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
-| Phase 14 | Compatibility engine | pending | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
+| Phase 14 | Compatibility engine | done | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
 | Phase 15 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
 | Phase 16 | State foundation | pending | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
 | Phase 17 | Adapter state adoption | pending | Major adapters adopt fake state without breaking scenario-compatible behavior |
@@ -210,10 +210,10 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P14-T01 | Add compatibility level model | pending | Manifest tests cover wire/sdk/workflow/error/state/contract levels |
-| P14-T02 | Add compatibility scoring | pending | Score tests cover endpoint, scenario, SDK, state, and error coverage |
-| P14-T03 | Add compatibility report output | pending | Report tests assert score, levels, SDK versions, provider API version, gaps |
-| P14-T04 | Define provisional promotion rule | pending | Static checks prevent undocumented compatibility claims |
+| P14-T01 | Add compatibility level model | done | Manifest tests cover wire/sdk/workflow/error/state/contract levels |
+| P14-T02 | Add compatibility scoring | done | Score tests cover endpoint, scenario, SDK, state, and error coverage |
+| P14-T03 | Add compatibility report output | done | Report tests assert score, levels, SDK versions, provider API version, gaps |
+| P14-T04 | Define provisional promotion rule | done | Static checks prevent undocumented compatibility claims |
 
 ## Phase 15 Tasks
 

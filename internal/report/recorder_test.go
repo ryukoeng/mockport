@@ -50,3 +50,22 @@ func TestRecorderStoresReplayMetadataAndUnsupportedEndpoints(t *testing.T) {
 		t.Fatalf("unsupported endpoints = %d, want 1", len(snapshot.UnsupportedEndpoints))
 	}
 }
+
+func TestRecorderStoresCompatibility(t *testing.T) {
+	rec := NewRecorder()
+	rec.SetCompatibility([]CompatibilityStatus{{
+		Adapter:         "stripe",
+		Level:           "wire",
+		Score:           80,
+		ProviderVersion: "2026-05-26",
+		SDKVersions:     []string{"stripe-go@v83.0.0"},
+	}})
+
+	snapshot := rec.Snapshot()
+	if len(snapshot.Compatibility) != 1 {
+		t.Fatalf("compatibility count = %d, want 1", len(snapshot.Compatibility))
+	}
+	if snapshot.Compatibility[0].Adapter != "stripe" || snapshot.Compatibility[0].Score != 80 {
+		t.Fatalf("compatibility = %#v", snapshot.Compatibility[0])
+	}
+}

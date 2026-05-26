@@ -30,7 +30,7 @@ func TestRegistryReturnsRegisteredAdapter(t *testing.T) {
 }
 
 func TestValidateMaturity(t *testing.T) {
-	for _, maturity := range []string{"experimental", "partial", "common-path", "contract-tested", "sandbox-verified"} {
+	for _, maturity := range []string{"experimental", "partial", "sdk-compatible", "workflow-compatible", "provider-compatible"} {
 		if !ValidateMaturity(maturity) {
 			t.Fatalf("expected maturity %q to be valid", maturity)
 		}

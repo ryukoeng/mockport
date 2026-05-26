@@ -24,45 +24,45 @@
 
 ## Task P14-T01: Compatibility Level Model
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for levels: `wire`, `sdk`, `workflow`, `error`, `state`, `contract`.
-- [ ] Implement compatibility manifest structs with adapter, provider version, SDK versions, endpoints, scenarios, unsupported behavior.
-- [ ] Consume the Phase 12 built-in/user-defined scenario policy when scoring scenario coverage.
-- [ ] Add validation for required fields and duplicate endpoint ids.
-- [ ] Run `/usr/local/go/bin/go test ./internal/compat -v`.
+- [x] Write failing tests for levels: `wire`, `sdk`, `workflow`, `error`, `state`, `contract`.
+- [x] Implement compatibility manifest structs with adapter, provider version, SDK versions, endpoints, scenarios, unsupported behavior.
+- [x] Consume the Phase 12 built-in/user-defined scenario policy when scoring scenario coverage.
+- [x] Add validation for required fields and duplicate endpoint ids.
+- [x] Run `go test ./internal/compat -v`.
 
 ## Task P14-T02: Compatibility Score
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing score tests for endpoint coverage, scenario coverage, SDK smoke status, state support, and error support.
-- [ ] Implement deterministic score calculation without network access.
-- [ ] Expose score in report JSON.
-- [ ] Run `/usr/local/go/bin/go test ./internal/compat ./internal/report -v`.
+- [x] Write failing score tests for endpoint coverage, scenario coverage, SDK smoke status, state support, and error support.
+- [x] Implement deterministic score calculation without network access.
+- [x] Expose score in report JSON.
+- [x] Run `go test ./internal/compat ./internal/report -v`.
 
 ## Task P14-T03: Compatibility Report Output
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add report fields for compatibility level, score, SDK versions tested, provider API version, unsupported endpoints.
-- [ ] Add text report rendering.
-- [ ] Update docs to define what Mockport means by provider-compatible local API.
-- [ ] Run `/usr/local/go/bin/go test ./...`.
+- [x] Add report fields for compatibility level, score, SDK versions tested, provider API version, unsupported endpoints.
+- [x] Add text report rendering.
+- [x] Update docs to define what Mockport means by provider-compatible local API.
+- [x] Run `go test ./...`.
 
 ## Task P14-T04: Provisional Promotion Rule
 
-**Status:** pending
+**Status:** done
 
-- [ ] Define provisional maturity labels before provider-specific tracks start.
-- [ ] Require fixture policy, report visibility, and minimum contract evidence before raising maturity.
-- [ ] Add tests or static checks that prevent undocumented compatibility claims.
-- [ ] Run docs/static checks.
+- [x] Define provisional maturity labels before provider-specific tracks start.
+- [x] Require fixture policy, report visibility, and minimum contract evidence before raising maturity.
+- [x] Add tests or static checks that prevent undocumented compatibility claims.
+- [x] Run docs/static checks.
 
 ## Phase 14 Exit
 
-- [ ] Compatibility is represented as a structured manifest.
-- [ ] Report shows compatibility score and levels.
-- [ ] Full-compatible is explicitly defined as external API/SDK/workflow compatibility, not provider internals.
-- [ ] Provisional promotion rules exist before provider-specific compatibility work starts.
-- [ ] Unsupported and approximate behavior remains visible.
+- [x] Compatibility is represented as a structured manifest.
+- [x] Report shows compatibility score and levels.
+- [x] Full-compatible is explicitly defined as external API/SDK/workflow compatibility, not provider internals.
+- [x] Provisional promotion rules exist before provider-specific compatibility work starts.
+- [x] Unsupported and approximate behavior remains visible.

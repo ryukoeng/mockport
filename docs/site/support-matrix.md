@@ -23,7 +23,7 @@ Mockport support is explicit and scenario-driven. Use reports to confirm what a 
 
 ## Planned Compatibility Track
 
-Provider-compatible work is staged after public preview:
+Provider-compatible work follows the model in `docs/compatibility-model.md` and is staged after public preview:
 
 1. Compatibility manifests and scores.
 2. SDK contract harness foundation.

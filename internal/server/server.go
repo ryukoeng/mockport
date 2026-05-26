@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/compat"
 	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
 )
@@ -27,6 +28,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	var adapterStatuses []report.AdapterStatus
 	var coverage []report.ScenarioCoverage
 	var matrix []report.BehaviorMatrixEntry
+	var compatibility []report.CompatibilityStatus
 	for warningIdx := range cfg.SafetyWarnings {
 		warning := cfg.SafetyWarnings[warningIdx]
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
@@ -51,6 +53,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		})
 		coverage = append(coverage, scenarioCoverage(meta))
 		matrix = append(matrix, behaviorMatrix(meta)...)
+		compatibility = append(compatibility, compatibilityStatus(compat.FromMetadata(meta)))
 		if err := registered.Register(mux, adapter.Config{
 			BasePath:             adapterCfg.BasePath,
 			Scenario:             adapterCfg.Scenario,
@@ -64,6 +67,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	rec.SetAdapters(adapterStatuses)
 	rec.SetScenarioCoverage(coverage)
 	rec.SetBehaviorMatrix(matrix)
+	rec.SetCompatibility(compatibility)
 	mux.HandleFunc("/_mockport/report", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -74,6 +78,28 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	})
 
 	return recordMiddleware(mux, rec, adapterStatuses), nil
+}
+
+func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
+	score := compat.CalculateScore(manifest)
+	status := report.CompatibilityStatus{
+		Adapter:          manifest.Adapter,
+		Level:            score.Level,
+		Score:            score.Total,
+		EndpointCoverage: score.EndpointCoverage,
+		ScenarioCoverage: score.ScenarioCoverage,
+		SDKCoverage:      score.SDKCoverage,
+		StateCoverage:    score.StateCoverage,
+		ErrorCoverage:    score.ErrorCoverage,
+		ProviderVersion:  manifest.ProviderVersion,
+	}
+	for _, sdk := range manifest.SDKVersions {
+		status.SDKVersions = append(status.SDKVersions, sdk.Name+"@"+sdk.Version)
+	}
+	for _, unsupported := range manifest.Unsupported {
+		status.UnsupportedEndpoints = append(status.UnsupportedEndpoints, unsupported.ID)
+	}
+	return status
 }
 
 type statusRecorder struct {

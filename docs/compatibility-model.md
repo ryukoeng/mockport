@@ -1,0 +1,38 @@
+# Compatibility Model
+
+Mockport compatibility is measured against public provider API behavior, SDK contracts, selected workflows, fake state, and known gaps. It does not mean provider internals, undocumented behavior, model quality, fraud checks, billing networks, delivery guarantees, or production network effects are reproduced.
+
+## Levels
+
+| Level | Meaning |
+| --- | --- |
+| `wire` | Request path, method, status, headers, and response shape are represented for selected endpoints. |
+| `sdk` | Selected official SDK calls pass against local Mockport with pinned SDK versions. |
+| `workflow` | A selected user workflow works across multiple requests. |
+| `state` | Fake deterministic state supports create/retrieve/list/update or equivalent lifecycle paths. |
+| `error` | Common provider error shapes, status codes, and retry/rate-limit hints are represented. |
+| `contract` | Manifest, fixture, SDK, workflow, state, and known-gap evidence are all present for the selected surface. |
+
+## Score Inputs
+
+Compatibility score is deterministic and offline. It combines:
+
+- Endpoint coverage.
+- Built-in scenario coverage.
+- SDK evidence.
+- Fake state support.
+- Error behavior support.
+
+User-defined scenarios do not raise provider compatibility score unless promoted into a built-in scenario with tests, docs, and sanitized fixture evidence.
+
+## Maturity Promotion
+
+| Maturity | Minimum evidence |
+| --- | --- |
+| `experimental` | Adapter exists with explicit metadata and known gaps. |
+| `partial` | Common scenario-compatible paths are implemented and reported. |
+| `sdk-compatible` | SDK level evidence exists and selected SDK contracts pass. |
+| `workflow-compatible` | Workflow, state, and error evidence exists for selected workflows. |
+| `provider-compatible` | Contract level evidence exists with manifest, fixtures, SDK contracts, workflow/state/error coverage, score, and known gaps. |
+
+Adapters must not be promoted only because local app-specific behavior works. Unsupported and approximate behavior must stay visible in reports.

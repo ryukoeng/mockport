@@ -75,6 +75,15 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if snapshot.Adapters[0].Maturity != "partial" {
 		t.Fatalf("maturity = %q, want partial", snapshot.Adapters[0].Maturity)
 	}
+	if len(snapshot.Compatibility) != 1 {
+		t.Fatalf("compatibility = %#v, want one entry", snapshot.Compatibility)
+	}
+	if snapshot.Compatibility[0].Adapter != "stripe" || snapshot.Compatibility[0].Score == 0 {
+		t.Fatalf("compatibility entry = %#v", snapshot.Compatibility[0])
+	}
+	if snapshot.Compatibility[0].ProviderVersion == "" {
+		t.Fatalf("provider version is empty: %#v", snapshot.Compatibility[0])
+	}
 }
 
 func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {

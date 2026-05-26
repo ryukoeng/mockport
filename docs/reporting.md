@@ -15,6 +15,7 @@ Important fields:
 - `requests`: replay-safe request metadata. Request bodies and secret headers are not stored by default.
 - `scenario_coverage`: supported scenarios per adapter.
 - `behavior_matrix`: supported endpoints and their scenarios.
+- `compatibility`: measured compatibility level, score, provider version, SDK evidence, and known gaps.
 - `unsupported_endpoints`: requests that returned unsupported endpoint classifications.
 
 ## Text Report
@@ -32,11 +33,11 @@ Allowed adapter maturity values:
 ```txt
 experimental
 partial
-common-path
-contract-tested
-sandbox-verified
+sdk-compatible
+workflow-compatible
+provider-compatible
 ```
 
 Stripe compatibility is `partial`. OpenAI-compatible, GitHub OAuth-like, and Slack-like adapters start as `experimental`.
 
-All adapters are scenario-driven, not full provider clones. Use the behavior matrix and unsupported endpoint list as the source of truth for what a test run actually exercised.
+All adapters are scenario-driven today, not full provider clones. Use the behavior matrix, compatibility section, and unsupported endpoint list as the source of truth for what a test run actually exercised.

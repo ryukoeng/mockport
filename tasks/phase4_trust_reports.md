@@ -70,7 +70,7 @@
 **Status:** done
 
 - [x] Write failing report tests for `behavior_matrix` with endpoint, method, supported scenarios, notes, and maturity.
-- [x] Validate allowed maturity values: `experimental`, `partial`, `common-path`, `contract-tested`, `sandbox-verified`.
+- [x] Validate allowed maturity values: `experimental`, `partial`, `sdk-compatible`, `workflow-compatible`, `provider-compatible`.
 - [x] Include maturity in report and README adapter table.
 - [x] Run `/usr/local/go/bin/go test ./internal/adapter ./internal/report ./internal/server -run 'Behavior|Maturity' -v`.
 

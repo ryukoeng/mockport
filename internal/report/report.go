@@ -8,6 +8,7 @@ type Snapshot struct {
 	SafetyWarnings       []SafetyWarning       `json:"safety_warnings"`
 	ScenarioCoverage     []ScenarioCoverage    `json:"scenario_coverage"`
 	BehaviorMatrix       []BehaviorMatrixEntry `json:"behavior_matrix"`
+	Compatibility        []CompatibilityStatus `json:"compatibility,omitempty"`
 	UnsupportedEndpoints []UnsupportedEndpoint `json:"unsupported_endpoints"`
 }
 
@@ -69,4 +70,18 @@ type UnsupportedEndpoint struct {
 	Path   string `json:"path"`
 	Status int    `json:"status"`
 	Reason string `json:"reason"`
+}
+
+type CompatibilityStatus struct {
+	Adapter              string   `json:"adapter"`
+	Level                string   `json:"level"`
+	Score                int      `json:"score"`
+	EndpointCoverage     int      `json:"endpoint_coverage,omitempty"`
+	ScenarioCoverage     int      `json:"scenario_coverage,omitempty"`
+	SDKCoverage          int      `json:"sdk_coverage,omitempty"`
+	StateCoverage        int      `json:"state_coverage,omitempty"`
+	ErrorCoverage        int      `json:"error_coverage,omitempty"`
+	ProviderVersion      string   `json:"provider_version"`
+	SDKVersions          []string `json:"sdk_versions,omitempty"`
+	UnsupportedEndpoints []string `json:"unsupported_endpoints,omitempty"`
 }
