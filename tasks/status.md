@@ -31,7 +31,7 @@
 | Phase 10 | Public preview release | done | `v0.1.0-alpha` GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | done | Maintenance policy, Dependabot, roadmap, Node.js 24 Actions, and adapter contribution quality bar |
 | Phase 12 | Fixture, spec, and scenario policy | done | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
-| Phase 13 | Public preview contract cleanup | pending | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
+| Phase 13 | Public preview contract cleanup | done | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
 | Phase 14 | Compatibility engine | pending | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
 | Phase 15 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
 | Phase 16 | State foundation | pending | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
@@ -185,10 +185,10 @@
 
 | Issue | Priority | Destination | Status |
 | --- | --- | --- | --- |
-| [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 13 | open |
-| [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Phase 13 | open |
+| [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 13 | done |
+| [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Phase 13 | done |
 | [#5](https://github.com/albert-einshutoin/mockport/issues/5) Clarify scenario policy: built-in scenarios vs user-defined scenarios | medium | Phase 12 | done in docs/scenario-policy.md |
-| [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Phase 13 | open |
+| [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Phase 13 | done in docs/adapter-helper-policy.md |
 
 ## Phase 12 Tasks
 
@@ -202,9 +202,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P13-T01 | Improve `mockport up` UX | pending | CLI tests cover missing Docker, missing compose file, `--detach` / `-d`, and `--build` |
-| P13-T02 | Add OpenAI SSE `stream_success` | pending | HTTP tests assert `text/event-stream`, streaming chunks, and terminal `[DONE]` |
-| P13-T03 | Decide adapter helper duplication boundary | pending | Adapter regression tests preserve response shape if helpers are extracted |
+| P13-T01 | Improve `mockport up` UX | done | CLI tests cover missing Docker, missing compose file, `--detach` / `-d`, and `--build` |
+| P13-T02 | Add OpenAI SSE `stream_success` | done | HTTP tests assert `text/event-stream`, streaming chunks, and terminal `[DONE]` |
+| P13-T03 | Decide adapter helper duplication boundary | done | Adapter regression tests preserve response shape if helpers are extracted |
 
 ## Phase 14 Tasks
 

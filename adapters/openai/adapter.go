@@ -2,6 +2,7 @@ package openai
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -83,19 +84,49 @@ func (r *routes) writeCompletion(w http.ResponseWriter, object string) {
 		writeError(w, http.StatusTooManyRequests, "rate_limited", "Mockport simulated rate limit")
 	case "context_length_exceeded":
 		writeError(w, http.StatusBadRequest, "context_length_exceeded", "Mockport simulated context length error")
+	case "stream_success":
+		if object == "chat.completion" {
+			writeChatCompletionStream(w)
+			return
+		}
+		writeJSON(w, http.StatusOK, completionBody(object))
 	default:
-		writeJSON(w, http.StatusOK, map[string]interface{}{
-			"id":     "mockport_openai_response",
-			"object": object,
-			"choices": []map[string]interface{}{{
-				"index": 0,
-				"message": map[string]string{
-					"role":    "assistant",
-					"content": "Mockport response",
-				},
-			}},
-		})
+		writeJSON(w, http.StatusOK, completionBody(object))
 	}
+}
+
+func completionBody(object string) map[string]interface{} {
+	return map[string]interface{}{
+		"id":     "mockport_openai_response",
+		"object": object,
+		"choices": []map[string]interface{}{{
+			"index": 0,
+			"message": map[string]string{
+				"role":    "assistant",
+				"content": "Mockport response",
+			},
+		}},
+	}
+}
+
+func writeChatCompletionStream(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	chunk := map[string]interface{}{
+		"id":     "mockport_openai_response",
+		"object": "chat.completion.chunk",
+		"choices": []map[string]interface{}{{
+			"index": 0,
+			"delta": map[string]string{
+				"content": "Mockport response",
+			},
+		}},
+	}
+	data, _ := json.Marshal(chunk)
+	_, _ = fmt.Fprintf(w, "data: %s\n\n", data)
+	_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 }
 
 func normalizeScenario(s string) string {

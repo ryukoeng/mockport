@@ -60,4 +60,6 @@ Adapter pull requests must include:
 - AI-safe fake credentials and local-only URLs.
 - No real provider secrets, production URLs, customer payloads, or unsanitized fixtures.
 
+Keep provider-shaped helpers local until `docs/adapter-helper-policy.md` says the abstraction threshold has been met.
+
 Future compatibility levels will be defined in Phase 14. Until then, adapter claims must stay at scenario-compatible or experimental unless stronger evidence exists.

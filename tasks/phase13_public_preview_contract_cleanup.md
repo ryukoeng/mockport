@@ -21,36 +21,36 @@
 
 ## Task P13-T01: Improve `mockport up` UX
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing CLI tests for missing `docker`, missing `docker-compose.mockport.yml`, `--detach` / `-d`, and `--build`.
-- [ ] Return actionable errors when Docker is unavailable.
-- [ ] Prompt `mockport init` when the compose file is missing.
-- [ ] Pass `--detach` / `-d` and `--build` through to `docker compose`.
-- [ ] Run `/usr/local/go/bin/go test ./internal/cli -run Up -v`.
+- [x] Write failing CLI tests for missing `docker`, missing `docker-compose.mockport.yml`, `--detach` / `-d`, and `--build`.
+- [x] Return actionable errors when Docker is unavailable.
+- [x] Prompt `mockport init` when the compose file is missing.
+- [x] Pass `--detach` / `-d` and `--build` through to `docker compose`.
+- [x] Run `go test ./internal/cli -run Up -v`.
 
 ## Task P13-T02: Add OpenAI SSE `stream_success`
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing HTTP tests asserting `text/event-stream`, streaming chunks, and terminal `[DONE]`.
-- [ ] Implement minimal SSE-compatible response for OpenAI `stream_success`.
-- [ ] Keep normal non-stream scenarios as JSON.
-- [ ] Update docs/support matrix so metadata and behavior match. See [issue #6](https://github.com/albert-einshutoin/mockport/issues/6).
-- [ ] Run `/usr/local/go/bin/go test ./adapters/openai -run Stream -v`.
+- [x] Write failing HTTP tests asserting `text/event-stream`, streaming chunks, and terminal `[DONE]`.
+- [x] Implement minimal SSE-compatible response for OpenAI `stream_success`.
+- [x] Keep normal non-stream scenarios as JSON.
+- [x] Update docs/support matrix so metadata and behavior match. See [issue #6](https://github.com/albert-einshutoin/mockport/issues/6).
+- [x] Run `go test ./adapters/openai -run Stream -v`.
 
 ## Task P13-T03: Decide Adapter Helper Duplication Boundary
 
-**Status:** pending
+**Status:** done
 
-- [ ] Review `writeJSON`, scenario normalization, and error helpers across OpenAI, GitHub OAuth, and Slack adapters.
-- [ ] Document whether helpers stay local until the next adapter wave or move into a shared package now.
-- [ ] If extracting helpers, write regression tests proving response shape does not change.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/openai ./adapters/githuboauth ./adapters/slack -v`. See [issue #7](https://github.com/albert-einshutoin/mockport/issues/7).
+- [x] Review `writeJSON`, scenario normalization, and error helpers across OpenAI, GitHub OAuth, and Slack adapters.
+- [x] Document whether helpers stay local until the next adapter wave or move into a shared package now.
+- [x] If extracting helpers, write regression tests proving response shape does not change.
+- [x] Run `go test ./adapters/openai ./adapters/githuboauth ./adapters/slack -v`. See [issue #7](https://github.com/albert-einshutoin/mockport/issues/7).
 
 ## Phase 13 Exit
 
-- [ ] `mockport up` errors are actionable and support `--detach` / `--build`.
-- [ ] OpenAI `stream_success` is actually SSE-compatible.
-- [ ] Adapter helper duplication has an explicit decision before more adapters are added.
-- [ ] Public preview docs and metadata no longer overstate implemented behavior.
+- [x] `mockport up` errors are actionable and support `--detach` / `--build`.
+- [x] OpenAI `stream_success` is actually SSE-compatible.
+- [x] Adapter helper duplication has an explicit decision before more adapters are added.
+- [x] Public preview docs and metadata no longer overstate implemented behavior.

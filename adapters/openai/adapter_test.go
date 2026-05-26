@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
@@ -52,6 +53,38 @@ func TestResponses(t *testing.T) {
 	rec := performRequest(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"}, http.MethodPost, "/openai/v1/responses")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
+func TestChatCompletionStreamSuccessReturnsSSE(t *testing.T) {
+	rec := performRequest(t, adapter.Config{BasePath: "/openai", Scenario: "stream_success"}, http.MethodPost, "/openai/v1/chat/completions")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+	contentType := rec.Header().Get("Content-Type")
+	if !strings.HasPrefix(contentType, "text/event-stream") {
+		t.Fatalf("Content-Type = %q, want text/event-stream", contentType)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{
+		"data: {",
+		`"object":"chat.completion.chunk"`,
+		`"delta":{"content":"Mockport response"}`,
+		"data: [DONE]",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("body missing %q: %s", want, body)
+		}
+	}
+}
+
+func TestChatCompletionSuccessStillReturnsJSON(t *testing.T) {
+	rec := performRequest(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"}, http.MethodPost, "/openai/v1/chat/completions")
+	if contentType := rec.Header().Get("Content-Type"); !strings.HasPrefix(contentType, "application/json") {
+		t.Fatalf("Content-Type = %q, want application/json", contentType)
+	}
+	if strings.Contains(rec.Body.String(), "data: [DONE]") {
+		t.Fatalf("non-stream response used SSE body: %s", rec.Body.String())
 	}
 }
 
