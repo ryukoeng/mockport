@@ -26,7 +26,7 @@
 | Phase 5 | Additional adapters | done | OpenAI, GitHub OAuth, Slack-like adapters, examples, multi-adapter CLI, Docker smoke |
 | Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 | Phase 7 | Public OSS hardening | done | Public trust files, contribution surface, first-run install path, public CI gates |
-| Phase 8 | Public env safety | pending | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
+| Phase 8 | Public env safety | done | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
 | Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | pending | Preview GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
@@ -150,9 +150,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P8-T01 | Define public-safe env policy | pending | Static docs check asserts allowed prefixes and forbidden real provider patterns |
-| P8-T02 | Add public env scanner | pending | Security tests catch real-looking secrets in env files and docs snippets |
-| P8-T03 | Add public env UX | pending | CLI/report tests assert generated env is fake, local, and safe-to-commit |
+| P8-T01 | Define public-safe env policy | done | Static docs check asserts allowed prefixes and forbidden real provider patterns |
+| P8-T02 | Add public env scanner | done | Security tests catch real-looking secrets in env files and docs snippets |
+| P8-T03 | Add public env UX | done | CLI/report tests assert generated env is fake, local, and safe-to-commit |
 
 ## Phase 9 Tasks
 
@@ -268,3 +268,5 @@
 - Passed: `docker build -t mockport:local -f docker/Dockerfile .`.
 - Passed: `bash scripts/check-public-trust.sh`.
 - Passed: README first-run Docker audit: build `mockport:local`, run with `configs/mockport.example.yml`, `GET /health`, `POST /stripe/v1/checkout/sessions`, `GET /_mockport/report`.
+- Passed: `bash scripts/check-public-env.sh`.
+- Passed: `bash scripts/smoke-empty-dir.sh` with public env safe-to-commit report field.

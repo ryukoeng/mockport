@@ -75,3 +75,38 @@ func TestLooksLikeExternalServiceURL(t *testing.T) {
 		t.Fatal("expected localhost URL to be allowed")
 	}
 }
+
+func TestScanPublicEnvRejectsRealProviderSecretsAndURLs(t *testing.T) {
+	env := strings.Join([]string{
+		"STRIPE_SECRET_KEY=sk_live_123",
+		"OPENAI_BASE_URL=https://api.openai.com/v1",
+		"SLACK_BOT_TOKEN=xoxb-real-token",
+		"GITHUB_OAUTH_CLIENT_SECRET=github_pat_real",
+	}, "\n")
+
+	findings := ScanPublicEnv(env)
+	if len(findings) != 4 {
+		t.Fatalf("finding count = %d, want 4: %#v", len(findings), findings)
+	}
+	for _, finding := range findings {
+		if finding.Line == 0 || finding.Key == "" || finding.Reason == "" {
+			t.Fatalf("incomplete finding: %#v", finding)
+		}
+	}
+}
+
+func TestScanPublicEnvAllowsMockportExamples(t *testing.T) {
+	env := strings.Join([]string{
+		"STRIPE_API_URL=http://localhost:43101/stripe",
+		"STRIPE_SECRET_KEY=mockport_stripe_secret",
+		"STRIPE_WEBHOOK_SECRET=whsec_mockport",
+		"OPENAI_BASE_URL=http://localhost:43101/openai/v1",
+		"OPENAI_API_KEY=mockport_openai_key",
+		"GITHUB_OAUTH_CLIENT_SECRET=mockport_github_secret",
+		"SLACK_BOT_TOKEN=mockport_slack_token",
+	}, "\n")
+
+	if findings := ScanPublicEnv(env); len(findings) != 0 {
+		t.Fatalf("ScanPublicEnv() findings = %#v, want none", findings)
+	}
+}

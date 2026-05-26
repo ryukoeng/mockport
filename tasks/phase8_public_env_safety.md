@@ -23,34 +23,34 @@
 
 ## Task P8-T01: Public-safe Env Policy
 
-**Status:** pending
+**Status:** done
 
-- [ ] Define allowed fake credential prefixes: `mockport_`, `whsec_mockport`, local-only URLs.
-- [ ] Define forbidden patterns for real provider secrets, production provider URLs, and ambiguous placeholders.
-- [ ] Add docs explaining when `.env.mockport.example` is safe to commit and when it is not.
-- [ ] Run docs/static check.
+- [x] Define allowed fake credential prefixes: `mockport_`, `whsec_mockport`, local-only URLs.
+- [x] Define forbidden patterns for real provider secrets, production provider URLs, and ambiguous placeholders.
+- [x] Add docs explaining when `.env.mockport.example` is safe to commit and when it is not.
+- [x] Run docs/static check.
 
 ## Task P8-T02: Env Scanner
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing tests for real Stripe/OpenAI/Slack/GitHub secret patterns inside env files.
-- [ ] Implement scanner improvements for public env examples.
-- [ ] Add `scripts/check-public-env.sh` to scan examples and docs snippets.
-- [ ] Run `/usr/local/go/bin/go test ./internal/security -v` and `bash scripts/check-public-env.sh`.
+- [x] Write failing tests for real Stripe/OpenAI/Slack/GitHub secret patterns inside env files.
+- [x] Implement scanner improvements for public env examples.
+- [x] Add `scripts/check-public-env.sh` to scan examples and docs snippets.
+- [x] Run `/usr/local/go/bin/go test ./internal/security -v` and `bash scripts/check-public-env.sh`.
 
 ## Task P8-T03: Public Env UX
 
-**Status:** pending
+**Status:** done
 
-- [ ] Update `mockport init` output to state generated `.env.mockport` uses fake local credentials.
-- [ ] Add `mockport report` safety field for public env contract status.
-- [ ] Add README section: "This Mockport env is safe to commit".
-- [ ] Run CLI tests and README command audit.
+- [x] Update `mockport init` output to state generated `.env.mockport` uses fake local credentials.
+- [x] Add `mockport report` safety field for public env contract status.
+- [x] Add README section: "This Mockport env is safe to commit".
+- [x] Run CLI tests and README command audit.
 
 ## Phase 8 Exit
 
-- [ ] Public-safe env policy is documented before public preview.
-- [ ] Env examples are checked in CI.
-- [ ] Scanner catches real-looking provider secrets.
-- [ ] Generated fake env values are compatible with current examples and reserved provider SDK env conventions.
+- [x] Public-safe env policy is documented before public preview.
+- [x] Env examples are checked in CI.
+- [x] Scanner catches real-looking provider secrets.
+- [x] Generated fake env values are compatible with current examples and reserved provider SDK env conventions.

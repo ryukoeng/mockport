@@ -56,30 +56,9 @@ dummy_
 
 ## Unsafe Examples
 
-Mockport flags provider secrets such as:
+Mockport flags real-looking provider secrets, including common live/test API key prefixes, cloud access key prefixes, GitHub token prefixes, Slack token prefixes, Google API key prefixes, and non-Mockport webhook signing secret prefixes.
 
-```txt
-sk_live_
-sk_test_
-AKIA
-ASIA
-ghp_
-github_pat_
-xoxb-
-xoxp-
-AIza
-whsec_
-```
-
-Mockport also flags live provider URLs such as:
-
-```txt
-https://api.stripe.com
-https://api.openai.com
-https://api.github.com
-https://api.line.me
-https://slack.com/api
-```
+Mockport also flags live provider URLs for supported and planned providers.
 
 ## Report
 
@@ -92,7 +71,8 @@ https://slack.com/api
     "mode": "ai-safe",
     "safe": false,
     "real_looking_secrets": 1,
-    "external_urls": 1
+    "external_urls": 1,
+    "public_env_safe": false
   }
 }
 ```

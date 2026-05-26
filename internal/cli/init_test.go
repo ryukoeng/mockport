@@ -38,6 +38,7 @@ func TestInitGeneratesStripeFiles(t *testing.T) {
 	}
 	got := out.String()
 	for _, want := range []string{
+		"Generated .env.mockport uses fake local credentials and is safe to commit when unchanged.",
 		"docker compose -f docker-compose.mockport.yml up",
 		"curl http://localhost:43101/health",
 		"mockport report",

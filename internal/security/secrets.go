@@ -38,3 +38,34 @@ func LooksLikeSecret(value string) bool {
 	}
 	return false
 }
+
+type PublicEnvFinding struct {
+	Line   int
+	Key    string
+	Reason string
+}
+
+func ScanPublicEnv(content string) []PublicEnvFinding {
+	var findings []PublicEnvFinding
+	for idx, rawLine := range strings.Split(content, "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.Trim(strings.TrimSpace(value), `"'`)
+		switch {
+		case LooksLikeSecret(value):
+			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "real-looking provider secret"})
+		case LooksLikeExternalServiceURL(value):
+			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "production provider URL"})
+		case strings.Contains(strings.ToLower(value), "changeme") || strings.Contains(strings.ToLower(value), "replace_me"):
+			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "ambiguous placeholder"})
+		}
+	}
+	return findings
+}

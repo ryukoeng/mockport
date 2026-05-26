@@ -63,6 +63,9 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if snapshot.Safety.RealLookingSecrets != 1 {
 		t.Fatalf("real-looking secrets = %d, want 1", snapshot.Safety.RealLookingSecrets)
 	}
+	if snapshot.Safety.PublicEnvSafe {
+		t.Fatal("public env safe = true, want false")
+	}
 	if len(snapshot.ScenarioCoverage) != 1 || snapshot.ScenarioCoverage[0].Adapter != "stripe" {
 		t.Fatalf("scenario coverage = %#v", snapshot.ScenarioCoverage)
 	}

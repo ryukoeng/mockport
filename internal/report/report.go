@@ -16,6 +16,7 @@ type SafetySummary struct {
 	Safe               bool   `json:"safe"`
 	RealLookingSecrets int    `json:"real_looking_secrets"`
 	ExternalURLs       int    `json:"external_urls"`
+	PublicEnvSafe      bool   `json:"public_env_safe"`
 }
 
 type AdapterStatus struct {

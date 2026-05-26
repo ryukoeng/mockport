@@ -87,7 +87,7 @@ func (r *Recorder) Snapshot() Snapshot {
 }
 
 func safetySummary(mode string, warnings []SafetyWarning) SafetySummary {
-	summary := SafetySummary{Mode: mode, Safe: len(warnings) == 0}
+	summary := SafetySummary{Mode: mode, Safe: len(warnings) == 0, PublicEnvSafe: len(warnings) == 0}
 	for _, warning := range warnings {
 		switch warning.Category {
 		case "real_looking_secret":

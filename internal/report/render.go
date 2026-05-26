@@ -11,6 +11,7 @@ func RenderText(snapshot Snapshot) string {
 	fmt.Fprintln(&out)
 	fmt.Fprintf(&out, "Mode: %s\n", snapshot.Mode)
 	fmt.Fprintf(&out, "Safety: safe=%v real-looking-secrets=%d external-urls=%d\n", snapshot.Safety.Safe, snapshot.Safety.RealLookingSecrets, snapshot.Safety.ExternalURLs)
+	fmt.Fprintf(&out, "Public env safe-to-commit: %v\n", snapshot.Safety.PublicEnvSafe)
 	fmt.Fprintln(&out)
 	fmt.Fprintln(&out, "Adapters:")
 	for _, adapter := range snapshot.Adapters {

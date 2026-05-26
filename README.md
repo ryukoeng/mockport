@@ -40,6 +40,8 @@ STRIPE_SECRET_KEY=mockport_stripe_secret
 STRIPE_WEBHOOK_SECRET=whsec_mockport
 ```
 
+This Mockport env is safe to commit when the generated fake values remain unchanged. See [Public Env Safety](docs/public-env-safety.md).
+
 Test a Stripe-like checkout session:
 
 ```bash
