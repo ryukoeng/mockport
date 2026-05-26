@@ -39,26 +39,26 @@
 
 ## Task P10-T03: GHCR Preview Publish Verification
 
-**Status:** in_progress
+**Status:** done
 
-- [ ] Confirm GHCR image `ghcr.io/albert-einshutoin/mockport:0.1.0-alpha` exists.
-- [ ] Confirm `latest` behavior is intentional for preview releases before enabling it.
-- [ ] Run Docker pull and smoke test from GHCR image, not local build.
-- [ ] Record image digest in `docs/releases/v0.1.0-alpha.md`.
+- [x] Confirm GHCR image `ghcr.io/albert-einshutoin/mockport:0.1.0-alpha` exists.
+- [x] Confirm `latest` behavior is intentional for preview releases before enabling it.
+- [x] Run Docker pull and smoke test from GHCR image, not local build.
+- [x] Record image digest in `docs/releases/v0.1.0-alpha.md`.
 
 ## Task P10-T04: Preview Install Docs Update
 
-**Status:** pending
+**Status:** done
 
-- [ ] Update README install instructions with actual preview release URLs.
-- [ ] Update docs site distribution page with release artifacts and GHCR commands.
-- [ ] Keep Homebrew and npm marked not-yet-published unless actually published.
-- [ ] Run README install path audit from a temporary directory.
+- [x] Update README install instructions with actual preview release URLs.
+- [x] Update docs site distribution page with release artifacts and GHCR commands.
+- [x] Keep Homebrew and npm marked not-yet-published unless actually published.
+- [x] Run README install path audit from a temporary directory.
 
 ## Phase 10 Exit
 
-- [ ] Preview tag exists on GitHub.
-- [ ] GitHub Release contains archives and checksums.
-- [ ] GHCR preview image can be pulled and run.
-- [ ] README install commands work from a clean environment.
-- [ ] Known limitations and non-provider-compatible status are documented.
+- [x] Preview tag exists on GitHub.
+- [x] GitHub Release contains archives and checksums.
+- [x] GHCR preview image can be pulled and run.
+- [x] README install commands work from a clean environment.
+- [x] Known limitations and non-provider-compatible status are documented.

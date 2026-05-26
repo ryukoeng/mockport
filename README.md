@@ -92,7 +92,7 @@ Release archives:
 ```bash
 curl -LO https://github.com/albert-einshutoin/mockport/releases/download/v0.1.0-alpha/mockport_0.1.0-alpha_darwin_arm64.tar.gz
 curl -LO https://github.com/albert-einshutoin/mockport/releases/download/v0.1.0-alpha/checksums.txt
-grep 'mockport_0.1.0-alpha_darwin_arm64.tar.gz' checksums.txt | shasum -a 256 -c -
+grep 'mockport_0.1.0-alpha_darwin_arm64.tar.gz' checksums.txt | sed 's# dist/# #' | shasum -a 256 -c -
 tar -xzf mockport_0.1.0-alpha_darwin_arm64.tar.gz
 ./mockport_0.1.0-alpha_darwin_arm64/mockport version
 ```
