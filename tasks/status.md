@@ -167,8 +167,8 @@
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
 | P10-T01 | Add preview release readiness audit | done | Release verification script checks archive names, checksums, version, image |
-| P10-T02 | Publish `v0.1.0-alpha` GitHub Release | pending | Release workflow produces archives and `checksums.txt` |
-| P10-T03 | Verify GHCR preview publish | pending | Docker pull and smoke use GHCR preview image, not local build |
+| P10-T02 | Publish `v0.1.0-alpha` GitHub Release | done | Release workflow produces archives and `checksums.txt` |
+| P10-T03 | Verify GHCR preview publish | in_progress | Docker pull and smoke use GHCR preview image, not local build |
 | P10-T04 | Update preview install docs | pending | README install audit passes from a temporary directory |
 
 ## Phase 11 Tasks

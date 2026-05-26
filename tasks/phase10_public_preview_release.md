@@ -30,16 +30,16 @@
 
 ## Task P10-T02: Tag And GitHub Preview Release
 
-**Status:** pending
+**Status:** done
 
-- [ ] Create annotated tag `v0.1.0-alpha`.
-- [ ] Push tag and confirm release workflow completes on GitHub.
-- [ ] Confirm GitHub Release has four archives and `checksums.txt`.
-- [ ] Run release archive install test from downloaded artifact.
+- [x] Create annotated tag `v0.1.0-alpha`.
+- [x] Push tag and confirm release workflow completes on GitHub.
+- [x] Confirm GitHub Release has four archives and `checksums.txt`.
+- [x] Run release archive install test from downloaded artifact.
 
 ## Task P10-T03: GHCR Preview Publish Verification
 
-**Status:** pending
+**Status:** in_progress
 
 - [ ] Confirm GHCR image `ghcr.io/albert-einshutoin/mockport:0.1.0-alpha` exists.
 - [ ] Confirm `latest` behavior is intentional for preview releases before enabling it.
