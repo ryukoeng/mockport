@@ -1,0 +1,45 @@
+# Compatibility Report
+
+Generated: 2026-05-26
+
+Compatibility is measured from Mockport runtime metadata, SDK/client contract checks, fixture coverage, and known gaps. It is not a claim that provider internals or undocumented behavior are reproduced.
+
+## Scores
+
+| Adapter | Maturity | Score | Provider API | SDK/client evidence |
+| --- | --- | ---: | --- | --- |
+| `github-oauth` | `workflow-compatible` | 80 | 2022-11-28 | client contract |
+| `openai` | `workflow-compatible` | 100 | 2025-02-01 | openai@6.39.0 |
+| `slack` | `workflow-compatible` | 80 | 2025-02-01 | client contract |
+| `stripe` | `workflow-compatible` | 100 | 2025-10-29.clover | stripe@22.1.1 |
+
+## Coverage
+
+| Adapter | Endpoint | Scenario | SDK/client | State | Error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `github-oauth` | 100 | 100 | 0 | 100 | 100 |
+| `openai` | 100 | 100 | 100 | 100 | 100 |
+| `slack` | 100 | 100 | 0 | 100 | 100 |
+| `stripe` | 100 | 100 | 100 | 100 | 100 |
+
+## Known Gaps
+
+### github-oauth
+- No real GitHub policy, repository permissions, SSO, org/enterprise enforcement, or app installation model.
+
+### openai
+- No real model quality, tokenization parity, hosted tools, vector stores, or provider scheduling.
+
+### slack
+- No real delivery, Events API completeness, Block Kit validation, files, app scopes, enterprise policy, or full workspace directory.
+
+### stripe
+- No fraud, payment network, tax, disputes, Connect, or full Billing lifecycle.
+
+## Release Labels
+
+- `experimental`: Early adapter coverage for selected workflows. Expect gaps.
+- `sdk-compatible`: Selected SDK or client contract calls pass against local Mockport.
+- `workflow-compatible`: Selected workflows include fake state, errors, and replayable behavior.
+- `provider-compatible`: Selected provider workflows are backed by manifests, SDK contracts, fixtures, scores, and known-gap reports.
+

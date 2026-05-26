@@ -56,8 +56,9 @@ require_file ".github/workflows/ci.yml"
 require_file ".github/workflows/docker.yml"
 require_file ".github/workflows/release.yml"
 require_file ".github/workflows/smoke.yml"
+require_file ".github/workflows/compatibility.yml"
 
-for workflow in .github/workflows/ci.yml .github/workflows/docker.yml .github/workflows/release.yml .github/workflows/smoke.yml; do
+for workflow in .github/workflows/ci.yml .github/workflows/docker.yml .github/workflows/release.yml .github/workflows/smoke.yml .github/workflows/compatibility.yml; do
   require_text "$workflow" "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24"
   require_absent_text "$workflow" "actions/checkout@v4"
   require_absent_text "$workflow" "actions/setup-go@v5"
@@ -80,6 +81,11 @@ require_text ".github/workflows/release.yml" "softprops/action-gh-release@v3"
 
 require_text ".github/workflows/smoke.yml" "schedule:"
 require_text ".github/workflows/smoke.yml" "bash scripts/smoke-multi-adapter.sh"
+
+require_text ".github/workflows/compatibility.yml" "schedule:"
+require_text ".github/workflows/compatibility.yml" "workflow_dispatch"
+require_text ".github/workflows/compatibility.yml" "actions/upload-artifact@v7"
+require_text ".github/workflows/compatibility.yml" "bash scripts/check-compatibility-release.sh"
 
 require_text "CONTRIBUTING.md" "Adapter acceptance criteria"
 require_text "CONTRIBUTING.md" "No real provider secrets"

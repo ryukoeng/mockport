@@ -2,6 +2,8 @@
 
 Mockport support is explicit and scenario-driven. Use reports to confirm what a test run exercised.
 
+Generated compatibility reports live in [`docs/compatibility-reports`](../compatibility-reports/README.md). They include compatibility scores, provider API versions, SDK/client evidence, and known gaps.
+
 ## Maturity
 
 | Maturity | Meaning |

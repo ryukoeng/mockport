@@ -40,7 +40,7 @@
 | Phase 19 | OpenAI provider compatibility | done | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 20 | GitHub OAuth provider compatibility | done | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
 | Phase 21 | Slack provider compatibility | done | Slack reaches workflow-compatible status with client contracts and support matrix |
-| Phase 22 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
+| Phase 22 | Provider-compatible release track | done | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
 
 ## Phase 0 Tasks
 
@@ -275,9 +275,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P22-T01 | Add compatibility CI | pending | Workflow static checks assert SDK contracts, fixture checks, report artifact |
-| P22-T02 | Generate compatibility reports | pending | Report generation tests assert adapter scores, SDK versions, known gaps |
-| P22-T03 | Define provider-compatible release criteria | pending | Release check enforces minimum score and passing contracts before maturity promotion |
+| P22-T01 | Add compatibility CI | done | Workflow static checks assert SDK contracts, fixture checks, report artifact |
+| P22-T02 | Generate compatibility reports | done | Report generation tests assert adapter scores, SDK versions, known gaps |
+| P22-T03 | Define provider-compatible release criteria | done | Release check enforces minimum score and passing contracts before maturity promotion |
 
 ## Verification Notes
 

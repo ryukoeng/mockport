@@ -22,34 +22,34 @@
 
 ## Task P22-T01: Compatibility CI
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add scheduled and manual compatibility workflow.
-- [ ] Run SDK contracts and fixture checks in the workflow.
-- [ ] Upload compatibility report artifact.
-- [ ] Run static workflow checks locally.
+- [x] Add scheduled and manual compatibility workflow.
+- [x] Run SDK contracts and fixture checks in the workflow.
+- [x] Upload compatibility report artifact.
+- [x] Run static workflow checks locally.
 
 ## Task P22-T02: Generated Compatibility Reports
 
-**Status:** pending
+**Status:** done
 
-- [ ] Generate markdown/JSON reports from compatibility manifests.
-- [ ] Include adapter score, tested SDK versions, provider API version, known gaps.
-- [ ] Add docs index for compatibility reports.
-- [ ] Run report generation check.
+- [x] Generate markdown/JSON reports from compatibility manifests.
+- [x] Include adapter score, tested SDK versions, provider API version, known gaps.
+- [x] Add docs index for compatibility reports.
+- [x] Run report generation check.
 
 ## Task P22-T03: Provider-compatible Release Criteria
 
-**Status:** pending
+**Status:** done
 
-- [ ] Define release labels: `experimental`, `sdk-compatible`, `workflow-compatible`, `provider-compatible`.
-- [ ] Require SDK contract pass and minimum score before promoting adapter maturity.
-- [ ] Add release checklist to changelog/release docs.
-- [ ] Run full compatibility release check.
+- [x] Define release labels: `experimental`, `sdk-compatible`, `workflow-compatible`, `provider-compatible`.
+- [x] Require SDK contract pass and minimum score before promoting adapter maturity.
+- [x] Add release checklist to changelog/release docs.
+- [x] Run full compatibility release check.
 
 ## Phase 22 Exit
 
-- [ ] Compatibility CI runs on demand and schedule.
-- [ ] Compatibility reports are generated from manifests.
-- [ ] Adapter maturity is promoted only with contract evidence.
-- [ ] Release notes show compatibility scores and known gaps.
+- [x] Compatibility CI runs on demand and schedule.
+- [x] Compatibility reports are generated from manifests.
+- [x] Adapter maturity is promoted only with contract evidence.
+- [x] Release notes show compatibility scores and known gaps.

@@ -1,0 +1,38 @@
+name: Compatibility
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.3"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: "contract/sdk/package-lock.json"
+      - run: go test ./...
+      - run: go vet ./...
+      - run: bash scripts/run-sdk-contracts.sh stripe
+      - run: bash scripts/run-sdk-contracts.sh openai
+      - run: bash scripts/run-sdk-contracts.sh github-oauth
+      - run: bash scripts/run-sdk-contracts.sh slack
+      - run: bash scripts/check-compat-fixtures.sh
+      - run: bash scripts/generate-compatibility-report.sh
+      - run: bash scripts/check-compatibility-release.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mockport-compatibility-report
+          path: |
+            docs/compatibility-reports/latest.md
+            docs/compatibility-reports/latest.json

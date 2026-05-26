@@ -1,0 +1,176 @@
+{
+  "generated_by": "scripts/generate-compatibility-report.sh",
+  "generated_at": "2026-05-26",
+  "source": "_mockport/report",
+  "release_labels": {
+    "experimental": "Early adapter coverage for selected workflows. Expect gaps.",
+    "sdk-compatible": "Selected SDK or client contract calls pass against local Mockport.",
+    "workflow-compatible": "Selected workflows include fake state, errors, and replayable behavior.",
+    "provider-compatible": "Selected provider workflows are backed by manifests, SDK contracts, fixtures, scores, and known-gap reports."
+  },
+  "promotion_criteria": {
+    "sdk-compatible": "SDK/client contract coverage exists and score is at least 40.",
+    "workflow-compatible": "Workflow, state, and error evidence exists and score is at least 60.",
+    "provider-compatible": "Contract-level evidence exists and score is at least 80."
+  },
+  "adapters": [
+    {
+      "name": "github-oauth",
+      "maturity": "workflow-compatible",
+      "measured_level": "workflow",
+      "score": 80,
+      "provider_version": "2022-11-28",
+      "sdk_versions": [],
+      "endpoint_coverage": 100,
+      "scenario_coverage": 100,
+      "sdk_coverage": 0,
+      "state_coverage": 100,
+      "error_coverage": 100,
+      "stateful_resources": [
+        "oauth_code",
+        "oauth_token",
+        "user_identity"
+      ],
+      "idempotency": false,
+      "reset": true,
+      "endpoints": [
+        "GET /github/login/oauth/authorize",
+        "POST /github/login/oauth/access_token",
+        "GET /github/user",
+        "GET /github/user/emails",
+        "GET /github/user/orgs"
+      ],
+      "known_gaps": [
+        "No real GitHub policy, repository permissions, SSO, org/enterprise enforcement, or app installation model."
+      ]
+    },
+    {
+      "name": "openai",
+      "maturity": "workflow-compatible",
+      "measured_level": "workflow",
+      "score": 100,
+      "provider_version": "2025-02-01",
+      "sdk_versions": [
+        "openai@6.39.0"
+      ],
+      "endpoint_coverage": 100,
+      "scenario_coverage": 100,
+      "sdk_coverage": 100,
+      "state_coverage": 100,
+      "error_coverage": 100,
+      "stateful_resources": [
+        "chat_completion",
+        "response",
+        "embedding",
+        "file",
+        "batch"
+      ],
+      "idempotency": false,
+      "reset": true,
+      "endpoints": [
+        "GET /openai/v1/models",
+        "POST /openai/v1/chat/completions",
+        "POST /openai/v1/responses",
+        "GET /openai/v1/responses/{id}",
+        "POST /openai/v1/embeddings",
+        "POST /openai/v1/files",
+        "POST /openai/v1/batches",
+        "GET /openai/v1/batches/{id}"
+      ],
+      "known_gaps": [
+        "No real model quality, tokenization parity, hosted tools, vector stores, or provider scheduling."
+      ]
+    },
+    {
+      "name": "slack",
+      "maturity": "workflow-compatible",
+      "measured_level": "workflow",
+      "score": 80,
+      "provider_version": "2025-02-01",
+      "sdk_versions": [],
+      "endpoint_coverage": 100,
+      "scenario_coverage": 100,
+      "sdk_coverage": 0,
+      "state_coverage": 100,
+      "error_coverage": 100,
+      "stateful_resources": [
+        "channel",
+        "user",
+        "bot",
+        "message"
+      ],
+      "idempotency": false,
+      "reset": true,
+      "endpoints": [
+        "POST /slack/api/auth.test",
+        "POST /slack/api/chat.postMessage",
+        "POST /slack/api/chat.update",
+        "POST /slack/api/chat.delete",
+        "POST /slack/api/conversations.list",
+        "GET /slack/api/conversations.history",
+        "POST /slack/api/conversations.history",
+        "POST /slack/events"
+      ],
+      "known_gaps": [
+        "No real delivery, Events API completeness, Block Kit validation, files, app scopes, enterprise policy, or full workspace directory."
+      ]
+    },
+    {
+      "name": "stripe",
+      "maturity": "workflow-compatible",
+      "measured_level": "workflow",
+      "score": 100,
+      "provider_version": "2025-10-29.clover",
+      "sdk_versions": [
+        "stripe@22.1.1"
+      ],
+      "endpoint_coverage": 100,
+      "scenario_coverage": 100,
+      "sdk_coverage": 100,
+      "state_coverage": 100,
+      "error_coverage": 100,
+      "stateful_resources": [
+        "checkout_session",
+        "payment_intent",
+        "customer",
+        "product",
+        "price",
+        "subscription",
+        "invoice",
+        "refund"
+      ],
+      "idempotency": true,
+      "reset": true,
+      "endpoints": [
+        "POST /stripe/v1/checkout/sessions",
+        "GET /stripe/v1/checkout/sessions",
+        "GET /stripe/v1/checkout/sessions/{id}",
+        "POST /stripe/v1/payment_intents",
+        "GET /stripe/v1/payment_intents",
+        "GET /stripe/v1/payment_intents/{id}",
+        "POST /stripe/v1/customers",
+        "GET /stripe/v1/customers",
+        "GET /stripe/v1/customers/{id}",
+        "POST /stripe/v1/products",
+        "GET /stripe/v1/products",
+        "GET /stripe/v1/products/{id}",
+        "POST /stripe/v1/prices",
+        "GET /stripe/v1/prices",
+        "GET /stripe/v1/prices/{id}",
+        "POST /stripe/v1/subscriptions",
+        "GET /stripe/v1/subscriptions",
+        "GET /stripe/v1/subscriptions/{id}",
+        "POST /stripe/v1/invoices",
+        "GET /stripe/v1/invoices",
+        "GET /stripe/v1/invoices/{id}",
+        "POST /stripe/v1/refunds",
+        "GET /stripe/v1/refunds",
+        "GET /stripe/v1/refunds/{id}",
+        "POST /stripe/test/webhook/send"
+      ],
+      "known_gaps": [
+        "No fraud, payment network, tax, disputes, Connect, or full Billing lifecycle."
+      ]
+    }
+  ]
+}

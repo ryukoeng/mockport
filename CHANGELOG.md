@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Compatibility release track
+
+- Added scheduled/manual compatibility CI for Stripe, OpenAI, GitHub OAuth, and Slack contract checks.
+- Added generated compatibility reports with compatibility scores, provider API versions, SDK/client evidence, and known gaps.
+- Added release checks for maturity labels: `experimental`, `sdk-compatible`, `workflow-compatible`, and `provider-compatible`.
+
 ## v0.1.0-alpha - 2026-05-26
 
 Initial public preview release.
@@ -18,4 +26,3 @@ Initial public preview release.
 - This is scenario-compatible, not full provider-compatible.
 - Provider SDK contract coverage starts in later phases.
 - Homebrew and npm are not published distribution channels yet.
-
