@@ -176,7 +176,7 @@
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
 | P11-T01 | Add maintenance policy | pending | Static maintenance check asserts roadmap and maintainer guide |
-| P11-T02 | Add dependency and CI maintenance | pending | Dependabot config and scheduled checks are validated statically |
+| P11-T02 | Add dependency and CI maintenance | pending | Dependabot config, scheduled checks, and Node.js 24-compatible Actions are validated |
 | P11-T03 | Define adapter contribution quality bar | pending | Public trust/docs checks cover adapter PR criteria |
 
 ## Phase 12 Tasks

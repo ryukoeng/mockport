@@ -4,7 +4,7 @@
 
 **Goal:** 公開OSSとして継続メンテできる運用面を整え、外部 contributor と adopter の負担を下げる。
 
-**Architecture:** Repository automation、dependency update、roadmap、triage labels を用意する。Compatibility policy は Phase 12 の compatibility model 後に詳細化するため、この Phase では一般的な maintenance policy に絞る。
+**Architecture:** Repository automation、dependency update、roadmap、triage labels、GitHub Actions runtime upkeep を用意する。Compatibility policy は Phase 12 の compatibility model 後に詳細化するため、この Phase では一般的な maintenance policy に絞る。
 
 **Tech Stack:** GitHub Actions, Dependabot, Markdown, GitHub labels/issues.
 
@@ -33,6 +33,7 @@
 **Status:** pending
 
 - [ ] Add Dependabot config for GitHub Actions, Go modules, and npm wrapper.
+- [ ] Update GitHub Actions versions/runtime configuration to remove Node.js 20 deprecation warnings and prefer Node.js 24-compatible actions.
 - [ ] Add scheduled CI smoke for Docker path if feasible.
 - [ ] Document that test-only SDK dependencies are pinned in the SDK contract harness phase.
 - [ ] Run CI static checks locally.
@@ -50,5 +51,6 @@
 
 - [ ] Maintenance policy is documented.
 - [ ] Dependabot is configured.
+- [ ] GitHub Actions run without Node.js 20 deprecation warnings, or any unavoidable warning is tracked with a dated upstream reason.
 - [ ] Adapter contribution quality bar is explicit.
 - [ ] Public roadmap exists and avoids overpromising.
