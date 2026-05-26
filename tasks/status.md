@@ -27,8 +27,8 @@
 | Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
 | Phase 7 | Public OSS hardening | pending | Public trust files, contribution surface, first-run install path, public CI gates |
 | Phase 8 | Public env safety | pending | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
-| Phase 9 | Public preview release | pending | Preview GitHub Release and GHCR image are published and install-verified |
-| Phase 10 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready |
+| Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
+| Phase 10 | Public preview release | pending | Preview GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
 | Phase 12 | Compatibility engine | pending | Compatibility manifests, scores, and reports define provider-compatible local API |
 | Phase 13 | Fixture and spec policy | pending | Sanitized fixtures, source metadata, and provider spec snapshot rules exist |
@@ -158,18 +158,18 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P9-T01 | Add preview release readiness audit | pending | Release verification script checks archive names, checksums, version, image |
-| P9-T02 | Publish `v0.1.0-alpha` GitHub Release | pending | Release workflow produces archives and `checksums.txt` |
-| P9-T03 | Verify GHCR preview publish | pending | Docker pull and smoke use GHCR preview image, not local build |
-| P9-T04 | Update preview install docs | pending | README install audit passes from a temporary directory |
+| P9-T01 | Build public docs information architecture | pending | Docs link/path check asserts expected pages |
+| P9-T02 | Add example-driven onboarding docs | pending | Example configs load and smoke path is covered |
+| P9-T03 | Add public positioning and limitations | pending | Markdown/link checks cover comparison and limitations pages |
 
 ## Phase 10 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P10-T01 | Build public docs information architecture | pending | Docs link/path check asserts expected pages |
-| P10-T02 | Add example-driven onboarding docs | pending | Example configs load and smoke path is covered |
-| P10-T03 | Add public positioning and limitations | pending | Markdown/link checks cover comparison and limitations pages |
+| P10-T01 | Add preview release readiness audit | pending | Release verification script checks archive names, checksums, version, image |
+| P10-T02 | Publish `v0.1.0-alpha` GitHub Release | pending | Release workflow produces archives and `checksums.txt` |
+| P10-T03 | Verify GHCR preview publish | pending | Docker pull and smoke use GHCR preview image, not local build |
+| P10-T04 | Update preview install docs | pending | README install audit passes from a temporary directory |
 
 ## Phase 11 Tasks
 

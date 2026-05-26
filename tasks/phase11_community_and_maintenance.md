@@ -34,7 +34,7 @@
 
 - [ ] Add Dependabot config for GitHub Actions, Go modules, and npm wrapper.
 - [ ] Add scheduled CI smoke for Docker path if feasible.
-- [ ] Pin test-only SDK dependencies when introduced later.
+- [ ] Document that test-only SDK dependencies are pinned in the SDK contract harness phase.
 - [ ] Run CI static checks locally.
 
 ## Task P11-T03: Contribution Quality Bar

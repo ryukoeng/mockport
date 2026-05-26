@@ -1,4 +1,4 @@
-# Phase 9 Public Preview Release Implementation Plan
+# Phase 10 Public Preview Release Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -19,16 +19,16 @@
 - Modify: `docs/site/distribution.md`
 - Modify: `tasks/status.md`
 
-## Task P9-T01: Preview Release Readiness Audit
+## Task P10-T01: Preview Release Readiness Audit
 
 **Status:** pending
 
 - [ ] Write `scripts/verify-release-artifacts.sh` to verify release archive names, checksums, binary version, and GHCR image availability.
 - [ ] Add `CHANGELOG.md` with `v0.1.0-alpha` initial preview release notes.
-- [ ] Add `docs/releases/v0.1.0-alpha.md` with scope, supported adapters, known limitations, public env safety, and verification commands.
+- [ ] Add `docs/releases/v0.1.0-alpha.md` with scope, supported adapters, known limitations, public env safety, support matrix link, and verification commands.
 - [ ] Run full pre-release verification locally.
 
-## Task P9-T02: Tag And GitHub Preview Release
+## Task P10-T02: Tag And GitHub Preview Release
 
 **Status:** pending
 
@@ -37,7 +37,7 @@
 - [ ] Confirm GitHub Release has four archives and `checksums.txt`.
 - [ ] Run release archive install test from downloaded artifact.
 
-## Task P9-T03: GHCR Preview Publish Verification
+## Task P10-T03: GHCR Preview Publish Verification
 
 **Status:** pending
 
@@ -46,7 +46,7 @@
 - [ ] Run Docker pull and smoke test from GHCR image, not local build.
 - [ ] Record image digest in `docs/releases/v0.1.0-alpha.md`.
 
-## Task P9-T04: Preview Install Docs Update
+## Task P10-T04: Preview Install Docs Update
 
 **Status:** pending
 
@@ -55,7 +55,7 @@
 - [ ] Keep Homebrew and npm marked not-yet-published unless actually published.
 - [ ] Run README install path audit from a temporary directory.
 
-## Phase 9 Exit
+## Phase 10 Exit
 
 - [ ] Preview tag exists on GitHub.
 - [ ] GitHub Release contains archives and checksums.

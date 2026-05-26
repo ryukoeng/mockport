@@ -53,4 +53,4 @@
 - [ ] Public-safe env policy is documented before public preview.
 - [ ] Env examples are checked in CI.
 - [ ] Scanner catches real-looking provider secrets.
-- [ ] Generated fake env values are compatible with current examples and future SDK contract tests.
+- [ ] Generated fake env values are compatible with current examples and reserved provider SDK env conventions.

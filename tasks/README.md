@@ -28,8 +28,8 @@ tasks/
   phase6_distribution.md
   phase7_public_oss_hardening.md
   phase8_public_env_safety.md
-  phase9_public_preview_release.md
-  phase10_public_docs_and_discovery.md
+  phase9_public_docs_and_discovery.md
+  phase10_public_preview_release.md
   phase11_community_and_maintenance.md
   phase12_compatibility_engine.md
   phase13_fixture_spec_policy.md
@@ -86,9 +86,9 @@ Phase 7 は「公開前に必要な LICENSE、SECURITY、CONTRIBUTING、issue/PR
 
 Phase 8 は「Mockport 用 `.env` を公開してもよい条件を scanner、docs、examples、CI で保証する」までです。
 
-Phase 9 は「初回 public preview release として GitHub Release、checksums、GHCR image を実際に公開し、clean install を検証する」までです。
+Phase 9 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
 
-Phase 10 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
+Phase 10 は「初回 public preview release として GitHub Release、checksums、GHCR image を実際に公開し、clean install を検証する」までです。
 
 Phase 11 は「Dependabot、maintainer guide、roadmap、adapter contribution quality bar を整え、継続運用できる」までです。
 
