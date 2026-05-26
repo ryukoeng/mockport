@@ -2,7 +2,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GO_BIN="${GO_BIN:-/usr/local/go/bin/go}"
+if [[ -z "${GO_BIN:-}" ]]; then
+  if command -v go >/dev/null 2>&1; then
+    GO_BIN="go"
+  else
+    GO_BIN="/usr/local/go/bin/go"
+  fi
+fi
 IMAGE_TAG="mockport:local"
 WORK_DIR="$(mktemp -d)"
 
