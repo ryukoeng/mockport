@@ -29,7 +29,7 @@
 | Phase 8 | Public env safety | done | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
 | Phase 9 | Public docs and discovery | done | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | done | `v0.1.0-alpha` GitHub Release and GHCR image are published and install-verified |
-| Phase 11 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
+| Phase 11 | Community and maintenance | done | Maintenance policy, Dependabot, roadmap, Node.js 24 Actions, and adapter contribution quality bar |
 | Phase 12 | Compatibility engine | pending | Compatibility manifests, scores, and reports define provider-compatible local API |
 | Phase 13 | Fixture and spec policy | pending | Sanitized fixtures, source metadata, and provider spec snapshot rules exist |
 | Phase 14 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
@@ -175,9 +175,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P11-T01 | Add maintenance policy | pending | Static maintenance check asserts roadmap and maintainer guide |
-| P11-T02 | Add dependency and CI maintenance | pending | Dependabot config, scheduled checks, and Node.js 24-compatible Actions are validated |
-| P11-T03 | Define adapter contribution quality bar | pending | Public trust/docs checks cover adapter PR criteria |
+| P11-T01 | Add maintenance policy | done | Static maintenance check asserts roadmap and maintainer guide |
+| P11-T02 | Add dependency and CI maintenance | done | Dependabot config, scheduled checks, and Node.js 24-compatible Actions are validated |
+| P11-T03 | Define adapter contribution quality bar | done | Public trust/docs checks cover adapter PR criteria |
 
 ## Phase 12 Tasks
 

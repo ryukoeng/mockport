@@ -6,6 +6,12 @@ Mockport runs local Docker-based emulators for external services. The Minimal MV
 
 For public preview scope, support matrix, examples, and limitations, see [Mockport Docs](docs/site/index.md).
 
+Project planning and maintenance:
+
+- [Roadmap](ROADMAP.md)
+- [Maintainer Guide](docs/maintainer-guide.md)
+- [Support Policy](docs/public-support-policy.md)
+
 ## Quickstart
 
 No local install required:

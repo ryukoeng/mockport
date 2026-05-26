@@ -33,6 +33,8 @@ bash scripts/check-distribution.sh
 
 ## Adapter Changes
 
+Adapter acceptance criteria:
+
 Adapter pull requests must include:
 
 - HTTP tests for success and failure scenarios.
@@ -40,6 +42,7 @@ Adapter pull requests must include:
 - Example config or docs when user-facing.
 - AI-safe behavior for fake credentials and local base URLs.
 - Clear unsupported behavior in reports or docs.
+- No real provider secrets, production URLs, customer payloads, or unsanitized fixtures.
 
 ## Pull Requests
 
