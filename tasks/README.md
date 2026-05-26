@@ -9,6 +9,8 @@
 - npm wrapper は後回しにする。
 - Rust component は後回しにする。
 - 動的 plugin system、複雑な DSL、adapter-specific image は Minimal MVP では作らない。
+- Phase 11 以降は、provider 内部再現ではなく、公開 API / 公式 SDK / 主要 workflow / fake state / 主要 error shape の高忠実度互換を目標にする。
+- 「Full-compatible」は全 provider 内部や全 undocumented behavior の再現ではなく、測定可能な provider-compatible local API として定義する。
 - production code は、対応する failing test を先に作って失敗を確認してから実装する。
 
 ## ファイル構成
@@ -28,6 +30,12 @@ tasks/
   phase8_first_public_release.md
   phase9_public_docs_and_discovery.md
   phase10_community_and_maintenance.md
+  phase11_compatibility_engine.md
+  phase12_sdk_contract_harness.md
+  phase13_stateful_provider_workflows.md
+  phase14_provider_fidelity_expansion.md
+  phase15_public_env_contract.md
+  phase16_provider_compatible_release_track.md
 ```
 
 ## Status の意味
@@ -77,6 +85,18 @@ Phase 8 は「初回 public release として GitHub Release、checksums、GHCR 
 Phase 9 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
 
 Phase 10 は「Dependabot、compatibility policy、maintainer guide、adapter contribution quality bar を整え、継続運用できる」までです。
+
+Phase 11 は「互換性を manifest、score、report として測れる Compatibility Engine を作る」までです。
+
+Phase 12 は「公式 SDK / 実 client contract を local Mockport に向けて通す」までです。
+
+Phase 13 は「主要 workflow を fake state 上で create/retrieve/list/update できる stateful API にする」までです。
+
+Phase 14 は「fixture/spec/SDK contract を使って主要 provider surface の高忠実度互換を広げる」までです。
+
+Phase 15 は「Mockport 用 `.env` を公開してもよい条件を scanner、docs、examples、CI で保証する」までです。
+
+Phase 16 は「provider-compatible release track と compatibility report を継続運用する」までです。
 
 ## 参照資料
 

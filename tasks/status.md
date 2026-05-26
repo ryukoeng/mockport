@@ -29,6 +29,12 @@
 | Phase 8 | First public release | pending | v0.1.0 GitHub Release and GHCR image are published and install-verified |
 | Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready |
 | Phase 10 | Community and maintenance | pending | Maintenance policy, Dependabot, roadmap, and adapter contribution quality bar |
+| Phase 11 | Compatibility engine | pending | Compatibility manifests, scores, and reports define provider-compatible local API |
+| Phase 12 | SDK contract harness | pending | Official SDK/client smoke tests run against local Mockport |
+| Phase 13 | Stateful provider workflows | pending | Major workflows use fake state for create/retrieve/list/update and idempotency |
+| Phase 14 | Provider fidelity expansion | pending | Major provider surfaces expand with fixtures, TDD, SDK contracts, and support matrix |
+| Phase 15 | Public env contract | pending | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI |
+| Phase 16 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
 
 ## Phase 0 Tasks
 
@@ -160,6 +166,57 @@
 | P10-T01 | Add maintenance policy | pending | Static maintenance check asserts policy, roadmap, maintainer guide |
 | P10-T02 | Add dependency and CI maintenance | pending | Dependabot config and scheduled checks are validated statically |
 | P10-T03 | Define adapter contribution quality bar | pending | Public trust/docs checks cover adapter PR criteria |
+
+## Phase 11 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P11-T01 | Add compatibility level model | pending | Manifest tests cover wire/sdk/workflow/error/state/contract levels |
+| P11-T02 | Add compatibility scoring | pending | Score tests cover endpoint, scenario, SDK, state, and error coverage |
+| P11-T03 | Add compatibility report output | pending | Report tests assert score, levels, SDK versions, provider API version, gaps |
+
+## Phase 12 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P12-T01 | Add SDK contract workspace | pending | SDK contract package fails until local Mockport-compatible smoke exists |
+| P12-T02 | Add Stripe SDK contract | pending | Official SDK smoke covers checkout sessions and payment intents |
+| P12-T03 | Add OpenAI SDK contract | pending | Official SDK smoke covers models, chat, responses, streaming where feasible |
+| P12-T04 | Add Slack and GitHub OAuth client contracts | pending | Client smoke covers auth, token exchange, user profile, and message posting |
+
+## Phase 13 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P13-T01 | Add deterministic state store | pending | Store tests cover create/retrieve/list/update/delete and reset |
+| P13-T02 | Add Stripe stateful workflows | pending | Adapter and SDK tests cover stateful checkout/payment intent/idempotency |
+| P13-T03 | Add OpenAI stateful workflows | pending | Adapter and SDK tests cover IDs, streaming shape, validation |
+| P13-T04 | Add OAuth and messaging state | pending | Client tests cover codes, tokens, scopes, users, channels, messages |
+
+## Phase 14 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P14-T01 | Add fixture and spec snapshot policy | pending | Fixture check rejects real secrets and missing source metadata |
+| P14-T02 | Expand Stripe major surface | pending | Endpoint group tests and SDK contracts cover customers/prices/products/subscriptions/invoices/refunds |
+| P14-T03 | Expand OpenAI major surface | pending | Endpoint group tests and SDK contracts cover embeddings/files/batches/tool-call subset |
+| P14-T04 | Expand GitHub and Slack major surface | pending | Client contracts cover OAuth scopes/user emails/org subset and Slack conversations/events subset |
+
+## Phase 15 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P15-T01 | Define public-safe env policy | pending | Static docs check asserts allowed prefixes and forbidden real provider patterns |
+| P15-T02 | Add public env scanner | pending | Security tests catch real-looking secrets in env files and docs snippets |
+| P15-T03 | Add public env UX | pending | CLI/report tests assert generated env is fake, local, and safe-to-commit |
+
+## Phase 16 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P16-T01 | Add compatibility CI | pending | Workflow static checks assert SDK contracts, fixture checks, report artifact |
+| P16-T02 | Generate compatibility reports | pending | Report generation tests assert adapter scores, SDK versions, known gaps |
+| P16-T03 | Define provider-compatible release criteria | pending | Release check enforces minimum score and passing contracts before maturity promotion |
 
 ## Verification Notes
 
