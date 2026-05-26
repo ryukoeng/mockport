@@ -1,4 +1,4 @@
-# Phase 11 Compatibility Engine Implementation Plan
+# Phase 12 Compatibility Engine Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -22,7 +22,7 @@
 - Modify: `internal/report/render.go`
 - Modify: `tasks/status.md`
 
-## Task P11-T01: Compatibility Level Model
+## Task P12-T01: Compatibility Level Model
 
 **Status:** pending
 
@@ -31,7 +31,7 @@
 - [ ] Add validation for required fields and duplicate endpoint ids.
 - [ ] Run `/usr/local/go/bin/go test ./internal/compat -v`.
 
-## Task P11-T02: Compatibility Score
+## Task P12-T02: Compatibility Score
 
 **Status:** pending
 
@@ -40,7 +40,7 @@
 - [ ] Expose score in report JSON.
 - [ ] Run `/usr/local/go/bin/go test ./internal/compat ./internal/report -v`.
 
-## Task P11-T03: Compatibility Report Output
+## Task P12-T03: Compatibility Report Output
 
 **Status:** pending
 
@@ -49,7 +49,7 @@
 - [ ] Update docs to define what Mockport means by provider-compatible local API.
 - [ ] Run `/usr/local/go/bin/go test ./...`.
 
-## Phase 11 Exit
+## Phase 12 Exit
 
 - [ ] Compatibility is represented as a structured manifest.
 - [ ] Report shows compatibility score and levels.

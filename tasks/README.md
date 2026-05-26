@@ -27,15 +27,19 @@ tasks/
   phase5_additional_adapters.md
   phase6_distribution.md
   phase7_public_oss_hardening.md
-  phase8_first_public_release.md
-  phase9_public_docs_and_discovery.md
-  phase10_community_and_maintenance.md
-  phase11_compatibility_engine.md
-  phase12_sdk_contract_harness.md
-  phase13_stateful_provider_workflows.md
-  phase14_provider_fidelity_expansion.md
-  phase15_public_env_contract.md
-  phase16_provider_compatible_release_track.md
+  phase8_public_env_safety.md
+  phase9_public_preview_release.md
+  phase10_public_docs_and_discovery.md
+  phase11_community_and_maintenance.md
+  phase12_compatibility_engine.md
+  phase13_fixture_spec_policy.md
+  phase14_sdk_contract_harness_foundation.md
+  phase15_stateful_provider_workflows.md
+  phase16_stripe_provider_compatibility.md
+  phase17_openai_provider_compatibility.md
+  phase18_github_oauth_provider_compatibility.md
+  phase19_slack_provider_compatibility.md
+  phase20_provider_compatible_release_track.md
 ```
 
 ## Status の意味
@@ -80,23 +84,31 @@ Phase 6 は「GHCR、GitHub release binaries、Homebrew tap 下準備、npm wrap
 
 Phase 7 は「公開前に必要な LICENSE、SECURITY、CONTRIBUTING、issue/PR templates、public CI gate を揃える」までです。
 
-Phase 8 は「初回 public release として GitHub Release、checksums、GHCR image を実際に公開し、clean install を検証する」までです。
+Phase 8 は「Mockport 用 `.env` を公開してもよい条件を scanner、docs、examples、CI で保証する」までです。
 
-Phase 9 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
+Phase 9 は「初回 public preview release として GitHub Release、checksums、GHCR image を実際に公開し、clean install を検証する」までです。
 
-Phase 10 は「Dependabot、compatibility policy、maintainer guide、adapter contribution quality bar を整え、継続運用できる」までです。
+Phase 10 は「公開 docs、support matrix、limitations、examples を整え、初見ユーザーが導入判断できる」までです。
 
-Phase 11 は「互換性を manifest、score、report として測れる Compatibility Engine を作る」までです。
+Phase 11 は「Dependabot、maintainer guide、roadmap、adapter contribution quality bar を整え、継続運用できる」までです。
 
-Phase 12 は「公式 SDK / 実 client contract を local Mockport に向けて通す」までです。
+Phase 12 は「互換性を manifest、score、report として測れる Compatibility Engine を作る」までです。
 
-Phase 13 は「主要 workflow を fake state 上で create/retrieve/list/update できる stateful API にする」までです。
+Phase 13 は「fixture/spec snapshot の安全性、出典、更新ルールを定義する」までです。
 
-Phase 14 は「fixture/spec/SDK contract を使って主要 provider surface の高忠実度互換を広げる」までです。
+Phase 14 は「公式 SDK / 実 client contract を local Mockport に向けて通す harness foundation を作る」までです。
 
-Phase 15 は「Mockport 用 `.env` を公開してもよい条件を scanner、docs、examples、CI で保証する」までです。
+Phase 15 は「主要 workflow を fake state 上で create/retrieve/list/update できる stateful API にする」までです。
 
-Phase 16 は「provider-compatible release track と compatibility report を継続運用する」までです。
+Phase 16 は「Stripe adapter を SDK/workflow-compatible local API に引き上げる」までです。
+
+Phase 17 は「OpenAI adapter を SDK/workflow-compatible local API に引き上げる」までです。
+
+Phase 18 は「GitHub OAuth adapter を client/workflow-compatible local API に引き上げる」までです。
+
+Phase 19 は「Slack adapter を client/workflow-compatible local API に引き上げる」までです。
+
+Phase 20 は「provider-compatible release track と compatibility report を継続運用する」までです。
 
 ## 参照資料
 

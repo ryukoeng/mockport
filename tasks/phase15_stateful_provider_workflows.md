@@ -1,4 +1,4 @@
-# Phase 13 Stateful Provider Workflows Implementation Plan
+# Phase 15 Stateful Provider Workflows Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -21,7 +21,7 @@
 - Modify: `internal/report/report.go`
 - Modify: `tasks/status.md`
 
-## Task P13-T01: Deterministic State Store
+## Task P15-T01: Deterministic State Store
 
 **Status:** pending
 
@@ -30,7 +30,7 @@
 - [ ] Add reset support for test isolation.
 - [ ] Run `/usr/local/go/bin/go test ./internal/state -v`.
 
-## Task P13-T02: Stripe Stateful Workflows
+## Task P15-T02: Stripe Stateful Workflows
 
 **Status:** pending
 
@@ -39,7 +39,7 @@
 - [ ] Add validation error shapes close to Stripe for missing required fields.
 - [ ] Run adapter tests and Stripe SDK contract.
 
-## Task P13-T03: OpenAI Stateful/Conversation Workflows
+## Task P15-T03: OpenAI Stateful/Conversation Workflows
 
 **Status:** pending
 
@@ -48,7 +48,7 @@
 - [ ] Add validation for model, messages/input, and unsupported parameters.
 - [ ] Run adapter tests and OpenAI SDK contract.
 
-## Task P13-T04: OAuth And Messaging State
+## Task P15-T04: OAuth And Messaging State
 
 **Status:** pending
 
@@ -57,7 +57,7 @@
 - [ ] Add list/retrieve helper endpoints where provider workflows expect them.
 - [ ] Run Slack/GitHub client contracts.
 
-## Phase 13 Exit
+## Phase 15 Exit
 
 - [ ] Major workflows are stateful across create/retrieve/list paths.
 - [ ] Idempotency and validation errors are represented for supported workflows.

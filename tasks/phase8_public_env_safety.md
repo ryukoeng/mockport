@@ -1,8 +1,8 @@
-# Phase 15 Public Env Contract Implementation Plan
+# Phase 8 Public Env Safety Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 「Mockport 用 `.env` は公開してもよい」と言える条件をプロダクト契約として定義し、検証する。
+**Goal:** 「Mockport 用 `.env` は公開してもよい」と言える条件を、初回 public preview 前にプロダクト契約として定義し検証する。
 
 **Architecture:** `.env.mockport.example` を public-safe artifact として扱い、fake credential namespace、base URL policy、secret scanner、README/docs の注意書きを統一する。実 provider credential と混ざった場合は strict mode と CI check で検出する。
 
@@ -21,7 +21,7 @@
 - Modify: `.github/workflows/ci.yml`
 - Modify: `tasks/status.md`
 
-## Task P15-T01: Public-safe Env Policy
+## Task P8-T01: Public-safe Env Policy
 
 **Status:** pending
 
@@ -30,7 +30,7 @@
 - [ ] Add docs explaining when `.env.mockport.example` is safe to commit and when it is not.
 - [ ] Run docs/static check.
 
-## Task P15-T02: Env Scanner
+## Task P8-T02: Env Scanner
 
 **Status:** pending
 
@@ -39,7 +39,7 @@
 - [ ] Add `scripts/check-public-env.sh` to scan examples and docs snippets.
 - [ ] Run `/usr/local/go/bin/go test ./internal/security -v` and `bash scripts/check-public-env.sh`.
 
-## Task P15-T03: Public Env UX
+## Task P8-T03: Public Env UX
 
 **Status:** pending
 
@@ -48,9 +48,9 @@
 - [ ] Add README section: "This Mockport env is safe to commit".
 - [ ] Run CLI tests and README command audit.
 
-## Phase 15 Exit
+## Phase 8 Exit
 
-- [ ] Public-safe env policy is documented.
+- [ ] Public-safe env policy is documented before public preview.
 - [ ] Env examples are checked in CI.
 - [ ] Scanner catches real-looking provider secrets.
-- [ ] Generated fake env values are compatible with SDK contract tests.
+- [ ] Generated fake env values are compatible with current examples and future SDK contract tests.

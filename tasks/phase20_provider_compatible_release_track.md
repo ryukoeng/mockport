@@ -1,4 +1,4 @@
-# Phase 16 Provider-compatible Release Track Implementation Plan
+# Phase 20 Provider-compatible Release Track Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -20,7 +20,7 @@
 - Modify: `CHANGELOG.md`
 - Modify: `tasks/status.md`
 
-## Task P16-T01: Compatibility CI
+## Task P20-T01: Compatibility CI
 
 **Status:** pending
 
@@ -29,7 +29,7 @@
 - [ ] Upload compatibility report artifact.
 - [ ] Run static workflow checks locally.
 
-## Task P16-T02: Generated Compatibility Reports
+## Task P20-T02: Generated Compatibility Reports
 
 **Status:** pending
 
@@ -38,7 +38,7 @@
 - [ ] Add docs index for compatibility reports.
 - [ ] Run report generation check.
 
-## Task P16-T03: Provider-compatible Release Criteria
+## Task P20-T03: Provider-compatible Release Criteria
 
 **Status:** pending
 
@@ -47,7 +47,7 @@
 - [ ] Add release checklist to changelog/release docs.
 - [ ] Run full compatibility release check.
 
-## Phase 16 Exit
+## Phase 20 Exit
 
 - [ ] Compatibility CI runs on demand and schedule.
 - [ ] Compatibility reports are generated from manifests.
