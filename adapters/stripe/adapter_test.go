@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
@@ -63,6 +64,85 @@ func TestGetPaymentIntent(t *testing.T) {
 	}
 }
 
+func TestCheckoutSessionCreateRetrieveListAndIdempotency(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
+
+	first := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/checkout/sessions", "client_reference_id=cart_1", map[string]string{"Idempotency-Key": "cart-1"})
+	if first.Code != http.StatusOK {
+		t.Fatalf("first status = %d, want %d, body=%s", first.Code, http.StatusOK, first.Body.String())
+	}
+	var created map[string]any
+	if err := json.Unmarshal(first.Body.Bytes(), &created); err != nil {
+		t.Fatalf("decode first response: %v", err)
+	}
+	if created["id"] != "stripe_checkout_session_000001" {
+		t.Fatalf("created id = %#v", created["id"])
+	}
+
+	replay := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/checkout/sessions", "client_reference_id=cart_1", map[string]string{"Idempotency-Key": "cart-1"})
+	if replay.Body.String() != first.Body.String() {
+		t.Fatalf("replay body = %s, want %s", replay.Body.String(), first.Body.String())
+	}
+
+	conflict := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/checkout/sessions", "client_reference_id=cart_2", map[string]string{"Idempotency-Key": "cart-1"})
+	if conflict.Code != http.StatusConflict {
+		t.Fatalf("conflict status = %d, want %d, body=%s", conflict.Code, http.StatusConflict, conflict.Body.String())
+	}
+	assertStripeErrorCode(t, conflict, "idempotency_key_in_use")
+
+	retrieved := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/checkout/sessions/stripe_checkout_session_000001", "", nil)
+	if retrieved.Code != http.StatusOK {
+		t.Fatalf("retrieve status = %d, want %d", retrieved.Code, http.StatusOK)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(retrieved.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode retrieve: %v", err)
+	}
+	if got["id"] != created["id"] || got["client_reference_id"] != "cart_1" {
+		t.Fatalf("retrieved = %#v", got)
+	}
+
+	list := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/checkout/sessions", "", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("list status = %d, want %d", list.Code, http.StatusOK)
+	}
+	var listed struct {
+		Object string           `json:"object"`
+		Data   []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(list.Body.Bytes(), &listed); err != nil {
+		t.Fatalf("decode list: %v", err)
+	}
+	if listed.Object != "list" || len(listed.Data) != 1 || listed.Data[0]["id"] != created["id"] {
+		t.Fatalf("list = %#v", listed)
+	}
+}
+
+func TestPaymentIntentCreateRetrieveAndList(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
+
+	create := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/payment_intents", "amount=1200&currency=usd", nil)
+	if create.Code != http.StatusOK {
+		t.Fatalf("create status = %d, want %d, body=%s", create.Code, http.StatusOK, create.Body.String())
+	}
+	var created map[string]any
+	if err := json.Unmarshal(create.Body.Bytes(), &created); err != nil {
+		t.Fatalf("decode create: %v", err)
+	}
+	if created["id"] != "stripe_payment_intent_000001" || created["amount"].(float64) != 1200 {
+		t.Fatalf("created = %#v", created)
+	}
+
+	retrieved := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/payment_intents/stripe_payment_intent_000001", "", nil)
+	if retrieved.Code != http.StatusOK {
+		t.Fatalf("retrieve status = %d, want %d", retrieved.Code, http.StatusOK)
+	}
+	list := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/payment_intents", "", nil)
+	if list.Code != http.StatusOK || !strings.Contains(list.Body.String(), "stripe_payment_intent_000001") {
+		t.Fatalf("list status/body = %d %s", list.Code, list.Body.String())
+	}
+}
+
 func TestTimeoutScenario(t *testing.T) {
 	rec := performStripeRequest(t, adapter.Config{BasePath: "/stripe", Scenario: "timeout"}, http.MethodPost, "/stripe/v1/checkout/sessions")
 	if rec.Code != http.StatusGatewayTimeout {
@@ -119,18 +199,39 @@ func TestMetadata(t *testing.T) {
 	if len(meta.Scenarios) != 5 {
 		t.Fatalf("scenario count = %d, want 5", len(meta.Scenarios))
 	}
-	if len(meta.Endpoints) != 5 {
-		t.Fatalf("endpoint count = %d, want 5", len(meta.Endpoints))
+	if len(meta.Endpoints) != 7 {
+		t.Fatalf("endpoint count = %d, want 7", len(meta.Endpoints))
+	}
+	if !meta.Idempotency || !meta.Reset || len(meta.StatefulResources) != 2 {
+		t.Fatalf("state metadata = %#v", meta)
 	}
 }
 
 func performStripeRequest(t *testing.T, cfg adapter.Config, method, path string) *httptest.ResponseRecorder {
 	t.Helper()
+	mux := newStripeMux(t, cfg)
+	return serveStripeRequest(mux, method, path, "", nil)
+}
+
+func newStripeMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
+	t.Helper()
 	mux := http.NewServeMux()
 	if err := New().Register(mux, cfg); err != nil {
 		t.Fatalf("register adapter: %v", err)
 	}
-	req := httptest.NewRequest(method, path, nil)
+	return mux
+}
+
+func serveStripeRequest(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
+	var reader *strings.Reader
+	reader = strings.NewReader(body)
+	req := httptest.NewRequest(method, path, reader)
+	if body != "" {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	for name, value := range headers {
+		req.Header.Set(name, value)
+	}
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	return rec

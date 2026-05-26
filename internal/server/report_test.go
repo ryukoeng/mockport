@@ -84,6 +84,9 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if snapshot.Compatibility[0].ProviderVersion == "" {
 		t.Fatalf("provider version is empty: %#v", snapshot.Compatibility[0])
 	}
+	if len(snapshot.StateCoverage) != 1 || snapshot.StateCoverage[0].Adapter != "stripe" || !snapshot.StateCoverage[0].Idempotency {
+		t.Fatalf("state coverage = %#v", snapshot.StateCoverage)
+	}
 }
 
 func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {

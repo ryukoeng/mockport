@@ -35,13 +35,25 @@ func (s *IdempotencyStore) Remember(scope, key, fingerprint string, response Ide
 
 	recordKey := scope + "\x00" + key
 	if record, ok := s.records[recordKey]; ok {
-		if record.fingerprint != fingerprint {
-			return false, IdempotentResponse{}, &IdempotencyConflictError{Scope: scope, Key: key}
-		}
-		return true, cloneResponse(record.response), nil
+		return replayRecord(scope, key, fingerprint, record)
 	}
 	s.records[recordKey] = idempotencyRecord{fingerprint: fingerprint, response: cloneResponse(response)}
 	return false, cloneResponse(response), nil
+}
+
+func (s *IdempotencyStore) Lookup(scope, key, fingerprint string) (bool, IdempotentResponse, error) {
+	if strings.TrimSpace(key) == "" {
+		return false, IdempotentResponse{}, nil
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	record, ok := s.records[scope+"\x00"+key]
+	if !ok {
+		return false, IdempotentResponse{}, nil
+	}
+	return replayRecord(scope, key, fingerprint, record)
 }
 
 type IdempotencyConflictError struct {
@@ -51,6 +63,13 @@ type IdempotencyConflictError struct {
 
 func (e *IdempotencyConflictError) Error() string {
 	return fmt.Sprintf("idempotency conflict for %s key %s", e.Scope, e.Key)
+}
+
+func replayRecord(scope, key, fingerprint string, record idempotencyRecord) (bool, IdempotentResponse, error) {
+	if record.fingerprint != fingerprint {
+		return false, IdempotentResponse{}, &IdempotencyConflictError{Scope: scope, Key: key}
+	}
+	return true, cloneResponse(record.response), nil
 }
 
 type ValidationError struct {

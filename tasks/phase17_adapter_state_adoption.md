@@ -21,34 +21,34 @@
 
 ## Task P17-T01: Stripe State Adoption
 
-**Status:** pending
+**Status:** done
 
-- [ ] Make checkout session and payment intent create/retrieve/list stateful.
-- [ ] Add idempotency key handling for create endpoints.
-- [ ] Keep existing scenario tests green while adding stateful tests first.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/stripe -v`.
+- [x] Make checkout session and payment intent create/retrieve/list stateful.
+- [x] Add idempotency key handling for create endpoints.
+- [x] Keep existing scenario tests green while adding stateful tests first.
+- [x] Run `/usr/local/go/bin/go test ./adapters/stripe -v`.
 
 ## Task P17-T02: OpenAI State Adoption
 
-**Status:** pending
+**Status:** done
 
-- [ ] Persist response IDs and chat completion IDs for retrieve-compatible fake workflows where applicable.
-- [ ] Preserve Phase 13 SSE behavior for `stream_success`.
-- [ ] Add validation for model, messages/input, and unsupported parameters where stateful workflows need it.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/openai -v`.
+- [x] Persist response IDs and chat completion IDs for retrieve-compatible fake workflows where applicable.
+- [x] Preserve Phase 13 SSE behavior for `stream_success`.
+- [x] Add validation for model, messages/input, and unsupported parameters where stateful workflows need it.
+- [x] Run `/usr/local/go/bin/go test ./adapters/openai -v`.
 
 ## Task P17-T03: OAuth And Messaging State Adoption
 
-**Status:** pending
+**Status:** done
 
-- [ ] Persist GitHub OAuth codes, tokens, scopes, and fake user identities.
-- [ ] Persist Slack messages by channel and timestamp.
-- [ ] Add report metadata for stateful adapter coverage.
-- [ ] Run `/usr/local/go/bin/go test ./adapters/githuboauth ./adapters/slack -v`.
+- [x] Persist GitHub OAuth codes, tokens, scopes, and fake user identities.
+- [x] Persist Slack messages by channel and timestamp.
+- [x] Add report metadata for stateful adapter coverage.
+- [x] Run `/usr/local/go/bin/go test ./adapters/githuboauth ./adapters/slack -v`.
 
 ## Phase 17 Exit
 
-- [ ] Major adapters use the shared state foundation where supported.
-- [ ] Existing scenario behavior remains backward compatible.
-- [ ] Idempotency and validation behavior is adapter-visible where implemented.
-- [ ] Provider-specific compatibility tracks can build on stateful workflows.
+- [x] Major adapters use the shared state foundation where supported.
+- [x] Existing scenario behavior remains backward compatible.
+- [x] Idempotency and validation behavior is adapter-visible where implemented.
+- [x] Provider-specific compatibility tracks can build on stateful workflows.

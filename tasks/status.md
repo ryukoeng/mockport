@@ -35,7 +35,7 @@
 | Phase 14 | Compatibility engine | done | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
 | Phase 15 | SDK contract harness foundation | done | Pinned SDK contract runner reaches local Mockport without external provider calls |
 | Phase 16 | State foundation | done | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
-| Phase 17 | Adapter state adoption | pending | Major adapters adopt fake state without breaking scenario-compatible behavior |
+| Phase 17 | Adapter state adoption | done | Major adapters adopt fake state without breaking scenario-compatible behavior |
 | Phase 18 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 19 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 20 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
@@ -235,9 +235,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P17-T01 | Adopt state in Stripe workflows | pending | Adapter tests cover stateful checkout/payment intent and idempotency |
-| P17-T02 | Adopt state in OpenAI workflows | pending | Adapter tests cover IDs, retrieve-compatible fake workflows, validation, and preserved streaming |
-| P17-T03 | Adopt state in OAuth and messaging workflows | pending | Adapter tests cover codes, tokens, scopes, users, channels, messages |
+| P17-T01 | Adopt state in Stripe workflows | done | Adapter tests cover stateful checkout/payment intent and idempotency |
+| P17-T02 | Adopt state in OpenAI workflows | done | Adapter tests cover IDs, retrieve-compatible fake workflows, validation, and preserved streaming |
+| P17-T03 | Adopt state in OAuth and messaging workflows | done | Adapter tests cover codes, tokens, scopes, users, channels, messages |
 
 ## Phase 18 Tasks
 

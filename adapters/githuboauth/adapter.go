@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
 type Adapter struct{}
@@ -19,7 +20,7 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/github"
 	}
-	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg}
+	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg, store: state.NewStore()}
 	mux.HandleFunc(r.basePath+"/", r.handle)
 	return nil
 }
@@ -41,6 +42,12 @@ func (a Adapter) Metadata() adapter.Metadata {
 		Name:         "github-oauth",
 		Maturity:     "experimental",
 		Capabilities: []string{"oauth_authorize", "oauth_token", "user_profile"},
+		StatefulResources: []string{
+			"oauth_code",
+			"oauth_token",
+			"user_identity",
+		},
+		Reset: true,
 		Scenarios: []adapter.Scenario{
 			{Name: "oauth_success", Supported: true},
 			{Name: "invalid_code", Supported: true},
@@ -58,6 +65,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 type routes struct {
 	basePath string
 	cfg      adapter.Config
+	store    *state.Store
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
@@ -68,21 +76,34 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		if redirectURI == "" {
 			redirectURI = "http://localhost/callback"
 		}
+		code := r.createCode(req)
 		sep := "?"
 		if strings.Contains(redirectURI, "?") {
 			sep = "&"
 		}
-		http.Redirect(w, req, redirectURI+sep+"code=mockport_code&state="+req.URL.Query().Get("state"), http.StatusFound)
+		http.Redirect(w, req, redirectURI+sep+"code="+code+"&state="+req.URL.Query().Get("state"), http.StatusFound)
 	case req.Method == http.MethodPost && path == "/login/oauth/access_token":
-		r.writeToken(w)
+		r.writeToken(w, req)
 	case req.Method == http.MethodGet && path == "/user":
-		r.writeUser(w)
+		r.writeUser(w, req)
 	default:
 		http.NotFound(w, req)
 	}
 }
 
-func (r *routes) writeToken(w http.ResponseWriter) {
+func (r *routes) createCode(req *http.Request) string {
+	scope := req.URL.Query().Get("scope")
+	if scope == "" {
+		scope = "read:user"
+	}
+	resource, _ := r.store.Create("github-oauth", "oauth_code", map[string]any{
+		"scope": scope,
+		"user":  "mockport-user",
+	})
+	return resource.ID
+}
+
+func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 	switch normalizeScenario(r.cfg.Scenario) {
 	case "invalid_code":
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad_verification_code"})
@@ -91,19 +112,45 @@ func (r *routes) writeToken(w http.ResponseWriter) {
 	case "scope_missing":
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "scope_missing"})
 	default:
-		writeJSON(w, http.StatusOK, map[string]interface{}{"access_token": "gho_mockport", "token_type": "bearer", "scope": "read:user"})
+		_ = req.ParseForm()
+		code := req.Form.Get("code")
+		if code == "" {
+			writeJSON(w, http.StatusOK, map[string]interface{}{"access_token": "gho_mockport", "token_type": "bearer", "scope": "read:user"})
+			return
+		}
+		codeResource, ok := r.store.Get("github-oauth", "oauth_code", code)
+		if !ok {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad_verification_code"})
+			return
+		}
+		token, _ := r.store.Create("github-oauth", "oauth_token", map[string]any{
+			"scope": codeResource.Data["scope"],
+			"user":  codeResource.Data["user"],
+		})
+		writeJSON(w, http.StatusOK, map[string]interface{}{"access_token": token.ID, "token_type": "bearer", "scope": codeResource.Data["scope"]})
 	}
 }
 
-func (r *routes) writeUser(w http.ResponseWriter) {
+func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
 	switch normalizeScenario(r.cfg.Scenario) {
 	case "expired_token":
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "Mockport simulated expired token"})
 	case "scope_missing":
 		writeJSON(w, http.StatusForbidden, map[string]string{"message": "Mockport simulated missing scope"})
 	default:
-		writeJSON(w, http.StatusOK, map[string]interface{}{"login": "mockport-user", "id": 43101, "name": "Mockport User"})
+		body := map[string]interface{}{"login": "mockport-user", "id": 43101, "name": "Mockport User"}
+		if token := bearerToken(req); token != "" {
+			if resource, ok := r.store.Get("github-oauth", "oauth_token", token); ok {
+				body["scope"] = resource.Data["scope"]
+			}
+		}
+		writeJSON(w, http.StatusOK, body)
 	}
+}
+
+func bearerToken(r *http.Request) string {
+	value := r.Header.Get("Authorization")
+	return strings.TrimSpace(strings.TrimPrefix(value, "Bearer "))
 }
 
 func normalizeScenario(s string) string {

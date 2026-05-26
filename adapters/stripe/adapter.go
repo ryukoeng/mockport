@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
 type Adapter struct{}
@@ -22,7 +23,12 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/stripe"
 	}
-	routes := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg}
+	routes := &routes{
+		basePath:    strings.TrimRight(basePath, "/"),
+		cfg:         cfg,
+		store:       state.NewStore(),
+		idempotency: state.NewIdempotencyStore(),
+	}
 	mux.HandleFunc(routes.basePath+"/", routes.handle)
 	return nil
 }
@@ -61,10 +67,18 @@ func (a Adapter) Metadata() adapter.Metadata {
 		Maturity:     "partial",
 		Capabilities: []string{"checkout_sessions", "payment_intents", "webhooks"},
 		Scenarios:    scenarios,
+		StatefulResources: []string{
+			"checkout_session",
+			"payment_intent",
+		},
+		Idempotency: true,
+		Reset:       true,
 		Endpoints: []adapter.Endpoint{
 			{Method: http.MethodPost, Path: "/stripe/v1/checkout/sessions", SupportedScenarios: scenarioNames, Notes: "Stripe-like checkout session creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/checkout/sessions", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic checkout session list"},
 			{Method: http.MethodGet, Path: "/stripe/v1/checkout/sessions/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic checkout session lookup"},
 			{Method: http.MethodPost, Path: "/stripe/v1/payment_intents", SupportedScenarios: scenarioNames, Notes: "Stripe-like payment intent creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/payment_intents", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic payment intent list"},
 			{Method: http.MethodGet, Path: "/stripe/v1/payment_intents/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic payment intent lookup"},
 			{Method: http.MethodPost, Path: "/stripe/test/webhook/send", SupportedScenarios: []string{"payment_success", "payment_failed"}, Notes: "Sends fake signed webhook to configured target"},
 		},
