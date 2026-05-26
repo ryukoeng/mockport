@@ -65,8 +65,9 @@ require_text ".github/workflows/docker.yml" "docker/login-action@v4"
 require_text ".github/workflows/docker.yml" "docker/metadata-action@v6"
 require_text ".github/workflows/docker.yml" "docker/build-push-action@v7"
 
-require_text ".github/workflows/release.yml" "actions/upload-artifact@v6"
-require_text ".github/workflows/release.yml" "actions/download-artifact@v6"
+require_text ".github/workflows/release.yml" "actions/upload-artifact@v7"
+require_text ".github/workflows/release.yml" "actions/download-artifact@v8"
+require_text ".github/workflows/release.yml" "softprops/action-gh-release@v3"
 
 require_text ".github/workflows/smoke.yml" "schedule:"
 require_text ".github/workflows/smoke.yml" "bash scripts/smoke-multi-adapter.sh"
