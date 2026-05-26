@@ -25,7 +25,7 @@
 | Phase 4 | Trust reports and adapter contracts | done | Report explains supported/unsupported behavior before adding more adapters |
 | Phase 5 | Additional adapters | done | OpenAI, GitHub OAuth, Slack-like adapters, examples, multi-adapter CLI, Docker smoke |
 | Phase 6 | Distribution | done | GHCR/release/Homebrew/npm/docs distribution paths are documented and tested where local |
-| Phase 7 | Public OSS hardening | pending | Public trust files, contribution surface, first-run install path, public CI gates |
+| Phase 7 | Public OSS hardening | done | Public trust files, contribution surface, first-run install path, public CI gates |
 | Phase 8 | Public env safety | pending | `.env.mockport.example` is safe-to-commit by policy, scanner, docs, and CI before preview release |
 | Phase 9 | Public docs and discovery | pending | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | pending | Preview GitHub Release and GHCR image are published and install-verified |
@@ -141,10 +141,10 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P7-T01 | Add public trust artifacts | pending | Static trust check fails until LICENSE/SECURITY/CONTRIBUTING/CODE_OF_CONDUCT exist |
-| P7-T02 | Add GitHub collaboration surface | pending | Static trust check asserts issue and PR templates exist |
-| P7-T03 | Fix README first-run install path | pending | README command audit starts from no preinstalled `mockport` |
-| P7-T04 | Add public CI gates | pending | CI runs trust and distribution static checks |
+| P7-T01 | Add public trust artifacts | done | Static trust check fails until LICENSE/SECURITY/CONTRIBUTING/CODE_OF_CONDUCT exist |
+| P7-T02 | Add GitHub collaboration surface | done | Static trust check asserts issue and PR templates exist |
+| P7-T03 | Fix README first-run install path | done | README command audit starts from no preinstalled `mockport` |
+| P7-T04 | Add public CI gates | done | CI runs trust and distribution static checks |
 
 ## Phase 8 Tasks
 
@@ -266,3 +266,5 @@
 - Passed: `bash scripts/test-release-archives.sh`.
 - Passed: `(cd packaging/npm && npm test)`.
 - Passed: `docker build -t mockport:local -f docker/Dockerfile .`.
+- Passed: `bash scripts/check-public-trust.sh`.
+- Passed: README first-run Docker audit: build `mockport:local`, run with `configs/mockport.example.yml`, `GET /health`, `POST /stripe/v1/checkout/sessions`, `GET /_mockport/report`.

@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible Mockport bug
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: dropdown
+    id: adapter
+    attributes:
+      label: Adapter
+      options:
+        - stripe
+        - openai
+        - github-oauth
+        - slack
+        - cli
+        - docs
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide commands or a minimal config. Keep all secrets redacted.
+      placeholder: "mockport run --config mockport.yml"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Redacted config
+      description: Paste only redacted local config. Do not include real provider credentials.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I removed or redacted real secrets, tokens, customer data, and production URLs.
+          required: true

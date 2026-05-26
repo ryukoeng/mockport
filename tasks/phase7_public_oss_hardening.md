@@ -27,46 +27,46 @@
 
 ## Task P7-T01: Public Trust Artifacts
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing `scripts/check-public-trust.sh` check for `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue templates, and PR template.
-- [ ] Add MIT `LICENSE`.
-- [ ] Add `SECURITY.md` with supported versions, vulnerability report path, and AI-safe scope boundaries.
-- [ ] Add `CONTRIBUTING.md` with setup, TDD flow, verification commands, and PR expectations.
-- [ ] Add `CODE_OF_CONDUCT.md`.
-- [ ] Run `bash scripts/check-public-trust.sh`.
+- [x] Write failing `scripts/check-public-trust.sh` check for `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue templates, and PR template.
+- [x] Add MIT `LICENSE`.
+- [x] Add `SECURITY.md` with supported versions, vulnerability report path, and AI-safe scope boundaries.
+- [x] Add `CONTRIBUTING.md` with setup, TDD flow, verification commands, and PR expectations.
+- [x] Add `CODE_OF_CONDUCT.md`.
+- [x] Run `bash scripts/check-public-trust.sh`.
 
 ## Task P7-T02: GitHub Collaboration Surface
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add bug report issue template with reproduction, adapter, config redaction, expected behavior, actual behavior.
-- [ ] Add feature request template with target adapter, scenario, API surface, and safety impact.
-- [ ] Add PR template with test evidence checklist.
-- [ ] Run `bash scripts/check-public-trust.sh`.
+- [x] Add bug report issue template with reproduction, adapter, config redaction, expected behavior, actual behavior.
+- [x] Add feature request template with target adapter, scenario, API surface, and safety impact.
+- [x] Add PR template with test evidence checklist.
+- [x] Run `bash scripts/check-public-trust.sh`.
 
 ## Task P7-T03: README First-run Install Path
 
-**Status:** pending
+**Status:** done
 
-- [ ] Rewrite README quickstart so a new user can start from Docker without preinstalled `mockport`.
-- [ ] Add binary install placeholder for first release artifacts.
-- [ ] Add clear note that npm is experimental wrapper only.
-- [ ] Run README command audit: Docker build/run, `/health`, one adapter request, report.
+- [x] Rewrite README quickstart so a new user can start from Docker without preinstalled `mockport`.
+- [x] Add binary install placeholder for first release artifacts.
+- [x] Add clear note that npm is experimental wrapper only.
+- [x] Run README command audit: Docker build/run, `/health`, one adapter request, report.
 
 ## Task P7-T04: CI Public Gate
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add public trust check to `.github/workflows/ci.yml`.
-- [ ] Add distribution static check to CI.
-- [ ] Keep Docker smoke optional or scheduled if it is too slow for every PR.
-- [ ] Run `/usr/local/go/bin/go test ./...`, `/usr/local/go/bin/go vet ./...`, `bash scripts/check-public-trust.sh`, and `bash scripts/check-distribution.sh`.
+- [x] Add public trust check to `.github/workflows/ci.yml`.
+- [x] Add distribution static check to CI.
+- [x] Keep Docker smoke optional or scheduled if it is too slow for every PR.
+- [x] Run `/usr/local/go/bin/go test ./...`, `/usr/local/go/bin/go vet ./...`, `bash scripts/check-public-trust.sh`, and `bash scripts/check-distribution.sh`.
 
 ## Phase 7 Exit
 
-- [ ] Public trust files exist and are checked by CI.
-- [ ] README first-run path does not require unpublished install assumptions.
-- [ ] Security and contribution policies are explicit.
-- [ ] Issue/PR templates guide useful external contributions.
-- [ ] CI gates public trust and distribution static checks.
+- [x] Public trust files exist and are checked by CI.
+- [x] README first-run path does not require unpublished install assumptions.
+- [x] Security and contribution policies are explicit.
+- [x] Issue/PR templates guide useful external contributions.
+- [x] CI gates public trust and distribution static checks.

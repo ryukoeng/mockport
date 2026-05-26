@@ -6,6 +6,25 @@ Mockport runs local Docker-based emulators for external services. The Minimal MV
 
 ## Quickstart
 
+No local install required:
+
+```bash
+docker build -t mockport:local -f docker/Dockerfile .
+docker run --rm -p 43101:43101 \
+  -v $(pwd)/configs/mockport.example.yml:/etc/mockport/mockport.yml \
+  mockport:local
+```
+
+Then verify the local API:
+
+```bash
+curl http://localhost:43101/health
+curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
+curl http://localhost:43101/_mockport/report
+```
+
+CLI workflow from a built binary:
+
 ```bash
 mockport init --adapter stripe
 docker compose -f docker-compose.mockport.yml up
@@ -60,7 +79,7 @@ Mockport is Docker-first. Release binaries and packaging scaffolds are prepared 
 | Docker / GHCR | Planned | `ghcr.io/albert-einshutoin/mockport` workflow publishes semver tags and `latest` |
 | GitHub release archives | Planned | `mockport_<version>_<os>_<arch>.tar.gz` with `checksums.txt` |
 | Homebrew | Template | Formula template is under `packaging/homebrew/` |
-| npm | Experimental wrapper | Convenience wrapper only; Go binary and Docker remain primary |
+| npm | Experimental wrapper | The npm wrapper is experimental; Go binary and Docker remain primary |
 
 Docs site source lives under `docs/site/`.
 
