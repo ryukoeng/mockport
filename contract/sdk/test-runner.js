@@ -3,6 +3,7 @@
 
 const { runSmokePlaceholder } = require("./smoke-placeholder.test.js");
 const { runStripeSmoke } = require("./stripe-smoke.test.js");
+const { runOpenAISmoke } = require("./openai-smoke.test.js");
 
 const allowedProviders = new Set(["all", "stripe", "openai", "github-oauth", "slack"]);
 
@@ -46,6 +47,8 @@ async function main() {
   let result;
   if (!options.offline && options.provider === "stripe") {
     result = await runStripeSmoke(options);
+  } else if (!options.offline && options.provider === "openai") {
+    result = await runOpenAISmoke(options);
   } else {
     result = await runSmokePlaceholder(options);
   }

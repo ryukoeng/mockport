@@ -37,7 +37,7 @@
 | Phase 16 | State foundation | done | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
 | Phase 17 | Adapter state adoption | done | Major adapters adopt fake state without breaking scenario-compatible behavior |
 | Phase 18 | Stripe provider compatibility | done | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
-| Phase 19 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
+| Phase 19 | OpenAI provider compatibility | done | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 20 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
 | Phase 21 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
 | Phase 22 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
@@ -251,9 +251,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P19-T01 | Add OpenAI SDK contract baseline | pending | Official SDK smoke covers models, chat, responses, streaming where feasible |
-| P19-T02 | Expand OpenAI major surface | pending | Endpoint group tests and SDK contracts cover embeddings/files/batches/tool-call subset |
-| P19-T03 | Add OpenAI error and streaming fidelity | pending | Adapter tests cover auth, rate limit, context length, invalid model, malformed input, and Phase 13 streaming fixtures |
+| P19-T01 | Add OpenAI SDK contract baseline | done | Official SDK smoke covers models, chat, responses, streaming where feasible |
+| P19-T02 | Expand OpenAI major surface | done | Endpoint group tests and SDK contracts cover embeddings/files/batches/tool-call subset |
+| P19-T03 | Add OpenAI error and streaming fidelity | done | Adapter tests cover auth, rate limit, context length, invalid model, malformed input, and Phase 13 streaming fixtures |
 
 ## Phase 20 Tasks
 

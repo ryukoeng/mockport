@@ -1,0 +1,50 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "docs",
+    "title": "OpenAI Streaming Responses",
+    "url_or_path": "https://platform.openai.com/docs/api-reference/streaming",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "stream_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-mockport",
+      "messages": [
+        {
+          "role": "user",
+          "content": "stream"
+        }
+      ],
+      "stream": true
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/event-stream"
+    },
+    "body": {
+      "events": [
+        "data: {\"object\":\"chat.completion.chunk\"}",
+        "data: [DONE]"
+      ]
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "stream chunks contain deterministic fake content",
+    "no external OpenAI API calls are made"
+  ]
+}

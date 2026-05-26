@@ -1,0 +1,44 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "docs",
+    "title": "OpenAI Responses API",
+    "url_or_path": "https://platform.openai.com/docs/api-reference/responses/create",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "chat_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/responses",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-mockport",
+      "input": "hello"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": "openai_response_000001",
+      "object": "response",
+      "status": "completed",
+      "output_text": "Mockport response"
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "model output is deterministic fake text",
+    "resource IDs use deterministic Mockport state IDs"
+  ]
+}

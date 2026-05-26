@@ -1,0 +1,50 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "docs",
+    "title": "OpenAI Error Codes",
+    "url_or_path": "https://platform.openai.com/docs/guides/error-codes",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "auth_error",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-mockport",
+      "messages": [
+        {
+          "role": "user",
+          "content": "hello"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "error": {
+        "type": "mockport_error",
+        "code": "invalid_api_key",
+        "message": "Mockport simulated invalid API key"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "request payload is deterministic fake text",
+    "error response is reduced to public documented fields"
+  ]
+}

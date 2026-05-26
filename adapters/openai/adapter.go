@@ -1,8 +1,11 @@
 package openai
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 
@@ -46,13 +49,19 @@ func (a Adapter) Metadata() adapter.Metadata {
 		{Name: "auth_error", Supported: true},
 	}
 	return adapter.Metadata{
-		Name:         "openai",
-		Maturity:     "experimental",
-		Capabilities: []string{"models", "chat_completions", "responses"},
-		Scenarios:    scenarios,
+		Name:            "openai",
+		Maturity:        "workflow-compatible",
+		ProviderVersion: "2025-02-01",
+		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.39.0"}},
+		Levels:          []string{"wire", "sdk", "workflow", "state", "error"},
+		Capabilities:    []string{"models", "chat_completions", "responses", "embeddings", "files", "batches"},
+		Scenarios:       scenarios,
 		StatefulResources: []string{
 			"chat_completion",
 			"response",
+			"embedding",
+			"file",
+			"batch",
 		},
 		Reset: true,
 		Endpoints: []adapter.Endpoint{
@@ -60,6 +69,10 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodPost, Path: "/openai/v1/chat/completions", SupportedScenarios: []string{"chat_success", "stream_success", "rate_limited", "context_length_exceeded", "auth_error"}, Notes: "OpenAI-like chat completion"},
 			{Method: http.MethodPost, Path: "/openai/v1/responses", SupportedScenarios: []string{"chat_success", "rate_limited", "context_length_exceeded", "auth_error"}, Notes: "OpenAI-like responses endpoint"},
 			{Method: http.MethodGet, Path: "/openai/v1/responses/{id}", SupportedScenarios: []string{"chat_success"}, Notes: "Deterministic response lookup"},
+			{Method: http.MethodPost, Path: "/openai/v1/embeddings", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like deterministic embeddings"},
+			{Method: http.MethodPost, Path: "/openai/v1/files", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like file creation for batch workflows"},
+			{Method: http.MethodPost, Path: "/openai/v1/batches", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like batch creation"},
+			{Method: http.MethodGet, Path: "/openai/v1/batches/{id}", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like batch lookup"},
 		},
 	}
 }
@@ -81,6 +94,14 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeCompletion(w, req, "response")
 	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v1/responses/"):
 		r.writeResponseLookup(w, strings.TrimPrefix(path, "/v1/responses/"))
+	case req.Method == http.MethodPost && path == "/v1/embeddings":
+		r.writeEmbedding(w, req)
+	case req.Method == http.MethodPost && path == "/v1/files":
+		r.writeFile(w, req)
+	case req.Method == http.MethodPost && path == "/v1/batches":
+		r.writeBatch(w, req)
+	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v1/batches/"):
+		r.writeBatchLookup(w, strings.TrimPrefix(path, "/v1/batches/"))
 	default:
 		http.NotFound(w, req)
 	}
@@ -119,6 +140,18 @@ func (r *routes) writeStatefulCompletion(w http.ResponseWriter, req *http.Reques
 			payload["input"] = "Mockport request"
 		}
 	}
+	if payload["mockport_unsupported_parameter"] != nil {
+		writeError(w, http.StatusBadRequest, "unsupported_parameter", "Mockport simulated unsupported parameter")
+		return
+	}
+	if object == "chat.completion" && payload["stream"] == true {
+		writeChatCompletionStream(w)
+		return
+	}
+	if !validModel(payload["model"]) {
+		writeError(w, http.StatusBadRequest, "model_not_found", "Mockport simulated invalid model")
+		return
+	}
 	required := []string{"model"}
 	resourceType := "response"
 	if object == "chat.completion" {
@@ -129,6 +162,10 @@ func (r *routes) writeStatefulCompletion(w http.ResponseWriter, req *http.Reques
 	}
 	if err := state.RequireFields(payload, required...); err != nil {
 		writeError(w, http.StatusBadRequest, "missing_required_field", err.Error())
+		return
+	}
+	if object == "chat.completion" && !validMessages(payload["messages"]) {
+		writeError(w, http.StatusBadRequest, "invalid_request_error", "messages must be an array")
 		return
 	}
 
@@ -167,8 +204,104 @@ func completionBody(object string) map[string]interface{} {
 	}
 	if object == "response" {
 		body["output_text"] = "Mockport response"
+		body["status"] = "completed"
+		body["output"] = []map[string]interface{}{{
+			"id":     "msg_mockport",
+			"type":   "message",
+			"status": "completed",
+			"role":   "assistant",
+			"content": []map[string]interface{}{{
+				"type":        "output_text",
+				"text":        "Mockport response",
+				"annotations": []interface{}{},
+			}},
+		}}
 	}
 	return body
+}
+
+func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
+	payload, err := decodePayload(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be JSON")
+		return
+	}
+	if err := state.RequireFields(payload, "model", "input"); err != nil {
+		writeError(w, http.StatusBadRequest, "missing_required_field", err.Error())
+		return
+	}
+	if !validModel(payload["model"]) {
+		writeError(w, http.StatusBadRequest, "model_not_found", "Mockport simulated invalid model")
+		return
+	}
+	resource, _ := r.store.Create("openai", "embedding", map[string]any{"model": payload["model"]})
+	embedding := any([]float64{0.01, 0.02, 0.03})
+	if payload["encoding_format"] == "base64" {
+		embedding = base64Embedding([]float32{0.01, 0.02, 0.03})
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"id":     resource.ID,
+		"object": "list",
+		"data": []map[string]interface{}{{
+			"object":    "embedding",
+			"index":     0,
+			"embedding": embedding,
+		}},
+		"model": payload["model"],
+		"usage": map[string]int{"prompt_tokens": 1, "total_tokens": 1},
+	})
+}
+
+func (r *routes) writeFile(w http.ResponseWriter, req *http.Request) {
+	purpose, filename := fileFields(req)
+	if purpose == "" {
+		purpose = "batch"
+	}
+	if filename == "" {
+		filename = "mockport.jsonl"
+	}
+	resource, _ := r.store.Create("openai", "file", map[string]any{
+		"object":   "file",
+		"purpose":  purpose,
+		"filename": filename,
+		"bytes":    18,
+		"status":   "processed",
+	})
+	body := resource.Data
+	body["id"] = resource.ID
+	writeJSON(w, http.StatusOK, body)
+}
+
+func (r *routes) writeBatch(w http.ResponseWriter, req *http.Request) {
+	payload, err := decodePayload(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be JSON")
+		return
+	}
+	if err := state.RequireFields(payload, "input_file_id", "endpoint", "completion_window"); err != nil {
+		writeError(w, http.StatusBadRequest, "missing_required_field", err.Error())
+		return
+	}
+	resource, _ := r.store.Create("openai", "batch", map[string]any{
+		"object":            "batch",
+		"status":            "completed",
+		"input_file_id":     payload["input_file_id"],
+		"endpoint":          payload["endpoint"],
+		"completion_window": payload["completion_window"],
+	})
+	body := resource.Data
+	body["id"] = resource.ID
+	writeJSON(w, http.StatusOK, body)
+}
+
+func (r *routes) writeBatchLookup(w http.ResponseWriter, id string) {
+	if resource, ok := r.store.Get("openai", "batch", id); ok {
+		body := resource.Data
+		body["id"] = resource.ID
+		writeJSON(w, http.StatusOK, body)
+		return
+	}
+	writeError(w, http.StatusNotFound, "not_found", "Mockport batch not found")
 }
 
 func decodePayload(req *http.Request) (map[string]any, error) {
@@ -186,6 +319,49 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 		payload = map[string]any{}
 	}
 	return payload, nil
+}
+
+func fileFields(req *http.Request) (string, string) {
+	contentType := req.Header.Get("Content-Type")
+	if strings.HasPrefix(contentType, "multipart/form-data") {
+		_ = req.ParseMultipartForm(8 << 20)
+		purpose := req.FormValue("purpose")
+		filename := "mockport.jsonl"
+		if req.MultipartForm != nil {
+			for _, files := range req.MultipartForm.File {
+				if len(files) > 0 && files[0].Filename != "" {
+					filename = files[0].Filename
+					break
+				}
+			}
+		}
+		return purpose, filename
+	}
+	payload, err := decodePayload(req)
+	if err != nil {
+		return "", ""
+	}
+	purpose, _ := payload["purpose"].(string)
+	filename, _ := payload["filename"].(string)
+	return purpose, filename
+}
+
+func validModel(value any) bool {
+	model, _ := value.(string)
+	return model == "gpt-mockport" || model == "text-embedding-mockport"
+}
+
+func validMessages(value any) bool {
+	_, ok := value.([]any)
+	return ok
+}
+
+func base64Embedding(values []float32) string {
+	buf := make([]byte, len(values)*4)
+	for i, value := range values {
+		binary.LittleEndian.PutUint32(buf[i*4:], math.Float32bits(value))
+	}
+	return base64.StdEncoding.EncodeToString(buf)
 }
 
 func writeChatCompletionStream(w http.ResponseWriter) {

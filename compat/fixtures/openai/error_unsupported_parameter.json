@@ -1,0 +1,46 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "manual",
+    "title": "Mockport OpenAI unsupported parameter policy",
+    "url_or_path": "docs/compatibility-model.md",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "chat_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/responses",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-mockport",
+      "input": "hello",
+      "mockport_unsupported_parameter": true
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "error": {
+        "type": "mockport_error",
+        "code": "unsupported_parameter",
+        "message": "Mockport simulated unsupported parameter"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "unsupported parameter name is Mockport-specific",
+    "error response is reduced to public documented fields"
+  ]
+}

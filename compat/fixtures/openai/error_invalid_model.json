@@ -1,0 +1,50 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "docs",
+    "title": "OpenAI Error Codes",
+    "url_or_path": "https://platform.openai.com/docs/guides/error-codes",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "chat_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "not-real",
+      "messages": [
+        {
+          "role": "user",
+          "content": "hello"
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "error": {
+        "type": "mockport_error",
+        "code": "model_not_found",
+        "message": "Mockport simulated invalid model"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "model name is a deterministic fake invalid value",
+    "error response is reduced to public documented fields"
+  ]
+}

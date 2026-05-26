@@ -81,6 +81,9 @@ func TestResponsesCreateAndRetrieveState(t *testing.T) {
 	if got["id"] != created["id"] || got["model"] != "gpt-mockport" {
 		t.Fatalf("retrieved = %#v", got)
 	}
+	if _, ok := got["output"].([]any); !ok {
+		t.Fatalf("response output is missing or not array: %#v", got)
+	}
 }
 
 func TestChatCompletionUsesStatefulIDsAndValidatesRequiredFields(t *testing.T) {
@@ -133,18 +136,73 @@ func TestChatCompletionSuccessStillReturnsJSON(t *testing.T) {
 	}
 }
 
+func TestEmbeddingsFilesAndBatchesAreStateful(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+
+	embedding := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/embeddings", `{"model":"text-embedding-mockport","input":"hello"}`)
+	if embedding.Code != http.StatusOK || !strings.Contains(embedding.Body.String(), `"object":"embedding"`) {
+		t.Fatalf("embedding status/body = %d %s", embedding.Code, embedding.Body.String())
+	}
+	base64Embedding := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/embeddings", `{"model":"text-embedding-mockport","input":"hello","encoding_format":"base64"}`)
+	if base64Embedding.Code != http.StatusOK || !strings.Contains(base64Embedding.Body.String(), `"embedding":"`) {
+		t.Fatalf("base64 embedding status/body = %d %s", base64Embedding.Code, base64Embedding.Body.String())
+	}
+
+	file := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/files", `{"purpose":"batch","filename":"mockport.jsonl"}`)
+	if file.Code != http.StatusOK {
+		t.Fatalf("file status = %d, body=%s", file.Code, file.Body.String())
+	}
+	var fileBody map[string]any
+	if err := json.Unmarshal(file.Body.Bytes(), &fileBody); err != nil {
+		t.Fatalf("decode file: %v", err)
+	}
+	if fileBody["id"] != "openai_file_000001" || fileBody["purpose"] != "batch" {
+		t.Fatalf("file body = %#v", fileBody)
+	}
+
+	batch := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/batches", `{"input_file_id":"openai_file_000001","endpoint":"/v1/responses","completion_window":"24h"}`)
+	if batch.Code != http.StatusOK || !strings.Contains(batch.Body.String(), `"input_file_id":"openai_file_000001"`) {
+		t.Fatalf("batch status/body = %d %s", batch.Code, batch.Body.String())
+	}
+}
+
+func TestOpenAIValidationAndInvalidModelErrors(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+
+	invalidModel := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/chat/completions", `{"model":"not-real","messages":[{"role":"user","content":"hi"}]}`)
+	if invalidModel.Code != http.StatusBadRequest {
+		t.Fatalf("invalid model status = %d, body=%s", invalidModel.Code, invalidModel.Body.String())
+	}
+	assertErrorCode(t, invalidModel, "model_not_found")
+
+	malformed := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/chat/completions", `{"model":"gpt-mockport","messages":"bad"}`)
+	if malformed.Code != http.StatusBadRequest {
+		t.Fatalf("malformed status = %d, body=%s", malformed.Code, malformed.Body.String())
+	}
+	assertErrorCode(t, malformed, "invalid_request_error")
+
+	unsupported := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/responses", `{"model":"gpt-mockport","input":"hello","mockport_unsupported_parameter":true}`)
+	if unsupported.Code != http.StatusBadRequest {
+		t.Fatalf("unsupported status = %d, body=%s", unsupported.Code, unsupported.Body.String())
+	}
+	assertErrorCode(t, unsupported, "unsupported_parameter")
+}
+
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
 	if meta.Name != "openai" {
 		t.Fatalf("name = %q", meta.Name)
 	}
-	if meta.Maturity != "experimental" {
+	if meta.Maturity != "workflow-compatible" {
 		t.Fatalf("maturity = %q", meta.Maturity)
 	}
-	if len(meta.Scenarios) < 5 || len(meta.Endpoints) < 3 {
+	if meta.ProviderVersion != "2025-02-01" || len(meta.SDKVersions) != 1 {
+		t.Fatalf("compat metadata = %#v", meta)
+	}
+	if len(meta.Scenarios) < 5 || len(meta.Endpoints) < 8 {
 		t.Fatalf("metadata too small: %#v", meta)
 	}
-	if !meta.Reset || len(meta.StatefulResources) != 2 {
+	if !meta.Reset || len(meta.StatefulResources) != 5 {
 		t.Fatalf("state metadata = %#v", meta)
 	}
 }

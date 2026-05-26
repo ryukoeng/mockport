@@ -20,34 +20,34 @@
 
 ## Task P19-T01: OpenAI SDK Contract Baseline
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing SDK smoke for models list.
-- [ ] Write failing SDK smoke for chat completions and responses.
-- [ ] Add streaming smoke if SDK supports base URL override cleanly.
-- [ ] Run `bash scripts/run-sdk-contracts.sh openai`.
+- [x] Write failing SDK smoke for models list.
+- [x] Write failing SDK smoke for chat completions and responses.
+- [x] Add streaming smoke if SDK supports base URL override cleanly.
+- [x] Run `bash scripts/run-sdk-contracts.sh openai`.
 
 ## Task P19-T02: OpenAI Major Surface Expansion
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add embeddings, files, batches, and responses tool-call subset coverage backlog.
-- [ ] Implement endpoint groups with TDD and SDK contracts.
-- [ ] Keep inference fake, deterministic, and documented.
-- [ ] Update support matrix and compatibility score.
+- [x] Add embeddings, files, batches, and responses tool-call subset coverage backlog.
+- [x] Implement endpoint groups with TDD and SDK contracts.
+- [x] Keep inference fake, deterministic, and documented.
+- [x] Update support matrix and compatibility score.
 
 ## Task P19-T03: OpenAI Error And Streaming Fidelity
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add fixtures for auth errors, rate limits, context length, invalid model, malformed messages/input.
-- [ ] Verify Phase 13 SSE-compatible `stream_success` against SDK contracts and streaming fixtures.
-- [ ] Add unsupported parameter reporting.
-- [ ] Run adapter tests, SDK contracts, and compatibility report.
+- [x] Add fixtures for auth errors, rate limits, context length, invalid model, malformed messages/input.
+- [x] Verify Phase 13 SSE-compatible `stream_success` against SDK contracts and streaming fixtures.
+- [x] Add unsupported parameter reporting.
+- [x] Run adapter tests, SDK contracts, and compatibility report.
 
 ## Phase 19 Exit
 
-- [ ] OpenAI adapter is at least `workflow-compatible`.
-- [ ] OpenAI SDK contracts pass for supported workflows.
-- [ ] Streaming and error behavior are documented by fixtures.
-- [ ] Known gaps are explicit.
+- [x] OpenAI adapter is at least `workflow-compatible`.
+- [x] OpenAI SDK contracts pass for supported workflows.
+- [x] Streaming and error behavior are documented by fixtures.
+- [x] Known gaps are explicit.

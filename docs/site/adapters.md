@@ -3,7 +3,7 @@
 | Adapter | Base path | Maturity | Workflows |
 | --- | --- | --- | --- |
 | `stripe` | `/stripe` plus SDK-compatible `/v1` alias | `workflow-compatible` | checkout sessions, payment intents, customers, products, prices, subscriptions, invoices, refunds, fake signed webhooks |
-| `openai` | `/openai` | `experimental` | models, chat completions, responses |
+| `openai` | `/openai` | `workflow-compatible` | models, chat completions, responses, embeddings, files, batches |
 | `github-oauth` | `/github` | `experimental` | authorize redirect, token exchange, user profile |
 | `slack` | `/slack` | `experimental` | auth test, message posting |
 

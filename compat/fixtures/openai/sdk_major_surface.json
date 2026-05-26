@@ -1,0 +1,43 @@
+{
+  "provider": "openai",
+  "provider_version": "2025-02-01",
+  "sdk": {
+    "name": "openai",
+    "version": "6.39.0"
+  },
+  "source": {
+    "type": "sdk",
+    "title": "Mockport OpenAI SDK contract smoke",
+    "url_or_path": "contract/sdk/openai-smoke.test.js",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "chat_success",
+  "request": {
+    "method": "SDK",
+    "path": "models/chat/responses/streaming/embeddings/files/batches smoke",
+    "headers": {
+      "Authorization": "Bearer mockport_openai_key"
+    },
+    "body": {
+      "models": "list",
+      "chat_completions": "create and stream",
+      "responses": "create/retrieve",
+      "major_surface": "embeddings, files, batches"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "status": "sdk-ok",
+      "sdk": "openai@6.39.0"
+    }
+  },
+  "normalization": [
+    "SDK evidence is produced against local Mockport only",
+    "resource IDs use deterministic Mockport state IDs",
+    "no external OpenAI API calls are made"
+  ]
+}
