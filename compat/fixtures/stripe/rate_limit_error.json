@@ -1,0 +1,47 @@
+{
+  "provider": "stripe",
+  "provider_version": "2025-10-29.clover",
+  "sdk": {
+    "name": "stripe",
+    "version": "22.1.1"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Stripe Rate Limits",
+    "url_or_path": "https://docs.stripe.com/rate-limits",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "rate_limited",
+  "request": {
+    "method": "POST",
+    "path": "/v1/payment_intents",
+    "headers": {
+      "Authorization": "Bearer mockport_stripe_secret",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "amount": 1200,
+      "currency": "usd"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "Content-Type": "application/json",
+      "Request-Id": "req_mockport",
+      "Stripe-Version": "2025-10-29.clover"
+    },
+    "body": {
+      "error": {
+        "type": "rate_limit_error",
+        "code": "rate_limited",
+        "message": "Mockport simulated rate limit"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "request ID is deterministic",
+    "error response is reduced to public documented fields"
+  ]
+}

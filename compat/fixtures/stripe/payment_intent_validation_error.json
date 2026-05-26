@@ -1,0 +1,47 @@
+{
+  "provider": "stripe",
+  "provider_version": "2025-10-29.clover",
+  "sdk": {
+    "name": "stripe",
+    "version": "22.1.1"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Stripe Errors",
+    "url_or_path": "https://docs.stripe.com/api/errors",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "payment_success",
+  "request": {
+    "method": "POST",
+    "path": "/v1/payment_intents",
+    "headers": {
+      "Authorization": "Bearer mockport_stripe_secret",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "currency": "usd"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json",
+      "Request-Id": "req_mockport",
+      "Stripe-Version": "2025-10-29.clover"
+    },
+    "body": {
+      "error": {
+        "type": "invalid_request_error",
+        "code": "parameter_missing",
+        "param": "amount",
+        "message": "Missing required param: amount"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "request ID is deterministic",
+    "error response is reduced to public documented fields"
+  ]
+}

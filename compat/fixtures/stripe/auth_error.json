@@ -1,0 +1,47 @@
+{
+  "provider": "stripe",
+  "provider_version": "2025-10-29.clover",
+  "sdk": {
+    "name": "stripe",
+    "version": "22.1.1"
+  },
+  "source": {
+    "type": "docs",
+    "title": "Stripe Authentication Errors",
+    "url_or_path": "https://docs.stripe.com/api/authentication",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "auth_error",
+  "request": {
+    "method": "POST",
+    "path": "/v1/payment_intents",
+    "headers": {
+      "Authorization": "Bearer mockport_stripe_secret",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "amount": 1200,
+      "currency": "usd"
+    }
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "Content-Type": "application/json",
+      "Request-Id": "req_mockport",
+      "Stripe-Version": "2025-10-29.clover"
+    },
+    "body": {
+      "error": {
+        "type": "invalid_request_error",
+        "code": "invalid_api_key",
+        "message": "Mockport simulated auth error"
+      }
+    }
+  },
+  "normalization": [
+    "credentials use the mockport_ fake namespace",
+    "request ID is deterministic",
+    "error response is reduced to public documented fields"
+  ]
+}

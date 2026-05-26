@@ -2,6 +2,7 @@
 "use strict";
 
 const { runSmokePlaceholder } = require("./smoke-placeholder.test.js");
+const { runStripeSmoke } = require("./stripe-smoke.test.js");
 
 const allowedProviders = new Set(["all", "stripe", "openai", "github-oauth", "slack"]);
 
@@ -42,7 +43,12 @@ function parseArgs(argv) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const result = await runSmokePlaceholder(options);
+  let result;
+  if (!options.offline && options.provider === "stripe") {
+    result = await runStripeSmoke(options);
+  } else {
+    result = await runSmokePlaceholder(options);
+  }
   if (options.json) {
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } else {

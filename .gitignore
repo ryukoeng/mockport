@@ -18,6 +18,9 @@
 /dist/
 *.test
 
+# Node dependencies
+node_modules/
+
 # Test and coverage outputs
 coverage.out
 *.coverprofile

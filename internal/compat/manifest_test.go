@@ -58,19 +58,28 @@ func TestManifestValidationRejectsInvalidLevels(t *testing.T) {
 
 func TestManifestFromAdapterMetadata(t *testing.T) {
 	meta := adapter.Metadata{
-		Name:         "openai",
-		Maturity:     "experimental",
-		Capabilities: []string{"chat_completions"},
-		Scenarios:    []adapter.Scenario{{Name: "chat_success", Supported: true}},
-		Endpoints:    []adapter.Endpoint{{Method: http.MethodPost, Path: "/openai/v1/chat/completions", SupportedScenarios: []string{"chat_success"}}},
+		Name:            "openai",
+		Maturity:        "experimental",
+		ProviderVersion: "2025-10-29.clover",
+		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.0.0"}},
+		Levels:          []string{"wire", "sdk", "state"},
+		Capabilities:    []string{"chat_completions"},
+		Scenarios:       []adapter.Scenario{{Name: "chat_success", Supported: true}},
+		Endpoints:       []adapter.Endpoint{{Method: http.MethodPost, Path: "/openai/v1/chat/completions", SupportedScenarios: []string{"chat_success"}}},
 	}
 
 	manifest := FromMetadata(meta)
 	if manifest.Adapter != "openai" {
 		t.Fatalf("adapter = %q, want openai", manifest.Adapter)
 	}
-	if manifest.ProviderVersion == "" {
-		t.Fatal("provider version is empty")
+	if manifest.ProviderVersion != "2025-10-29.clover" {
+		t.Fatalf("provider version = %q", manifest.ProviderVersion)
+	}
+	if len(manifest.SDKVersions) != 1 || manifest.SDKVersions[0].Name != "openai" {
+		t.Fatalf("sdk versions = %#v", manifest.SDKVersions)
+	}
+	if len(manifest.Levels) != 3 {
+		t.Fatalf("levels = %#v", manifest.Levels)
 	}
 	if len(manifest.Endpoints) != 1 || manifest.Endpoints[0].ID == "" {
 		t.Fatalf("endpoints = %#v, want generated id", manifest.Endpoints)

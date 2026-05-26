@@ -56,3 +56,18 @@ func TestCanPromoteRequiresContractEvidenceForProviderCompatible(t *testing.T) {
 		t.Fatalf("provider-compatible promotion failed with contract evidence: %#v", score)
 	}
 }
+
+func TestCalculateScoreReportsWorkflowAsHigherThanState(t *testing.T) {
+	score := CalculateScore(Manifest{
+		Adapter:         "stripe",
+		ProviderVersion: "2025-10-29.clover",
+		Levels:          []Level{LevelWire, LevelSDK, LevelWorkflow, LevelState, LevelError},
+		SDKVersions:     []SDKVersion{{Name: "stripe", Version: "22.1.1"}},
+		Endpoints:       []Endpoint{{ID: "checkout_sessions_create", Supported: true}},
+		Scenarios:       []Scenario{{Name: "payment_success", BuiltIn: true, Supported: true}},
+	})
+
+	if score.Level != string(LevelWorkflow) {
+		t.Fatalf("level = %q, want workflow", score.Level)
+	}
+}

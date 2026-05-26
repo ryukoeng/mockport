@@ -20,12 +20,20 @@ type Adapter interface {
 type Metadata struct {
 	Name              string
 	Maturity          string
+	ProviderVersion   string
+	SDKVersions       []SDKVersion
+	Levels            []string
 	Capabilities      []string
 	Scenarios         []Scenario
 	Endpoints         []Endpoint
 	StatefulResources []string
 	Idempotency       bool
 	Reset             bool
+}
+
+type SDKVersion struct {
+	Name    string
+	Version string
 }
 
 type Scenario struct {

@@ -78,7 +78,7 @@ func scenarioCoverage(scenarios []Scenario) int {
 }
 
 func highestLevel(levels []Level) Level {
-	for _, level := range []Level{LevelContract, LevelState, LevelWorkflow, LevelSDK, LevelWire, LevelError} {
+	for _, level := range []Level{LevelContract, LevelWorkflow, LevelState, LevelSDK, LevelWire, LevelError} {
 		if hasLevel(levels, level) {
 			return level
 		}

@@ -1,0 +1,42 @@
+{
+  "provider": "stripe",
+  "provider_version": "2025-10-29.clover",
+  "sdk": {
+    "name": "stripe",
+    "version": "22.1.1"
+  },
+  "source": {
+    "type": "sdk",
+    "title": "Mockport Stripe SDK contract smoke",
+    "url_or_path": "contract/sdk/stripe-smoke.test.js",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "payment_success",
+  "request": {
+    "method": "SDK",
+    "path": "stripe checkout/payment/customer/product/price/subscription/invoice/refund smoke",
+    "headers": {
+      "Authorization": "Bearer mockport_stripe_secret"
+    },
+    "body": {
+      "checkout_session": "create/retrieve/list",
+      "payment_intent": "create/retrieve/list",
+      "major_surface": "customers, products, prices, subscriptions, invoices, refunds"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "status": "sdk-ok",
+      "sdk": "stripe@22.1.1"
+    }
+  },
+  "normalization": [
+    "SDK evidence is produced against local Mockport only",
+    "resource IDs use deterministic Mockport state IDs",
+    "no external Stripe API calls are made"
+  ]
+}

@@ -143,6 +143,58 @@ func TestPaymentIntentCreateRetrieveAndList(t *testing.T) {
 	}
 }
 
+func TestMajorStripeResourcesCreateRetrieveAndList(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
+
+	customer := createStripeResource(t, mux, "/stripe/v1/customers", "email=customer@example.test")
+	product := createStripeResource(t, mux, "/stripe/v1/products", "name=Mockport+Product")
+	price := createStripeResource(t, mux, "/stripe/v1/prices", "product="+product["id"].(string)+"&currency=usd&unit_amount=1200")
+	subscription := createStripeResource(t, mux, "/stripe/v1/subscriptions", "customer="+customer["id"].(string)+"&items[0][price]="+price["id"].(string))
+	invoice := createStripeResource(t, mux, "/stripe/v1/invoices", "customer="+customer["id"].(string))
+	paymentIntent := createStripeResource(t, mux, "/stripe/v1/payment_intents", "amount=1200&currency=usd")
+	refund := createStripeResource(t, mux, "/stripe/v1/refunds", "payment_intent="+paymentIntent["id"].(string))
+
+	for _, entry := range []struct {
+		path string
+		body map[string]any
+	}{
+		{"/stripe/v1/customers", customer},
+		{"/stripe/v1/products", product},
+		{"/stripe/v1/prices", price},
+		{"/stripe/v1/subscriptions", subscription},
+		{"/stripe/v1/invoices", invoice},
+		{"/stripe/v1/refunds", refund},
+	} {
+		retrieved := serveStripeRequest(mux, http.MethodGet, entry.path+"/"+entry.body["id"].(string), "", nil)
+		if retrieved.Code != http.StatusOK {
+			t.Fatalf("retrieve %s status = %d body=%s", entry.path, retrieved.Code, retrieved.Body.String())
+		}
+		listed := serveStripeRequest(mux, http.MethodGet, entry.path, "", nil)
+		if listed.Code != http.StatusOK || !strings.Contains(listed.Body.String(), entry.body["id"].(string)) {
+			t.Fatalf("list %s status/body = %d %s", entry.path, listed.Code, listed.Body.String())
+		}
+	}
+}
+
+func TestStripeValidationAndErrorHeaders(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
+
+	missing := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/payment_intents", "currency=usd", nil)
+	if missing.Code != http.StatusBadRequest {
+		t.Fatalf("missing status = %d, want %d, body=%s", missing.Code, http.StatusBadRequest, missing.Body.String())
+	}
+	assertStripeErrorCode(t, missing, "parameter_missing")
+	if missing.Header().Get("Request-Id") == "" || missing.Header().Get("Stripe-Version") == "" {
+		t.Fatalf("missing stripe-like headers: %#v", missing.Header())
+	}
+
+	malformed := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/payment_intents/not_a_pi", "", nil)
+	if malformed.Code != http.StatusNotFound {
+		t.Fatalf("malformed status = %d, want %d, body=%s", malformed.Code, http.StatusNotFound, malformed.Body.String())
+	}
+	assertStripeErrorCode(t, malformed, "resource_missing")
+}
+
 func TestTimeoutScenario(t *testing.T) {
 	rec := performStripeRequest(t, adapter.Config{BasePath: "/stripe", Scenario: "timeout"}, http.MethodPost, "/stripe/v1/checkout/sessions")
 	if rec.Code != http.StatusGatewayTimeout {
@@ -190,19 +242,22 @@ func TestMetadata(t *testing.T) {
 	if meta.Name != "stripe" {
 		t.Fatalf("name = %q, want stripe", meta.Name)
 	}
-	if meta.Maturity != "partial" {
-		t.Fatalf("maturity = %q, want partial", meta.Maturity)
+	if meta.Maturity != "workflow-compatible" {
+		t.Fatalf("maturity = %q, want workflow-compatible", meta.Maturity)
 	}
-	if len(meta.Capabilities) == 0 {
+	if meta.ProviderVersion != "2025-10-29.clover" || len(meta.SDKVersions) != 1 {
+		t.Fatalf("compat metadata = %#v", meta)
+	}
+	if len(meta.Capabilities) < 9 {
 		t.Fatal("expected capabilities")
 	}
 	if len(meta.Scenarios) != 5 {
 		t.Fatalf("scenario count = %d, want 5", len(meta.Scenarios))
 	}
-	if len(meta.Endpoints) != 7 {
-		t.Fatalf("endpoint count = %d, want 7", len(meta.Endpoints))
+	if len(meta.Endpoints) != 25 {
+		t.Fatalf("endpoint count = %d, want 25", len(meta.Endpoints))
 	}
-	if !meta.Idempotency || !meta.Reset || len(meta.StatefulResources) != 2 {
+	if !meta.Idempotency || !meta.Reset || len(meta.StatefulResources) != 8 {
 		t.Fatalf("state metadata = %#v", meta)
 	}
 }
@@ -220,6 +275,22 @@ func newStripeMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 		t.Fatalf("register adapter: %v", err)
 	}
 	return mux
+}
+
+func createStripeResource(t *testing.T, mux http.Handler, path, body string) map[string]any {
+	t.Helper()
+	rec := serveStripeRequest(mux, http.MethodPost, path, body, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("create %s status = %d, body=%s", path, rec.Code, rec.Body.String())
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &decoded); err != nil {
+		t.Fatalf("decode %s: %v", path, err)
+	}
+	if decoded["id"] == "" {
+		t.Fatalf("created %s without id: %#v", path, decoded)
+	}
+	return decoded
 }
 
 func serveStripeRequest(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {

@@ -72,8 +72,8 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if len(snapshot.BehaviorMatrix) == 0 {
 		t.Fatal("behavior matrix is empty")
 	}
-	if snapshot.Adapters[0].Maturity != "partial" {
-		t.Fatalf("maturity = %q, want partial", snapshot.Adapters[0].Maturity)
+	if snapshot.Adapters[0].Maturity != "workflow-compatible" {
+		t.Fatalf("maturity = %q, want workflow-compatible", snapshot.Adapters[0].Maturity)
 	}
 	if len(snapshot.Compatibility) != 1 {
 		t.Fatalf("compatibility = %#v, want one entry", snapshot.Compatibility)
@@ -83,6 +83,9 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	}
 	if snapshot.Compatibility[0].ProviderVersion == "" {
 		t.Fatalf("provider version is empty: %#v", snapshot.Compatibility[0])
+	}
+	if snapshot.Compatibility[0].SDKCoverage != 100 || snapshot.Compatibility[0].StateCoverage != 100 || snapshot.Compatibility[0].ErrorCoverage != 100 {
+		t.Fatalf("compatibility coverage = %#v", snapshot.Compatibility[0])
 	}
 	if len(snapshot.StateCoverage) != 1 || snapshot.StateCoverage[0].Adapter != "stripe" || !snapshot.StateCoverage[0].Idempotency {
 		t.Fatalf("state coverage = %#v", snapshot.StateCoverage)

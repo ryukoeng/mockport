@@ -111,11 +111,18 @@ func ValidLevel(level Level) bool {
 }
 
 func FromMetadata(meta adapter.Metadata) Manifest {
+	providerVersion := meta.ProviderVersion
+	if providerVersion == "" {
+		providerVersion = "unspecified"
+	}
 	manifest := Manifest{
 		Adapter:         meta.Name,
-		ProviderVersion: "unspecified",
+		ProviderVersion: providerVersion,
 		Maturity:        meta.Maturity,
-		Levels:          []Level{LevelWire},
+		Levels:          metadataLevels(meta.Levels),
+	}
+	for _, sdk := range meta.SDKVersions {
+		manifest.SDKVersions = append(manifest.SDKVersions, SDKVersion{Name: sdk.Name, Version: sdk.Version})
 	}
 	for _, endpoint := range meta.Endpoints {
 		manifest.Endpoints = append(manifest.Endpoints, Endpoint{
@@ -123,7 +130,7 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 			Method:    endpoint.Method,
 			Path:      endpoint.Path,
 			Supported: len(endpoint.SupportedScenarios) > 0 || endpoint.Method == http.MethodGet,
-			Levels:    []Level{LevelWire},
+			Levels:    metadataLevels(meta.Levels),
 		})
 	}
 	for _, scenario := range meta.Scenarios {
@@ -131,10 +138,27 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 			Name:      scenario.Name,
 			BuiltIn:   true,
 			Supported: scenario.Supported,
-			Levels:    []Level{LevelWire},
+			Levels:    metadataLevels(meta.Levels),
 		})
 	}
 	return manifest
+}
+
+func metadataLevels(values []string) []Level {
+	if len(values) == 0 {
+		return []Level{LevelWire}
+	}
+	levels := make([]Level, 0, len(values))
+	for _, value := range values {
+		level := Level(value)
+		if ValidLevel(level) {
+			levels = append(levels, level)
+		}
+	}
+	if len(levels) == 0 {
+		return []Level{LevelWire}
+	}
+	return levels
 }
 
 func endpointID(method, path string) string {

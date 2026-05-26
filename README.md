@@ -118,7 +118,7 @@ Supported:
 
 | Service | Adapter | Base path | Maturity | Supported workflows |
 | --- | --- | --- | --- | --- |
-| Stripe-like payments | `stripe` | `/stripe` | `partial` | checkout sessions, payment intents, fake signed webhooks, success/failure/auth/rate-limit/timeout scenarios |
+| Stripe-like payments | `stripe` | `/stripe` plus SDK-compatible `/v1` alias | `workflow-compatible` | checkout sessions, payment intents, customers, products, prices, subscriptions, invoices, refunds, fake signed webhooks, SDK contract, state, validation, idempotency |
 | OpenAI-compatible API | `openai` | `/openai` | `experimental` | models, chat completions, responses, auth error, rate limit, context length error |
 | GitHub OAuth-like API | `github-oauth` | `/github` | `experimental` | authorize redirect, access token exchange, user profile, invalid code, expired token, missing scope |
 | Slack-like messaging API | `slack` | `/slack` | `experimental` | auth test, message posting, auth error, rate limit, delivery failure |

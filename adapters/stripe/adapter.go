@@ -30,6 +30,7 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 		idempotency: state.NewIdempotencyStore(),
 	}
 	mux.HandleFunc(routes.basePath+"/", routes.handle)
+	mux.HandleFunc("/v1/", routes.handleRoot)
 	return nil
 }
 
@@ -63,13 +64,32 @@ func (a Adapter) Metadata() adapter.Metadata {
 	}
 	scenarioNames := []string{"payment_success", "payment_failed", "auth_error", "rate_limited", "timeout"}
 	return adapter.Metadata{
-		Name:         "stripe",
-		Maturity:     "partial",
-		Capabilities: []string{"checkout_sessions", "payment_intents", "webhooks"},
-		Scenarios:    scenarios,
+		Name:            "stripe",
+		Maturity:        "workflow-compatible",
+		ProviderVersion: "2025-10-29.clover",
+		SDKVersions:     []adapter.SDKVersion{{Name: "stripe", Version: "22.1.1"}},
+		Levels:          []string{"wire", "sdk", "workflow", "state", "error"},
+		Capabilities: []string{
+			"checkout_sessions",
+			"payment_intents",
+			"customers",
+			"products",
+			"prices",
+			"subscriptions",
+			"invoices",
+			"refunds",
+			"webhooks",
+		},
+		Scenarios: scenarios,
 		StatefulResources: []string{
 			"checkout_session",
 			"payment_intent",
+			"customer",
+			"product",
+			"price",
+			"subscription",
+			"invoice",
+			"refund",
 		},
 		Idempotency: true,
 		Reset:       true,
@@ -80,6 +100,24 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodPost, Path: "/stripe/v1/payment_intents", SupportedScenarios: scenarioNames, Notes: "Stripe-like payment intent creation"},
 			{Method: http.MethodGet, Path: "/stripe/v1/payment_intents", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic payment intent list"},
 			{Method: http.MethodGet, Path: "/stripe/v1/payment_intents/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Deterministic payment intent lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/customers", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like customer creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/customers", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like customer list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/customers/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like customer lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/products", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like product creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/products", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like product list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/products/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like product lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/prices", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like price creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/prices", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like price list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/prices/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like price lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/subscriptions", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like subscription creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/subscriptions", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like subscription list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/subscriptions/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like subscription lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/invoices", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like invoice creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/invoices", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like invoice list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/invoices/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like invoice lookup"},
+			{Method: http.MethodPost, Path: "/stripe/v1/refunds", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like refund creation"},
+			{Method: http.MethodGet, Path: "/stripe/v1/refunds", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like refund list"},
+			{Method: http.MethodGet, Path: "/stripe/v1/refunds/{id}", SupportedScenarios: []string{"payment_success"}, Notes: "Stripe-like refund lookup"},
 			{Method: http.MethodPost, Path: "/stripe/test/webhook/send", SupportedScenarios: []string{"payment_success", "payment_failed"}, Notes: "Sends fake signed webhook to configured target"},
 		},
 	}

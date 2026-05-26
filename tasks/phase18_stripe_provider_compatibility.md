@@ -20,34 +20,34 @@
 
 ## Task P18-T01: Stripe SDK Contract Baseline
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing SDK smoke for checkout session create/retrieve/list.
-- [ ] Write failing SDK smoke for payment intent create/retrieve/list.
-- [ ] Record Stripe SDK version in compatibility manifest.
-- [ ] Run `bash scripts/run-sdk-contracts.sh stripe`.
+- [x] Write failing SDK smoke for checkout session create/retrieve/list.
+- [x] Write failing SDK smoke for payment intent create/retrieve/list.
+- [x] Record Stripe SDK version in compatibility manifest.
+- [x] Run `bash scripts/run-sdk-contracts.sh stripe`.
 
 ## Task P18-T02: Stripe Major Surface Expansion
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add customers, products, prices, subscriptions, invoices, refunds, and webhooks coverage backlog.
-- [ ] Implement one endpoint group at a time with failing tests first.
-- [ ] Add SDK contract coverage for each endpoint group.
-- [ ] Update support matrix and compatibility score.
+- [x] Add customers, products, prices, subscriptions, invoices, refunds, and webhooks coverage backlog.
+- [x] Implement one endpoint group at a time with failing tests first.
+- [x] Add SDK contract coverage for each endpoint group.
+- [x] Update support matrix and compatibility score.
 
 ## Task P18-T03: Stripe Error And Idempotency Fidelity
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add validation error fixtures for missing required fields and malformed IDs.
-- [ ] Add auth, rate limit, idempotency replay, and conflict error fixtures.
-- [ ] Implement response shape and headers close to Stripe public API.
-- [ ] Run adapter tests, SDK contracts, and compatibility report.
+- [x] Add validation error fixtures for missing required fields and malformed IDs.
+- [x] Add auth, rate limit, idempotency replay, and conflict error fixtures.
+- [x] Implement response shape and headers close to Stripe public API.
+- [x] Run adapter tests, SDK contracts, and compatibility report.
 
 ## Phase 18 Exit
 
-- [ ] Stripe adapter is at least `workflow-compatible`.
-- [ ] Stripe SDK contracts pass for supported workflows.
-- [ ] Stripe support matrix shows endpoint and scenario coverage.
-- [ ] Known gaps are explicit.
+- [x] Stripe adapter is at least `workflow-compatible`.
+- [x] Stripe SDK contracts pass for supported workflows.
+- [x] Stripe support matrix shows endpoint and scenario coverage.
+- [x] Known gaps are explicit.

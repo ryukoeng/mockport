@@ -36,7 +36,7 @@
 | Phase 15 | SDK contract harness foundation | done | Pinned SDK contract runner reaches local Mockport without external provider calls |
 | Phase 16 | State foundation | done | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
 | Phase 17 | Adapter state adoption | done | Major adapters adopt fake state without breaking scenario-compatible behavior |
-| Phase 18 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
+| Phase 18 | Stripe provider compatibility | done | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 19 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 20 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
 | Phase 21 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
@@ -243,9 +243,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P18-T01 | Add Stripe SDK contract baseline | pending | Official SDK smoke covers checkout sessions and payment intents |
-| P18-T02 | Expand Stripe major surface | pending | Endpoint group tests and SDK contracts cover customers/prices/products/subscriptions/invoices/refunds |
-| P18-T03 | Add Stripe error and idempotency fidelity | pending | Adapter tests cover validation, auth, rate limit, idempotency replay, and conflict errors |
+| P18-T01 | Add Stripe SDK contract baseline | done | Official SDK smoke covers checkout sessions and payment intents |
+| P18-T02 | Expand Stripe major surface | done | Endpoint group tests and SDK contracts cover customers/prices/products/subscriptions/invoices/refunds |
+| P18-T03 | Add Stripe error and idempotency fidelity | done | Adapter tests cover validation, auth, rate limit, idempotency replay, and conflict errors |
 
 ## Phase 19 Tasks
 
