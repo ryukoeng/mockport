@@ -1,0 +1,38 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub OAuth app web application flow",
+    "url_or_path": "https://docs.github.com/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "GET",
+    "path": "/login/oauth/authorize",
+    "headers": {},
+    "body": {
+      "client_id": "mockport_github_client",
+      "redirect_uri": "http://app.local/callback",
+      "state": "state-123",
+      "scope": "read:user user:email read:org"
+    }
+  },
+  "response": {
+    "status": 302,
+    "headers": {
+      "Location": "http://app.local/callback?code=github_oauth_oauth_code_000001&state=state-123"
+    },
+    "body": {}
+  },
+  "normalization": [
+    "client credentials use the mockport_ fake namespace",
+    "redirect target is a local example URL",
+    "authorization code is deterministic fake state"
+  ]
+}

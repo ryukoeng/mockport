@@ -1,0 +1,42 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub REST API orgs list for authenticated user",
+    "url_or_path": "https://docs.github.com/rest/orgs/orgs#list-organizations-for-the-authenticated-user",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "GET",
+    "path": "/user/orgs",
+    "headers": {
+      "Authorization": "Bearer github_oauth_oauth_token_000001",
+      "Accept": "application/vnd.github+json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": [
+      {
+        "login": "mockport-org",
+        "id": 431010,
+        "description": "Mockport fake organization"
+      }
+    ]
+  },
+  "normalization": [
+    "organization identity is deterministic fake data",
+    "token is deterministic fake state",
+    "enterprise and policy fields are intentionally omitted"
+  ]
+}

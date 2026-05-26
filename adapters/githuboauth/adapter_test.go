@@ -43,7 +43,9 @@ func TestAccessTokenScenarios(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	rec := performRequest(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"}, http.MethodGet, "/github/user")
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	token := issueGitHubToken(t, mux, "read:user")
+	rec := serveGitHubRequest(mux, http.MethodGet, "/github/user", "", map[string]string{"Authorization": "Bearer " + token})
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
@@ -54,6 +56,22 @@ func TestUser(t *testing.T) {
 	if body["login"] != "mockport-user" {
 		t.Fatalf("login = %v", body["login"])
 	}
+}
+
+func TestUserRequiresValidBearerToken(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+
+	missing := serveGitHubRequest(mux, http.MethodGet, "/github/user", "", nil)
+	if missing.Code != http.StatusUnauthorized {
+		t.Fatalf("missing token status = %d, body=%s", missing.Code, missing.Body.String())
+	}
+	assertGitHubMessage(t, missing, "Bad credentials")
+
+	unknown := serveGitHubRequest(mux, http.MethodGet, "/github/user", "", map[string]string{"Authorization": "Bearer unknown"})
+	if unknown.Code != http.StatusUnauthorized {
+		t.Fatalf("unknown token status = %d, body=%s", unknown.Code, unknown.Body.String())
+	}
+	assertGitHubMessage(t, unknown, "Bad credentials")
 }
 
 func TestOAuthCodeTokenAndUserAreStateful(t *testing.T) {
@@ -98,6 +116,54 @@ func TestOAuthCodeTokenAndUserAreStateful(t *testing.T) {
 	}
 }
 
+func TestEmailsAndOrgsRequireScopes(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	token := issueGitHubToken(t, mux, "read:user user:email read:org")
+
+	emails := serveGitHubRequest(mux, http.MethodGet, "/github/user/emails", "", map[string]string{"Authorization": "Bearer " + token})
+	if emails.Code != http.StatusOK || !strings.Contains(emails.Body.String(), `"email":"mockport@example.test"`) {
+		t.Fatalf("emails status/body = %d %s", emails.Code, emails.Body.String())
+	}
+
+	orgs := serveGitHubRequest(mux, http.MethodGet, "/github/user/orgs", "", map[string]string{"Authorization": "Bearer " + token})
+	if orgs.Code != http.StatusOK || !strings.Contains(orgs.Body.String(), `"login":"mockport-org"`) {
+		t.Fatalf("orgs status/body = %d %s", orgs.Code, orgs.Body.String())
+	}
+
+	readOnly := issueGitHubToken(t, mux, "read:user")
+	for _, path := range []string{"/github/user/emails", "/github/user/orgs"} {
+		rec := serveGitHubRequest(mux, http.MethodGet, path, "", map[string]string{"Authorization": "Bearer " + readOnly})
+		if rec.Code != http.StatusForbidden {
+			t.Fatalf("%s status = %d, body=%s", path, rec.Code, rec.Body.String())
+		}
+		assertGitHubMessage(t, rec, "Resource not accessible by token")
+	}
+}
+
+func TestTokenRejectsRedirectURIMismatch(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1", "", nil)
+	code := redirectCode(t, auth)
+
+	rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://other/callback", map[string]string{"Accept": "application/json"})
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	assertGitHubOAuthError(t, rec, "redirect_uri_mismatch")
+}
+
+func TestAuthorizeReportsUnsupportedScope(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	rec := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1&scope=repo", "", nil)
+	if rec.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusFound)
+	}
+	location := rec.Header().Get("Location")
+	if !strings.Contains(location, "error=unsupported_scope") || !strings.Contains(location, "state=s1") {
+		t.Fatalf("location = %q", location)
+	}
+}
+
 func TestOAuthRejectsUnknownCode(t *testing.T) {
 	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
 	rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code=unknown", nil)
@@ -108,8 +174,11 @@ func TestOAuthRejectsUnknownCode(t *testing.T) {
 
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
-	if meta.Name != "github-oauth" || meta.Maturity != "experimental" {
+	if meta.Name != "github-oauth" || meta.Maturity != "workflow-compatible" {
 		t.Fatalf("metadata = %#v", meta)
+	}
+	if meta.ProviderVersion != "2022-11-28" || len(meta.Levels) < 5 || len(meta.Endpoints) < 5 {
+		t.Fatalf("compat metadata = %#v", meta)
 	}
 	if !meta.Reset || len(meta.StatefulResources) != 3 {
 		t.Fatalf("state metadata = %#v", meta)
@@ -142,4 +211,59 @@ func serveGitHubRequest(mux http.Handler, method, path, body string, headers map
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	return rec
+}
+
+func issueGitHubToken(t *testing.T, mux http.Handler, scope string) string {
+	t.Helper()
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1&scope="+url.QueryEscape(scope), "", nil)
+	code := redirectCode(t, auth)
+	token := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://app/callback", map[string]string{"Accept": "application/json"})
+	if token.Code != http.StatusOK {
+		t.Fatalf("issue token status = %d, body=%s", token.Code, token.Body.String())
+	}
+	var body map[string]any
+	if err := json.Unmarshal(token.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode token: %v", err)
+	}
+	accessToken, _ := body["access_token"].(string)
+	if accessToken == "" {
+		t.Fatalf("missing access token: %#v", body)
+	}
+	return accessToken
+}
+
+func redirectCode(t *testing.T, rec *httptest.ResponseRecorder) string {
+	t.Helper()
+	location := rec.Header().Get("Location")
+	parsed, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("parse redirect location: %v", err)
+	}
+	code := parsed.Query().Get("code")
+	if code == "" {
+		t.Fatalf("missing code in location: %q", location)
+	}
+	return code
+}
+
+func assertGitHubOAuthError(t *testing.T, rec *httptest.ResponseRecorder, want string) {
+	t.Helper()
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if body["error"] != want || body["error_description"] == "" || body["error_uri"] == "" {
+		t.Fatalf("error body = %#v", body)
+	}
+}
+
+func assertGitHubMessage(t *testing.T, rec *httptest.ResponseRecorder, want string) {
+	t.Helper()
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode message: %v", err)
+	}
+	if body["message"] != want || body["documentation_url"] == "" || body["status"] == "" {
+		t.Fatalf("message body = %#v", body)
+	}
 }

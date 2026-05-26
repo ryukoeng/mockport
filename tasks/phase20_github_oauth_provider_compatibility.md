@@ -20,34 +20,34 @@
 
 ## Task P20-T01: GitHub OAuth Client Contract Baseline
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write failing client smoke for authorize redirect with state.
-- [ ] Write failing client smoke for token exchange.
-- [ ] Write failing client smoke for user profile and user emails subset.
-- [ ] Run `bash scripts/run-sdk-contracts.sh github-oauth`.
+- [x] Write failing client smoke for authorize redirect with state.
+- [x] Write failing client smoke for token exchange.
+- [x] Write failing client smoke for user profile and user emails subset.
+- [x] Run `bash scripts/run-sdk-contracts.sh github-oauth`.
 
 ## Task P20-T02: GitHub OAuth State And Scope Fidelity
 
-**Status:** pending
+**Status:** done
 
-- [ ] Persist auth codes, access tokens, scopes, expiry, and fake user identities.
-- [ ] Add invalid code, expired token, missing scope, redirect URI mismatch fixtures.
-- [ ] Add user emails and org membership subset if required by common OAuth workflows.
-- [ ] Update support matrix and compatibility score.
+- [x] Persist auth codes, access tokens, scopes, expiry, and fake user identities.
+- [x] Add invalid code, expired token, missing scope, redirect URI mismatch fixtures.
+- [x] Add user emails and org membership subset if required by common OAuth workflows.
+- [x] Update support matrix and compatibility score.
 
 ## Task P20-T03: GitHub OAuth Error Fidelity
 
-**Status:** pending
+**Status:** done
 
-- [ ] Match public OAuth error response shapes for token endpoint.
-- [ ] Match common API auth error shapes for user endpoints.
-- [ ] Report unsupported scopes and endpoints.
-- [ ] Run adapter tests, client contracts, and compatibility report.
+- [x] Match public OAuth error response shapes for token endpoint.
+- [x] Match common API auth error shapes for user endpoints.
+- [x] Report unsupported scopes and endpoints.
+- [x] Run adapter tests, client contracts, and compatibility report.
 
 ## Phase 20 Exit
 
-- [ ] GitHub OAuth adapter is at least `workflow-compatible`.
-- [ ] OAuth client contract passes for supported workflows.
-- [ ] Scope and token state behavior are documented.
-- [ ] Known gaps are explicit.
+- [x] GitHub OAuth adapter is at least `workflow-compatible`.
+- [x] OAuth client contract passes for supported workflows.
+- [x] Scope and token state behavior are documented.
+- [x] Known gaps are explicit.

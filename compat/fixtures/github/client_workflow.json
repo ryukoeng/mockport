@@ -1,0 +1,40 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "sdk",
+    "title": "Mockport GitHub OAuth client contract smoke",
+    "url_or_path": "contract/sdk/github-oauth-smoke.test.js",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "CLIENT",
+    "path": "authorize/token/user/emails/orgs smoke",
+    "headers": {
+      "Authorization": "Bearer github_oauth_oauth_token_000001"
+    },
+    "body": {
+      "workflow": "authorize redirect, access token exchange, user profile, user emails, user orgs"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "status": "client-ok",
+      "provider": "github-oauth"
+    }
+  },
+  "normalization": [
+    "client evidence is produced against local Mockport only",
+    "OAuth IDs use deterministic Mockport state IDs",
+    "no external GitHub API calls are made"
+  ]
+}

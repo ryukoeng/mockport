@@ -1,0 +1,39 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub REST API troubleshooting",
+    "url_or_path": "https://docs.github.com/rest/using-the-rest-api/troubleshooting-the-rest-api",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "scope_missing",
+  "request": {
+    "method": "GET",
+    "path": "/user/emails",
+    "headers": {
+      "Authorization": "Bearer github_oauth_oauth_token_000001"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "message": "Resource not accessible by token",
+      "documentation_url": "https://docs.github.com/rest",
+      "status": "Forbidden"
+    }
+  },
+  "normalization": [
+    "token is deterministic fake state",
+    "response uses common public REST error fields",
+    "GitHub policy and enterprise restrictions are not modeled"
+  ]
+}

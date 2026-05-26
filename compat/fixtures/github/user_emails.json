@@ -1,0 +1,43 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub REST API users list email addresses",
+    "url_or_path": "https://docs.github.com/rest/users/emails#list-email-addresses-for-the-authenticated-user",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "GET",
+    "path": "/user/emails",
+    "headers": {
+      "Authorization": "Bearer github_oauth_oauth_token_000001",
+      "Accept": "application/vnd.github+json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": [
+      {
+        "email": "mockport@example.test",
+        "primary": true,
+        "verified": true,
+        "visibility": "public"
+      }
+    ]
+  },
+  "normalization": [
+    "email uses example.test",
+    "token is deterministic fake state",
+    "response is reduced to common public fields"
+  ]
+}

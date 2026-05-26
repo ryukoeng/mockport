@@ -38,7 +38,7 @@
 | Phase 17 | Adapter state adoption | done | Major adapters adopt fake state without breaking scenario-compatible behavior |
 | Phase 18 | Stripe provider compatibility | done | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
 | Phase 19 | OpenAI provider compatibility | done | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
-| Phase 20 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
+| Phase 20 | GitHub OAuth provider compatibility | done | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
 | Phase 21 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
 | Phase 22 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
 
@@ -259,9 +259,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P20-T01 | Add GitHub OAuth client contract baseline | pending | Client smoke covers authorize redirect, token exchange, user profile, and user emails subset |
-| P20-T02 | Add GitHub OAuth state and scope fidelity | pending | Tests cover codes, tokens, scopes, expiry, fake identities, and scope errors |
-| P20-T03 | Add GitHub OAuth error fidelity | pending | Tests cover token endpoint errors, API auth errors, unsupported scopes, and unsupported endpoints |
+| P20-T01 | Add GitHub OAuth client contract baseline | done | Client smoke covers authorize redirect, token exchange, user profile, and user emails subset |
+| P20-T02 | Add GitHub OAuth state and scope fidelity | done | Tests cover codes, tokens, scopes, expiry, fake identities, and scope errors |
+| P20-T03 | Add GitHub OAuth error fidelity | done | Tests cover token endpoint errors, API auth errors, unsupported scopes, and unsupported endpoints |
 
 ## Phase 21 Tasks
 

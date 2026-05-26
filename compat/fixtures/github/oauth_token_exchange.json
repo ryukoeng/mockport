@@ -1,0 +1,45 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub OAuth app access token request",
+    "url_or_path": "https://docs.github.com/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "POST",
+    "path": "/login/oauth/access_token",
+    "headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "client_id": "mockport_github_client",
+      "client_secret": "mockport_github_secret",
+      "code": "github_oauth_oauth_code_000001",
+      "redirect_uri": "http://app.local/callback"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "access_token": "github_oauth_oauth_token_000001",
+      "token_type": "bearer",
+      "scope": "read:user user:email read:org"
+    }
+  },
+  "normalization": [
+    "access token is deterministic fake state",
+    "client secret is non-sensitive fake data",
+    "only public OAuth response fields are retained"
+  ]
+}

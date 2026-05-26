@@ -1,0 +1,42 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub OAuth troubleshooting token request errors",
+    "url_or_path": "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "redirect_uri_mismatch",
+  "request": {
+    "method": "POST",
+    "path": "/login/oauth/access_token",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "body": {
+      "code": "github_oauth_oauth_code_000001",
+      "redirect_uri": "http://other.local/callback"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "error": "redirect_uri_mismatch",
+      "error_description": "The redirect_uri does not match the authorization request.",
+      "error_uri": "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors"
+    }
+  },
+  "normalization": [
+    "redirect URIs are local example URLs",
+    "authorization code is deterministic fake state",
+    "response uses public OAuth error fields"
+  ]
+}

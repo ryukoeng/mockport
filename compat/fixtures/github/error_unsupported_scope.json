@@ -1,0 +1,37 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub OAuth app web application flow",
+    "url_or_path": "https://docs.github.com/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "GET",
+    "path": "/login/oauth/authorize",
+    "headers": {},
+    "body": {
+      "redirect_uri": "http://app.local/callback",
+      "state": "state-123",
+      "scope": "repo"
+    }
+  },
+  "response": {
+    "status": 302,
+    "headers": {
+      "Location": "http://app.local/callback?error=unsupported_scope&error_description=Mockport+simulated+unsupported+scope&state=state-123"
+    },
+    "body": {}
+  },
+  "normalization": [
+    "unsupported scope is synthetic and deterministic",
+    "redirect target is a local example URL",
+    "private repository permissions are not modeled"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub REST API users get authenticated user",
+    "url_or_path": "https://docs.github.com/rest/users/users#get-the-authenticated-user",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "oauth_success",
+  "request": {
+    "method": "GET",
+    "path": "/user",
+    "headers": {
+      "Authorization": "Bearer github_oauth_oauth_token_000001",
+      "Accept": "application/vnd.github+json"
+    },
+    "body": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "login": "mockport-user",
+      "id": 43101,
+      "name": "Mockport User",
+      "email": "mockport@example.test",
+      "scope": "read:user user:email read:org"
+    }
+  },
+  "normalization": [
+    "user identity is deterministic fake data",
+    "email uses example.test",
+    "only common OAuth profile fields are retained"
+  ]
+}

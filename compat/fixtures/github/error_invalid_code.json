@@ -1,0 +1,41 @@
+{
+  "provider": "github-oauth",
+  "provider_version": "2022-11-28",
+  "sdk": {
+    "name": "oauth-http-client",
+    "version": "node-24-fetch"
+  },
+  "source": {
+    "type": "docs",
+    "title": "GitHub OAuth troubleshooting token request errors",
+    "url_or_path": "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors",
+    "retrieved_at": "2026-05-26"
+  },
+  "scenario": "invalid_code",
+  "request": {
+    "method": "POST",
+    "path": "/login/oauth/access_token",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "body": {
+      "code": "unknown"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "error": "bad_verification_code",
+      "error_description": "The code passed is incorrect or expired.",
+      "error_uri": "https://docs.github.com/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-oauth-app-access-token-request-errors"
+    }
+  },
+  "normalization": [
+    "code is deterministic fake invalid data",
+    "response uses public OAuth error fields",
+    "no external GitHub calls are made"
+  ]
+}

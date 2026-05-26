@@ -120,7 +120,7 @@ Supported:
 | --- | --- | --- | --- | --- |
 | Stripe-like payments | `stripe` | `/stripe` plus SDK-compatible `/v1` alias | `workflow-compatible` | checkout sessions, payment intents, customers, products, prices, subscriptions, invoices, refunds, fake signed webhooks, SDK contract, state, validation, idempotency |
 | OpenAI-compatible API | `openai` | `/openai` | `workflow-compatible` | models, chat completions, responses, streaming, embeddings, files, batches, SDK contract, state, validation |
-| GitHub OAuth-like API | `github-oauth` | `/github` | `experimental` | authorize redirect, access token exchange, user profile, invalid code, expired token, missing scope |
+| GitHub OAuth-like API | `github-oauth` | `/github` | `workflow-compatible` | authorize redirect, access token exchange, user profile, user emails, user orgs, client contract, state, scope validation |
 | Slack-like messaging API | `slack` | `/slack` | `experimental` | auth test, message posting, auth error, rate limit, delivery failure |
 
 Planned:

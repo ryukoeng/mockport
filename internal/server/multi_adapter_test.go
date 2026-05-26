@@ -46,7 +46,7 @@ func TestConfiguredHandlerServesMultipleAdapters(t *testing.T) {
 	}{
 		{http.MethodPost, "/stripe/v1/checkout/sessions", http.StatusOK},
 		{http.MethodGet, "/openai/v1/models", http.StatusOK},
-		{http.MethodGet, "/github/user", http.StatusOK},
+		{http.MethodGet, "/github/login/oauth/authorize", http.StatusFound},
 		{http.MethodPost, "/slack/api/auth.test", http.StatusOK},
 	} {
 		rec := httptest.NewRecorder()
