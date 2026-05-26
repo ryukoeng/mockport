@@ -76,14 +76,33 @@ docker run --rm -p 43101:43101 \
 
 ## Install And Distribution
 
-Mockport is Docker-first. Release binaries and packaging scaffolds are prepared for OSS distribution.
+Mockport is Docker-first. The first public preview is `v0.1.0-alpha`.
+
+Docker preview image:
+
+```bash
+docker pull ghcr.io/albert-einshutoin/mockport:0.1.0-alpha
+docker run --rm -p 43101:43101 \
+  -v $(pwd)/configs/mockport.example.yml:/etc/mockport/mockport.yml \
+  ghcr.io/albert-einshutoin/mockport:0.1.0-alpha
+```
+
+Release archives:
+
+```bash
+curl -LO https://github.com/albert-einshutoin/mockport/releases/download/v0.1.0-alpha/mockport_0.1.0-alpha_darwin_arm64.tar.gz
+curl -LO https://github.com/albert-einshutoin/mockport/releases/download/v0.1.0-alpha/checksums.txt
+grep 'mockport_0.1.0-alpha_darwin_arm64.tar.gz' checksums.txt | shasum -a 256 -c -
+tar -xzf mockport_0.1.0-alpha_darwin_arm64.tar.gz
+./mockport_0.1.0-alpha_darwin_arm64/mockport version
+```
 
 | Channel | Status | Notes |
 | --- | --- | --- |
-| Docker / GHCR | Planned | `ghcr.io/albert-einshutoin/mockport` workflow publishes semver tags and `latest` |
-| GitHub release archives | Planned | `mockport_<version>_<os>_<arch>.tar.gz` with `checksums.txt` |
-| Homebrew | Template | Formula template is under `packaging/homebrew/` |
-| npm | Experimental wrapper | The npm wrapper is experimental; Go binary and Docker remain primary |
+| Docker / GHCR | Preview | `ghcr.io/albert-einshutoin/mockport:0.1.0-alpha`; `latest` follows the default branch and is not the preview release contract |
+| GitHub release archives | Preview | `mockport_<version>_<os>_<arch>.tar.gz` with `checksums.txt` |
+| Homebrew | Not published | Formula template is under `packaging/homebrew/` |
+| npm | Not published | The npm wrapper is experimental; Go binary and Docker remain primary |
 
 Docs site source lives under `docs/site/`.
 

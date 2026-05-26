@@ -32,3 +32,5 @@ for target in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64; do
     exit 1
   fi
 done
+
+scripts/verify-release-artifacts.sh "$VERSION" "$DIST_DIR"

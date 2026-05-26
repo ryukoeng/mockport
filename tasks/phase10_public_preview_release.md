@@ -21,12 +21,12 @@
 
 ## Task P10-T01: Preview Release Readiness Audit
 
-**Status:** pending
+**Status:** done
 
-- [ ] Write `scripts/verify-release-artifacts.sh` to verify release archive names, checksums, binary version, and GHCR image availability.
-- [ ] Add `CHANGELOG.md` with `v0.1.0-alpha` initial preview release notes.
-- [ ] Add `docs/releases/v0.1.0-alpha.md` with scope, supported adapters, known limitations, public env safety, support matrix link, and verification commands.
-- [ ] Run full pre-release verification locally.
+- [x] Write `scripts/verify-release-artifacts.sh` to verify release archive names, checksums, binary version, and GHCR image availability.
+- [x] Add `CHANGELOG.md` with `v0.1.0-alpha` initial preview release notes.
+- [x] Add `docs/releases/v0.1.0-alpha.md` with scope, supported adapters, known limitations, public env safety, support matrix link, and verification commands.
+- [x] Run full pre-release verification locally.
 
 ## Task P10-T02: Tag And GitHub Preview Release
 
