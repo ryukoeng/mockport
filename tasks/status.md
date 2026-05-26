@@ -208,9 +208,9 @@
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
 | P15-T01 | Add deterministic state store | pending | Store tests cover create/retrieve/list/update/delete and reset |
-| P15-T02 | Add Stripe stateful workflows | pending | Adapter and SDK tests cover stateful checkout/payment intent/idempotency |
-| P15-T03 | Add OpenAI stateful workflows | pending | Adapter and SDK tests cover IDs, streaming shape, validation |
-| P15-T04 | Add OAuth and messaging state | pending | Client tests cover codes, tokens, scopes, users, channels, messages |
+| P15-T02 | Add Stripe stateful workflows | pending | Adapter tests and contract runner foundation cover stateful checkout/payment intent/idempotency |
+| P15-T03 | Add OpenAI stateful workflows | pending | Adapter tests and contract runner foundation cover IDs, streaming shape, validation |
+| P15-T04 | Add OAuth and messaging state | pending | Adapter tests and contract runner foundation cover codes, tokens, scopes, users, channels, messages |
 
 ## Phase 16 Tasks
 
