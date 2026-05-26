@@ -32,6 +32,7 @@ require_text ".github/dependabot.yml" 'package-ecosystem: "github-actions"'
 require_text ".github/dependabot.yml" 'package-ecosystem: "gomod"'
 require_text ".github/dependabot.yml" 'package-ecosystem: "npm"'
 require_text ".github/dependabot.yml" 'directory: "/packaging/npm"'
+require_text ".github/dependabot.yml" 'directory: "/contract/sdk"'
 
 require_file "ROADMAP.md"
 require_text "ROADMAP.md" "Near Term"
@@ -45,9 +46,10 @@ require_file "docs/compatibility-model.md"
 require_text "docs/maintainer-guide.md" "Do not auto-close stale issues"
 require_text "docs/maintainer-guide.md" "GitHub Actions should use Node.js 24-compatible action releases"
 require_text "docs/maintainer-guide.md" "Adapter Contribution Quality Bar"
-require_text "docs/maintainer-guide.md" "Test-only SDK dependencies are intentionally pinned later in Phase 15"
+require_text "docs/maintainer-guide.md" 'Test-only SDK dependencies are pinned in `contract/sdk`'
 require_text "docs/adapter-helper-policy.md" "Until then, adapters should prefer clear local helpers over broad abstraction"
 require_text "docs/compatibility-model.md" "Mockport compatibility is measured against public provider API behavior"
+require_text "docs/compatibility-model.md" "SDK contract tests live under"
 require_text "docs/compatibility-model.md" "provider-compatible"
 
 require_file ".github/workflows/ci.yml"
@@ -63,6 +65,8 @@ done
 
 require_text ".github/workflows/ci.yml" "actions/checkout@v6"
 require_text ".github/workflows/ci.yml" "actions/setup-go@v6"
+require_text ".github/workflows/ci.yml" "actions/setup-node@v6"
+require_text ".github/workflows/ci.yml" "bash scripts/run-sdk-contracts.sh all"
 require_text ".github/workflows/ci.yml" "bash scripts/check-maintenance-policy.sh"
 
 require_text ".github/workflows/docker.yml" "docker/setup-buildx-action@v4"

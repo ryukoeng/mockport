@@ -33,7 +33,7 @@
 | Phase 12 | Fixture, spec, and scenario policy | done | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
 | Phase 13 | Public preview contract cleanup | done | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
 | Phase 14 | Compatibility engine | done | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
-| Phase 15 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
+| Phase 15 | SDK contract harness foundation | done | Pinned SDK contract runner reaches local Mockport without external provider calls |
 | Phase 16 | State foundation | pending | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
 | Phase 17 | Adapter state adoption | pending | Major adapters adopt fake state without breaking scenario-compatible behavior |
 | Phase 18 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
@@ -219,9 +219,9 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P15-T01 | Add SDK contract workspace | pending | SDK contract package reaches local Mockport health endpoint |
-| P15-T02 | Add Mockport contract runner | pending | Runner starts Mockport, executes selected tests, and cleans up |
-| P15-T03 | Add CI integration | pending | CI runs SDK contract foundation without external provider calls |
+| P15-T01 | Add SDK contract workspace | done | SDK contract package reaches local Mockport health endpoint |
+| P15-T02 | Add Mockport contract runner | done | Runner starts Mockport, executes selected tests, and cleans up |
+| P15-T03 | Add CI integration | done | CI runs SDK contract foundation without external provider calls |
 
 ## Phase 16 Tasks
 

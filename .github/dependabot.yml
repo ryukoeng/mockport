@@ -32,3 +32,14 @@ updates:
     labels:
       - "dependencies"
       - "npm-wrapper"
+
+  - package-ecosystem: "npm"
+    directory: "/contract/sdk"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    labels:
+      - "dependencies"
+      - "sdk-contracts"

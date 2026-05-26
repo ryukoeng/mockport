@@ -1,0 +1,14 @@
+{
+  "name": "@mockport/sdk-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Test-only SDK contract harness for Mockport local compatibility checks.",
+  "scripts": {
+    "test": "node test-runner.js --offline",
+    "test:live": "node test-runner.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "Apache-2.0"
+}

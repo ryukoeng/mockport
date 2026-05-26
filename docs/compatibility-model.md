@@ -25,6 +25,12 @@ Compatibility score is deterministic and offline. It combines:
 
 User-defined scenarios do not raise provider compatibility score unless promoted into a built-in scenario with tests, docs, and sanitized fixture evidence.
 
+## SDK Contract Harness
+
+SDK contract tests live under `contract/sdk`. This workspace is test-only and is intentionally separate from the Go runtime and the experimental npm wrapper.
+
+The Phase 15 foundation runs a live placeholder contract against local Mockport health. Provider-specific tracks add real SDK calls later without contacting external provider APIs.
+
 ## Maturity Promotion
 
 | Maturity | Minimum evidence |

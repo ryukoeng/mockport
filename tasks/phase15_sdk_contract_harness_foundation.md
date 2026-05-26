@@ -24,34 +24,34 @@
 
 ## Task P15-T01: SDK Contract Workspace
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add a dedicated SDK contract package outside runtime code.
-- [ ] Pin package versions with `package-lock.json`.
-- [ ] Add placeholder smoke that proves the runner can reach local Mockport health endpoint.
-- [ ] Run `(cd contract/sdk && npm test)`.
+- [x] Add a dedicated SDK contract package outside runtime code.
+- [x] Pin package versions with `package-lock.json`.
+- [x] Add placeholder smoke that proves the runner can reach local Mockport health endpoint.
+- [x] Run `(cd contract/sdk && npm test)`.
 
 ## Task P15-T02: Mockport Contract Runner
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add `scripts/run-sdk-contracts.sh` that builds Mockport, starts it with multi-adapter config, runs selected SDK tests, and cleans up.
-- [ ] Support selecting provider names: `stripe`, `openai`, `github-oauth`, `slack`, or `all`.
-- [ ] Emit JSON or text result summary for compatibility report ingestion.
-- [ ] Run `bash scripts/run-sdk-contracts.sh all`.
+- [x] Add `scripts/run-sdk-contracts.sh` that builds Mockport, starts it with multi-adapter config, runs selected SDK tests, and cleans up.
+- [x] Support selecting provider names: `stripe`, `openai`, `github-oauth`, `slack`, or `all`.
+- [x] Emit JSON or text result summary for compatibility report ingestion.
+- [x] Run `bash scripts/run-sdk-contracts.sh all`.
 
 ## Task P15-T03: CI Integration
 
-**Status:** pending
+**Status:** done
 
-- [ ] Add SDK contract foundation check to CI without requiring external provider network calls.
-- [ ] Keep SDK dependencies test-only and out of the Go runtime.
-- [ ] Document how provider-specific tracks add tests later.
-- [ ] Run full local verification.
+- [x] Add SDK contract foundation check to CI without requiring external provider network calls.
+- [x] Keep SDK dependencies test-only and out of the Go runtime.
+- [x] Document how provider-specific tracks add tests later.
+- [x] Run full local verification.
 
 ## Phase 15 Exit
 
-- [ ] SDK contract workspace exists with pinned dependencies.
-- [ ] Contract runner starts local Mockport and executes tests.
-- [ ] No external provider network calls are required.
-- [ ] Provider-specific SDK contracts can be added incrementally.
+- [x] SDK contract workspace exists with pinned dependencies.
+- [x] Contract runner starts local Mockport and executes tests.
+- [x] No external provider network calls are required.
+- [x] Provider-specific SDK contracts can be added incrementally.

@@ -42,12 +42,12 @@ Follow `SECURITY.md`. Do not request real secrets or production provider traffic
 
 ## Dependency And CI Maintenance
 
-- Dependabot covers GitHub Actions, Go modules, and the experimental npm wrapper.
+- Dependabot covers GitHub Actions, Go modules, the experimental npm wrapper, and test-only SDK contracts.
 - GitHub Actions should use Node.js 24-compatible action releases where available.
 - If a Node.js 20 deprecation warning remains because an upstream action has no Node.js 24-compatible release, document the action, warning date, and upstream tracking reason in the relevant phase notes.
 - Scheduled smoke checks should validate the Docker-first path without publishing images.
 
-Test-only SDK dependencies are intentionally pinned later in Phase 15 when the SDK contract harness exists.
+Test-only SDK dependencies are pinned in `contract/sdk` and must stay out of the Go runtime.
 
 ## Adapter Contribution Quality Bar
 
