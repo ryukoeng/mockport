@@ -1,4 +1,4 @@
-# Phase 16 Stripe Provider Compatibility Implementation Plan
+# Phase 18 Stripe Provider Compatibility Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -18,7 +18,7 @@
 - Modify: `docs/site/support-matrix.md`
 - Modify: `tasks/status.md`
 
-## Task P16-T01: Stripe SDK Contract Baseline
+## Task P18-T01: Stripe SDK Contract Baseline
 
 **Status:** pending
 
@@ -27,7 +27,7 @@
 - [ ] Record Stripe SDK version in compatibility manifest.
 - [ ] Run `bash scripts/run-sdk-contracts.sh stripe`.
 
-## Task P16-T02: Stripe Major Surface Expansion
+## Task P18-T02: Stripe Major Surface Expansion
 
 **Status:** pending
 
@@ -36,7 +36,7 @@
 - [ ] Add SDK contract coverage for each endpoint group.
 - [ ] Update support matrix and compatibility score.
 
-## Task P16-T03: Stripe Error And Idempotency Fidelity
+## Task P18-T03: Stripe Error And Idempotency Fidelity
 
 **Status:** pending
 
@@ -45,7 +45,7 @@
 - [ ] Implement response shape and headers close to Stripe public API.
 - [ ] Run adapter tests, SDK contracts, and compatibility report.
 
-## Phase 16 Exit
+## Phase 18 Exit
 
 - [ ] Stripe adapter is at least `workflow-compatible`.
 - [ ] Stripe SDK contracts pass for supported workflows.

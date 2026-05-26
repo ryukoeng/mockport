@@ -43,7 +43,7 @@ require_file "docs/maintainer-guide.md"
 require_text "docs/maintainer-guide.md" "Do not auto-close stale issues"
 require_text "docs/maintainer-guide.md" "GitHub Actions should use Node.js 24-compatible action releases"
 require_text "docs/maintainer-guide.md" "Adapter Contribution Quality Bar"
-require_text "docs/maintainer-guide.md" "Test-only SDK dependencies are intentionally pinned later in Phase 14"
+require_text "docs/maintainer-guide.md" "Test-only SDK dependencies are intentionally pinned later in Phase 15"
 
 require_file ".github/workflows/ci.yml"
 require_file ".github/workflows/docker.yml"

@@ -1,4 +1,4 @@
-# Phase 17 OpenAI Provider Compatibility Implementation Plan
+# Phase 19 OpenAI Provider Compatibility Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -18,7 +18,7 @@
 - Modify: `docs/site/support-matrix.md`
 - Modify: `tasks/status.md`
 
-## Task P17-T01: OpenAI SDK Contract Baseline
+## Task P19-T01: OpenAI SDK Contract Baseline
 
 **Status:** pending
 
@@ -27,7 +27,7 @@
 - [ ] Add streaming smoke if SDK supports base URL override cleanly.
 - [ ] Run `bash scripts/run-sdk-contracts.sh openai`.
 
-## Task P17-T02: OpenAI Major Surface Expansion
+## Task P19-T02: OpenAI Major Surface Expansion
 
 **Status:** pending
 
@@ -36,16 +36,16 @@
 - [ ] Keep inference fake, deterministic, and documented.
 - [ ] Update support matrix and compatibility score.
 
-## Task P17-T03: OpenAI Error And Streaming Fidelity
+## Task P19-T03: OpenAI Error And Streaming Fidelity
 
 **Status:** pending
 
 - [ ] Add fixtures for auth errors, rate limits, context length, invalid model, malformed messages/input.
-- [ ] Implement SSE-compatible streaming response for `stream_success`, including streaming chunk shape and terminal events. See [issue #6](https://github.com/albert-einshutoin/mockport/issues/6).
+- [ ] Verify Phase 13 SSE-compatible `stream_success` against SDK contracts and streaming fixtures.
 - [ ] Add unsupported parameter reporting.
 - [ ] Run adapter tests, SDK contracts, and compatibility report.
 
-## Phase 17 Exit
+## Phase 19 Exit
 
 - [ ] OpenAI adapter is at least `workflow-compatible`.
 - [ ] OpenAI SDK contracts pass for supported workflows.

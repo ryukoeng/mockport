@@ -1,4 +1,4 @@
-# Phase 18 GitHub OAuth Provider Compatibility Implementation Plan
+# Phase 20 GitHub OAuth Provider Compatibility Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -18,7 +18,7 @@
 - Modify: `docs/site/support-matrix.md`
 - Modify: `tasks/status.md`
 
-## Task P18-T01: GitHub OAuth Client Contract Baseline
+## Task P20-T01: GitHub OAuth Client Contract Baseline
 
 **Status:** pending
 
@@ -27,7 +27,7 @@
 - [ ] Write failing client smoke for user profile and user emails subset.
 - [ ] Run `bash scripts/run-sdk-contracts.sh github-oauth`.
 
-## Task P18-T02: GitHub OAuth State And Scope Fidelity
+## Task P20-T02: GitHub OAuth State And Scope Fidelity
 
 **Status:** pending
 
@@ -36,7 +36,7 @@
 - [ ] Add user emails and org membership subset if required by common OAuth workflows.
 - [ ] Update support matrix and compatibility score.
 
-## Task P18-T03: GitHub OAuth Error Fidelity
+## Task P20-T03: GitHub OAuth Error Fidelity
 
 **Status:** pending
 
@@ -45,7 +45,7 @@
 - [ ] Report unsupported scopes and endpoints.
 - [ ] Run adapter tests, client contracts, and compatibility report.
 
-## Phase 18 Exit
+## Phase 20 Exit
 
 - [ ] GitHub OAuth adapter is at least `workflow-compatible`.
 - [ ] OAuth client contract passes for supported workflows.

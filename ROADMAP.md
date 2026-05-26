@@ -8,10 +8,11 @@ Mockport is a Docker-first local API environment for AI-native development and C
 
 ## Near Term
 
-- Phase 11: community and maintenance automation.
-- Phase 12: compatibility level model and compatibility report shape.
-- Phase 13: sanitized fixture and provider spec snapshot policy.
-- Phase 14: SDK contract harness foundation.
+- Phase 12: sanitized fixture, provider spec snapshot, and scenario policy.
+- Phase 13: public preview contract cleanup for `mockport up`, OpenAI streaming, and adapter helper boundaries.
+- Phase 14: compatibility level model, compatibility report shape, and provisional promotion rules.
+- Phase 15: SDK contract harness foundation.
+- Phase 16: shared state foundation before provider-specific compatibility tracks.
 
 ## Public Preview Follow-up
 

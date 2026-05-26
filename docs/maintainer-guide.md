@@ -47,7 +47,7 @@ Follow `SECURITY.md`. Do not request real secrets or production provider traffic
 - If a Node.js 20 deprecation warning remains because an upstream action has no Node.js 24-compatible release, document the action, warning date, and upstream tracking reason in the relevant phase notes.
 - Scheduled smoke checks should validate the Docker-first path without publishing images.
 
-Test-only SDK dependencies are intentionally pinned later in Phase 14 when the SDK contract harness exists.
+Test-only SDK dependencies are intentionally pinned later in Phase 15 when the SDK contract harness exists.
 
 ## Adapter Contribution Quality Bar
 
@@ -60,4 +60,4 @@ Adapter pull requests must include:
 - AI-safe fake credentials and local-only URLs.
 - No real provider secrets, production URLs, customer payloads, or unsanitized fixtures.
 
-Future compatibility levels will be defined in Phase 12. Until then, adapter claims must stay at scenario-compatible or experimental unless stronger evidence exists.
+Future compatibility levels will be defined in Phase 14. Until then, adapter claims must stay at scenario-compatible or experimental unless stronger evidence exists.

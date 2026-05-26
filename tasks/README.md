@@ -31,15 +31,17 @@ tasks/
   phase9_public_docs_and_discovery.md
   phase10_public_preview_release.md
   phase11_community_and_maintenance.md
-  phase12_compatibility_engine.md
-  phase13_fixture_spec_policy.md
-  phase14_sdk_contract_harness_foundation.md
-  phase15_stateful_provider_workflows.md
-  phase16_stripe_provider_compatibility.md
-  phase17_openai_provider_compatibility.md
-  phase18_github_oauth_provider_compatibility.md
-  phase19_slack_provider_compatibility.md
-  phase20_provider_compatible_release_track.md
+  phase12_fixture_spec_policy.md
+  phase13_public_preview_contract_cleanup.md
+  phase14_compatibility_engine.md
+  phase15_sdk_contract_harness_foundation.md
+  phase16_state_foundation.md
+  phase17_adapter_state_adoption.md
+  phase18_stripe_provider_compatibility.md
+  phase19_openai_provider_compatibility.md
+  phase20_github_oauth_provider_compatibility.md
+  phase21_slack_provider_compatibility.md
+  phase22_provider_compatible_release_track.md
 ```
 
 ## Status の意味
@@ -92,23 +94,27 @@ Phase 10 は「初回 public preview release として GitHub Release、checksum
 
 Phase 11 は「Dependabot、maintainer guide、roadmap、adapter contribution quality bar を整え、継続運用できる」までです。
 
-Phase 12 は「互換性を manifest、score、report として測れる Compatibility Engine を作る」までです。
+Phase 12 は「fixture/spec snapshot/scenario の安全性、出典、更新ルールを定義する」までです。
 
-Phase 13 は「fixture/spec snapshot の安全性、出典、更新ルールを定義する」までです。
+Phase 13 は「public preview で露出した `mockport up`、OpenAI streaming、adapter helper 境界の期待値差を解消する」までです。
 
-Phase 14 は「公式 SDK / 実 client contract を local Mockport に向けて通す harness foundation を作る」までです。
+Phase 14 は「互換性を manifest、score、report、promotion rule として測れる Compatibility Engine を作る」までです。
 
-Phase 15 は「主要 workflow を fake state 上で create/retrieve/list/update できる stateful API にする」までです。
+Phase 15 は「公式 SDK / 実 client contract を local Mockport に向けて通す harness foundation を作る」までです。
 
-Phase 16 は「Stripe adapter を SDK/workflow-compatible local API に引き上げる」までです。
+Phase 16 は「deterministic fake state、idempotency、validation、report hook の共通基盤を作る」までです。
 
-Phase 17 は「OpenAI adapter を SDK/workflow-compatible local API に引き上げる」までです。
+Phase 17 は「主要 adapter に shared state を適用し、provider-specific compatibility track の前提を作る」までです。
 
-Phase 18 は「GitHub OAuth adapter を client/workflow-compatible local API に引き上げる」までです。
+Phase 18 は「Stripe adapter を SDK/workflow-compatible local API に引き上げる」までです。
 
-Phase 19 は「Slack adapter を client/workflow-compatible local API に引き上げる」までです。
+Phase 19 は「OpenAI adapter を SDK/workflow-compatible local API に引き上げる」までです。
 
-Phase 20 は「provider-compatible release track と compatibility report を継続運用する」までです。
+Phase 20 は「GitHub OAuth adapter を client/workflow-compatible local API に引き上げる」までです。
+
+Phase 21 は「Slack adapter を client/workflow-compatible local API に引き上げる」までです。
+
+Phase 22 は「provider-compatible release track と compatibility report を継続運用する」までです。
 
 ## 参照資料
 

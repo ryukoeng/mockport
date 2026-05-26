@@ -1,10 +1,10 @@
-# Phase 14 SDK Contract Harness Foundation Implementation Plan
+# Phase 15 SDK Contract Harness Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 公式 SDK または実運用に近い client を使った contract harness の土台を作る。
 
-**Architecture:** この Phase では SDK contract runner、dependency pinning、Mockport 起動管理、result reporting までに限定する。Provider ごとの深い SDK compatibility は Phase16-19 の provider-specific track で実装する。
+**Architecture:** この Phase では SDK contract runner、dependency pinning、Mockport 起動管理、result reporting までに限定する。Provider ごとの深い SDK compatibility は Phase18-21 の provider-specific track で実装する。
 
 **Tech Stack:** Go server, Node SDK smoke workspace, shell scripts, Docker Compose, fixture snapshots.
 
@@ -22,7 +22,7 @@
 - Modify: `docs/compatibility-model.md`
 - Modify: `tasks/status.md`
 
-## Task P14-T01: SDK Contract Workspace
+## Task P15-T01: SDK Contract Workspace
 
 **Status:** pending
 
@@ -31,7 +31,7 @@
 - [ ] Add placeholder smoke that proves the runner can reach local Mockport health endpoint.
 - [ ] Run `(cd contract/sdk && npm test)`.
 
-## Task P14-T02: Mockport Contract Runner
+## Task P15-T02: Mockport Contract Runner
 
 **Status:** pending
 
@@ -40,7 +40,7 @@
 - [ ] Emit JSON or text result summary for compatibility report ingestion.
 - [ ] Run `bash scripts/run-sdk-contracts.sh all`.
 
-## Task P14-T03: CI Integration
+## Task P15-T03: CI Integration
 
 **Status:** pending
 
@@ -49,7 +49,7 @@
 - [ ] Document how provider-specific tracks add tests later.
 - [ ] Run full local verification.
 
-## Phase 14 Exit
+## Phase 15 Exit
 
 - [ ] SDK contract workspace exists with pinned dependencies.
 - [ ] Contract runner starts local Mockport and executes tests.

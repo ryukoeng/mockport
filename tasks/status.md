@@ -30,15 +30,17 @@
 | Phase 9 | Public docs and discovery | done | Support matrix, limitations, examples, and positioning docs are public-ready before preview release |
 | Phase 10 | Public preview release | done | `v0.1.0-alpha` GitHub Release and GHCR image are published and install-verified |
 | Phase 11 | Community and maintenance | done | Maintenance policy, Dependabot, roadmap, Node.js 24 Actions, and adapter contribution quality bar |
-| Phase 12 | Compatibility engine | pending | Compatibility manifests, scores, and reports define provider-compatible local API |
-| Phase 13 | Fixture and spec policy | pending | Sanitized fixtures, source metadata, and provider spec snapshot rules exist |
-| Phase 14 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
-| Phase 15 | Stateful provider workflows | pending | Major workflows use fake state for create/retrieve/list/update and idempotency |
-| Phase 16 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
-| Phase 17 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
-| Phase 18 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
-| Phase 19 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
-| Phase 20 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
+| Phase 12 | Fixture, spec, and scenario policy | pending | Sanitized fixtures, source metadata, provider spec snapshot rules, and scenario policy exist |
+| Phase 13 | Public preview contract cleanup | pending | `mockport up`, OpenAI streaming, and adapter helper boundaries no longer create expectation gaps |
+| Phase 14 | Compatibility engine | pending | Compatibility manifests, scores, reports, and provisional promotion rules define provider-compatible local API |
+| Phase 15 | SDK contract harness foundation | pending | Pinned SDK contract runner reaches local Mockport without external provider calls |
+| Phase 16 | State foundation | pending | Shared deterministic state, idempotency primitives, and state coverage report hooks exist |
+| Phase 17 | Adapter state adoption | pending | Major adapters adopt fake state without breaking scenario-compatible behavior |
+| Phase 18 | Stripe provider compatibility | pending | Stripe reaches workflow-compatible status with SDK contracts and support matrix |
+| Phase 19 | OpenAI provider compatibility | pending | OpenAI reaches workflow-compatible status with SDK contracts and support matrix |
+| Phase 20 | GitHub OAuth provider compatibility | pending | GitHub OAuth reaches workflow-compatible status with client contracts and support matrix |
+| Phase 21 | Slack provider compatibility | pending | Slack reaches workflow-compatible status with client contracts and support matrix |
+| Phase 22 | Provider-compatible release track | pending | Compatibility CI and release reports publish scores, SDK versions, and known gaps |
 
 ## Phase 0 Tasks
 
@@ -183,83 +185,99 @@
 
 | Issue | Priority | Destination | Status |
 | --- | --- | --- | --- |
-| [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 17 | open |
-| [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Public preview follow-up | open |
+| [#6](https://github.com/albert-einshutoin/mockport/issues/6) Add SSE-compatible streaming response for OpenAI `stream_success` scenario | high | Phase 13 | open |
+| [#8](https://github.com/albert-einshutoin/mockport/issues/8) Improve `mockport up` Docker Compose UX | high | Phase 13 | open |
 | [#5](https://github.com/albert-einshutoin/mockport/issues/5) Clarify scenario policy: built-in scenarios vs user-defined scenarios | medium | Phase 12 | open |
-| [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Before next adapter wave | open |
+| [#7](https://github.com/albert-einshutoin/mockport/issues/7) Track adapter helper duplication before adding more adapters | low | Phase 13 | open |
 
 ## Phase 12 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P12-T01 | Add compatibility level model | pending | Manifest tests cover wire/sdk/workflow/error/state/contract levels |
-| P12-T02 | Add compatibility scoring | pending | Score tests cover endpoint, scenario, SDK, state, and error coverage |
-| P12-T03 | Add compatibility report output | pending | Report tests assert score, levels, SDK versions, provider API version, gaps |
+| P12-T01 | Define fixture format and scenario policy | pending | Fixture check asserts source metadata, fake local credentials, and built-in/user-defined scenario rules |
+| P12-T02 | Add fixture safety check | pending | Scanner rejects real secrets and production provider URLs in fixtures |
+| P12-T03 | Add spec snapshot policy | pending | Docs/static checks cover source and update policy |
 
 ## Phase 13 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P13-T01 | Define fixture format | pending | Fixture check asserts source metadata and fake local credentials |
-| P13-T02 | Add fixture safety check | pending | Scanner rejects real secrets and production provider URLs in fixtures |
-| P13-T03 | Add spec snapshot policy | pending | Docs/static checks cover source and update policy |
+| P13-T01 | Improve `mockport up` UX | pending | CLI tests cover missing Docker, missing compose file, `--detach` / `-d`, and `--build` |
+| P13-T02 | Add OpenAI SSE `stream_success` | pending | HTTP tests assert `text/event-stream`, streaming chunks, and terminal `[DONE]` |
+| P13-T03 | Decide adapter helper duplication boundary | pending | Adapter regression tests preserve response shape if helpers are extracted |
 
 ## Phase 14 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P14-T01 | Add SDK contract workspace | pending | SDK contract package reaches local Mockport health endpoint |
-| P14-T02 | Add Mockport contract runner | pending | Runner starts Mockport, executes selected tests, and cleans up |
-| P14-T03 | Add CI integration | pending | CI runs SDK contract foundation without external provider calls |
+| P14-T01 | Add compatibility level model | pending | Manifest tests cover wire/sdk/workflow/error/state/contract levels |
+| P14-T02 | Add compatibility scoring | pending | Score tests cover endpoint, scenario, SDK, state, and error coverage |
+| P14-T03 | Add compatibility report output | pending | Report tests assert score, levels, SDK versions, provider API version, gaps |
+| P14-T04 | Define provisional promotion rule | pending | Static checks prevent undocumented compatibility claims |
 
 ## Phase 15 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P15-T01 | Add deterministic state store | pending | Store tests cover create/retrieve/list/update/delete and reset |
-| P15-T02 | Add Stripe stateful workflows | pending | Adapter tests and contract runner foundation cover stateful checkout/payment intent/idempotency |
-| P15-T03 | Add OpenAI stateful workflows | pending | Adapter tests and contract runner foundation cover IDs, streaming shape, validation |
-| P15-T04 | Add OAuth and messaging state | pending | Adapter tests and contract runner foundation cover codes, tokens, scopes, users, channels, messages |
+| P15-T01 | Add SDK contract workspace | pending | SDK contract package reaches local Mockport health endpoint |
+| P15-T02 | Add Mockport contract runner | pending | Runner starts Mockport, executes selected tests, and cleans up |
+| P15-T03 | Add CI integration | pending | CI runs SDK contract foundation without external provider calls |
 
 ## Phase 16 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P16-T01 | Add Stripe SDK contract baseline | pending | Official SDK smoke covers checkout sessions and payment intents |
-| P16-T02 | Expand Stripe major surface | pending | Endpoint group tests and SDK contracts cover customers/prices/products/subscriptions/invoices/refunds |
-| P16-T03 | Add Stripe error and idempotency fidelity | pending | Adapter tests cover validation, auth, rate limit, idempotency replay, and conflict errors |
+| P16-T01 | Add deterministic state store | pending | Store tests cover create/retrieve/list/update/delete and reset |
+| P16-T02 | Add idempotency and validation primitives | pending | State tests cover replay, conflict detection, and missing required field errors |
+| P16-T03 | Add state coverage report hooks | pending | Report tests assert stateful resources, idempotency support, and reset behavior |
 
 ## Phase 17 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P17-T01 | Add OpenAI SDK contract baseline | pending | Official SDK smoke covers models, chat, responses, streaming where feasible |
-| P17-T02 | Expand OpenAI major surface | pending | Endpoint group tests and SDK contracts cover embeddings/files/batches/tool-call subset |
-| P17-T03 | Add OpenAI error and streaming fidelity | pending | Adapter tests cover auth, rate limit, context length, invalid model, malformed input, streaming chunks |
+| P17-T01 | Adopt state in Stripe workflows | pending | Adapter tests cover stateful checkout/payment intent and idempotency |
+| P17-T02 | Adopt state in OpenAI workflows | pending | Adapter tests cover IDs, retrieve-compatible fake workflows, validation, and preserved streaming |
+| P17-T03 | Adopt state in OAuth and messaging workflows | pending | Adapter tests cover codes, tokens, scopes, users, channels, messages |
 
 ## Phase 18 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P18-T01 | Add GitHub OAuth client contract baseline | pending | Client smoke covers authorize redirect, token exchange, user profile, and user emails subset |
-| P18-T02 | Add GitHub OAuth state and scope fidelity | pending | Tests cover codes, tokens, scopes, expiry, fake identities, and scope errors |
-| P18-T03 | Add GitHub OAuth error fidelity | pending | Tests cover token endpoint errors, API auth errors, unsupported scopes, and unsupported endpoints |
+| P18-T01 | Add Stripe SDK contract baseline | pending | Official SDK smoke covers checkout sessions and payment intents |
+| P18-T02 | Expand Stripe major surface | pending | Endpoint group tests and SDK contracts cover customers/prices/products/subscriptions/invoices/refunds |
+| P18-T03 | Add Stripe error and idempotency fidelity | pending | Adapter tests cover validation, auth, rate limit, idempotency replay, and conflict errors |
 
 ## Phase 19 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P19-T01 | Add Slack client contract baseline | pending | Client smoke covers auth.test, chat.postMessage, conversations list/history where needed |
-| P19-T02 | Add Slack messaging and conversation state | pending | Tests cover channels, users, messages, timestamps, update/delete, and history |
-| P19-T03 | Add Slack error and rate limit fidelity | pending | Tests cover invalid_auth, channel_not_found, not_in_channel, rate_limited, delivery_failed |
+| P19-T01 | Add OpenAI SDK contract baseline | pending | Official SDK smoke covers models, chat, responses, streaming where feasible |
+| P19-T02 | Expand OpenAI major surface | pending | Endpoint group tests and SDK contracts cover embeddings/files/batches/tool-call subset |
+| P19-T03 | Add OpenAI error and streaming fidelity | pending | Adapter tests cover auth, rate limit, context length, invalid model, malformed input, and Phase 13 streaming fixtures |
 
 ## Phase 20 Tasks
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P20-T01 | Add compatibility CI | pending | Workflow static checks assert SDK contracts, fixture checks, report artifact |
-| P20-T02 | Generate compatibility reports | pending | Report generation tests assert adapter scores, SDK versions, known gaps |
-| P20-T03 | Define provider-compatible release criteria | pending | Release check enforces minimum score and passing contracts before maturity promotion |
+| P20-T01 | Add GitHub OAuth client contract baseline | pending | Client smoke covers authorize redirect, token exchange, user profile, and user emails subset |
+| P20-T02 | Add GitHub OAuth state and scope fidelity | pending | Tests cover codes, tokens, scopes, expiry, fake identities, and scope errors |
+| P20-T03 | Add GitHub OAuth error fidelity | pending | Tests cover token endpoint errors, API auth errors, unsupported scopes, and unsupported endpoints |
+
+## Phase 21 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P21-T01 | Add Slack client contract baseline | pending | Client smoke covers auth.test, chat.postMessage, conversations list/history where needed |
+| P21-T02 | Add Slack messaging and conversation state | pending | Tests cover channels, users, messages, timestamps, update/delete, and history |
+| P21-T03 | Add Slack error and rate limit fidelity | pending | Tests cover invalid_auth, channel_not_found, not_in_channel, rate_limited, delivery_failed |
+
+## Phase 22 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P22-T01 | Add compatibility CI | pending | Workflow static checks assert SDK contracts, fixture checks, report artifact |
+| P22-T02 | Generate compatibility reports | pending | Report generation tests assert adapter scores, SDK versions, known gaps |
+| P22-T03 | Define provider-compatible release criteria | pending | Release check enforces minimum score and passing contracts before maturity promotion |
 
 ## Verification Notes
 
