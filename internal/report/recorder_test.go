@@ -71,6 +71,38 @@ func TestRecorderStoresCompatibility(t *testing.T) {
 	}
 }
 
+func TestRecorderSnapshotDeepCopiesNestedSlices(t *testing.T) {
+	rec := NewRecorder()
+	rec.SetScenarioCoverage([]ScenarioCoverage{{Adapter: "stripe", Scenarios: []ScenarioSupport{{Name: "payment_success", Supported: true}}}})
+	rec.SetBehaviorMatrix([]BehaviorMatrixEntry{{Adapter: "stripe", SupportedScenarios: []string{"payment_success"}}})
+	rec.SetCompatibility([]CompatibilityStatus{{Adapter: "stripe", SDKVersions: []string{"stripe@22.1.1"}, UnsupportedEndpoints: []string{"post_v1_missing"}}})
+	rec.SetStateCoverage([]StateCoverageStatus{{Adapter: "stripe", StatefulResources: []string{"checkout_session"}}})
+
+	first := rec.Snapshot()
+	first.ScenarioCoverage[0].Scenarios[0].Name = "mutated"
+	first.BehaviorMatrix[0].SupportedScenarios[0] = "mutated"
+	first.Compatibility[0].SDKVersions[0] = "mutated"
+	first.Compatibility[0].UnsupportedEndpoints[0] = "mutated"
+	first.StateCoverage[0].StatefulResources[0] = "mutated"
+
+	second := rec.Snapshot()
+	if second.ScenarioCoverage[0].Scenarios[0].Name != "payment_success" {
+		t.Fatalf("scenario coverage was mutated through snapshot: %#v", second.ScenarioCoverage)
+	}
+	if second.BehaviorMatrix[0].SupportedScenarios[0] != "payment_success" {
+		t.Fatalf("behavior matrix was mutated through snapshot: %#v", second.BehaviorMatrix)
+	}
+	if second.Compatibility[0].SDKVersions[0] != "stripe@22.1.1" {
+		t.Fatalf("compatibility SDK versions were mutated through snapshot: %#v", second.Compatibility)
+	}
+	if second.Compatibility[0].UnsupportedEndpoints[0] != "post_v1_missing" {
+		t.Fatalf("compatibility unsupported endpoints were mutated through snapshot: %#v", second.Compatibility)
+	}
+	if second.StateCoverage[0].StatefulResources[0] != "checkout_session" {
+		t.Fatalf("state coverage was mutated through snapshot: %#v", second.StateCoverage)
+	}
+}
+
 func TestRecorderStoresStateCoverage(t *testing.T) {
 	rec := NewRecorder()
 	rec.SetStateCoverage([]StateCoverageStatus{{

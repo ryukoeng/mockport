@@ -33,6 +33,7 @@ func (s *IdempotencyStore) Remember(scope, key, fingerprint string, response Ide
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.initLocked()
 	recordKey := scope + "\x00" + key
 	if record, ok := s.records[recordKey]; ok {
 		return replayRecord(scope, key, fingerprint, record)
@@ -92,6 +93,12 @@ func RequireFields(payload map[string]any, fields ...string) error {
 		return &ValidationError{MissingFields: missing}
 	}
 	return nil
+}
+
+func (s *IdempotencyStore) initLocked() {
+	if s.records == nil {
+		s.records = map[string]idempotencyRecord{}
+	}
 }
 
 func isEmpty(value any) bool {

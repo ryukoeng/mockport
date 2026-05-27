@@ -40,6 +40,7 @@ func (s *Store) Create(adapter, resourceType string, data map[string]any) (Resou
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.initLocked()
 	key := newScope(adapter, resourceType)
 	s.counters[key]++
 	resource := Resource{
@@ -123,6 +124,15 @@ func (s *Store) Reset(adapter, resourceType string) {
 	key := newScope(adapter, resourceType)
 	delete(s.resources, key)
 	delete(s.counters, key)
+}
+
+func (s *Store) initLocked() {
+	if s.resources == nil {
+		s.resources = map[scope]map[string]Resource{}
+	}
+	if s.counters == nil {
+		s.counters = map[scope]int64{}
+	}
 }
 
 func newScope(adapter, resourceType string) scope {

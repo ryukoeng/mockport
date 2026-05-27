@@ -93,7 +93,11 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 			})
 			return
 		}
-		code := r.createCode(req)
+		code, err := r.createCode(req)
+		if err != nil {
+			writeAPIError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 		redirectWithQuery(w, req, redirectURI, map[string]string{"code": code, "state": req.URL.Query().Get("state")})
 	case req.Method == http.MethodPost && path == "/login/oauth/access_token":
 		r.writeToken(w, req)
@@ -108,19 +112,22 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *routes) createCode(req *http.Request) string {
+func (r *routes) createCode(req *http.Request) (string, error) {
 	scope := req.URL.Query().Get("scope")
 	if scope == "" {
 		scope = "read:user"
 	}
-	resource, _ := r.store.Create("github-oauth", "oauth_code", map[string]any{
+	resource, err := r.store.Create("github-oauth", "oauth_code", map[string]any{
 		"client_id":    req.URL.Query().Get("client_id"),
 		"redirect_uri": req.URL.Query().Get("redirect_uri"),
 		"scope":        scope,
 		"user":         "mockport-user",
 		"expires_at":   "2999-01-01T00:00:00Z",
 	})
-	return resource.ID
+	if err != nil {
+		return "", err
+	}
+	return resource.ID, nil
 }
 
 func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
@@ -151,12 +158,16 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusBadRequest, "redirect_uri_mismatch", "The redirect_uri does not match the authorization request.")
 			return
 		}
-		token, _ := r.store.Create("github-oauth", "oauth_token", map[string]any{
+		token, err := r.store.Create("github-oauth", "oauth_token", map[string]any{
 			"client_id":  codeResource.Data["client_id"],
 			"scope":      codeResource.Data["scope"],
 			"user":       codeResource.Data["user"],
 			"expires_at": "2999-01-01T00:00:00Z",
 		})
+		if err != nil {
+			writeAPIError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 		httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: token.ID, TokenType: "bearer", Scope: codeResource.Data["scope"]})
 	}
 }

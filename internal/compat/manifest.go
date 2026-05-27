@@ -11,16 +11,16 @@ import (
 
 var endpointIDInvalidChars = regexp.MustCompile(`[^a-z0-9_]+`)
 
-type Level string
+type Level = adapter.Level
 
 const (
-	LevelWire     Level = "wire"
-	LevelSDK      Level = "sdk"
-	LevelClient   Level = "client"
-	LevelWorkflow Level = "workflow"
-	LevelError    Level = "error"
-	LevelState    Level = "state"
-	LevelContract Level = "contract"
+	LevelWire     = adapter.LevelWire
+	LevelSDK      = adapter.LevelSDK
+	LevelClient   = adapter.LevelClient
+	LevelWorkflow = adapter.LevelWorkflow
+	LevelError    = adapter.LevelError
+	LevelState    = adapter.LevelState
+	LevelContract = adapter.LevelContract
 )
 
 type SDKVersion struct {
@@ -105,12 +105,7 @@ func (m Manifest) Validate() error {
 }
 
 func ValidLevel(level Level) bool {
-	switch level {
-	case LevelWire, LevelSDK, LevelClient, LevelWorkflow, LevelError, LevelState, LevelContract:
-		return true
-	default:
-		return false
-	}
+	return adapter.ValidateLevel(level)
 }
 
 func FromMetadata(meta adapter.Metadata) Manifest {

@@ -245,7 +245,11 @@ func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
 		writeError(w, http.StatusBadRequest, "model_not_found", "Mockport simulated invalid model")
 		return
 	}
-	resource, _ := r.store.Create("openai", "embedding", map[string]any{"model": payload["model"]})
+	resource, err := r.store.Create("openai", "embedding", map[string]any{"model": payload["model"]})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "mockport_state_error", err.Error())
+		return
+	}
 	embedding := any([]float64{0.01, 0.02, 0.03})
 	if payload["encoding_format"] == "base64" {
 		embedding = base64Embedding([]float32{0.01, 0.02, 0.03})
@@ -260,20 +264,32 @@ func (r *routes) writeEmbedding(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeFile(w http.ResponseWriter, req *http.Request) {
-	purpose, filename := fileFields(req)
+	purpose, filename, err := fileFields(req)
+	if err != nil {
+		if httpx.IsRequestBodyTooLarge(err) {
+			writeError(w, http.StatusRequestEntityTooLarge, "request_too_large", "Request body is too large")
+			return
+		}
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be JSON or multipart form data")
+		return
+	}
 	if purpose == "" {
 		purpose = "batch"
 	}
 	if filename == "" {
 		filename = "mockport.jsonl"
 	}
-	resource, _ := r.store.Create("openai", "file", map[string]any{
+	resource, err := r.store.Create("openai", "file", map[string]any{
 		"object":   "file",
 		"purpose":  purpose,
 		"filename": filename,
 		"bytes":    18,
 		"status":   "processed",
 	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "mockport_state_error", err.Error())
+		return
+	}
 	body := resource.Data
 	body["id"] = resource.ID
 	httpx.WriteJSON(w, http.StatusOK, body)
@@ -289,13 +305,17 @@ func (r *routes) writeBatch(w http.ResponseWriter, req *http.Request) {
 		writeError(w, http.StatusBadRequest, "missing_required_field", err.Error())
 		return
 	}
-	resource, _ := r.store.Create("openai", "batch", map[string]any{
+	resource, err := r.store.Create("openai", "batch", map[string]any{
 		"object":            "batch",
 		"status":            "completed",
 		"input_file_id":     payload["input_file_id"],
 		"endpoint":          payload["endpoint"],
 		"completion_window": payload["completion_window"],
 	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "mockport_state_error", err.Error())
+		return
+	}
 	body := resource.Data
 	body["id"] = resource.ID
 	httpx.WriteJSON(w, http.StatusOK, body)
@@ -328,10 +348,12 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 	return payload, nil
 }
 
-func fileFields(req *http.Request) (string, string) {
+func fileFields(req *http.Request) (string, string, error) {
 	contentType := req.Header.Get("Content-Type")
 	if strings.HasPrefix(contentType, "multipart/form-data") {
-		_ = req.ParseMultipartForm(8 << 20)
+		if err := req.ParseMultipartForm(8 << 20); err != nil {
+			return "", "", err
+		}
 		purpose := req.FormValue("purpose")
 		filename := "mockport.jsonl"
 		if req.MultipartForm != nil {
@@ -342,15 +364,15 @@ func fileFields(req *http.Request) (string, string) {
 				}
 			}
 		}
-		return purpose, filename
+		return purpose, filename, nil
 	}
 	payload, err := decodePayload(req)
 	if err != nil {
-		return "", ""
+		return "", "", err
 	}
 	purpose, _ := payload["purpose"].(string)
 	filename, _ := payload["filename"].(string)
-	return purpose, filename
+	return purpose, filename, nil
 }
 
 func validModel(value any) bool {

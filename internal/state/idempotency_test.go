@@ -2,6 +2,7 @@ package state
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 )
 
@@ -26,6 +27,19 @@ func TestIdempotencyStoreReplaysMatchingRequest(t *testing.T) {
 	}
 	if got.Status != response.Status || got.Body["id"] != "cs_test_123" {
 		t.Fatalf("replayed response = %#v", got)
+	}
+}
+
+func TestIdempotencyStoreZeroValueIsUsable(t *testing.T) {
+	var store IdempotencyStore
+	response := IdempotentResponse{Status: 200, Body: map[string]any{"id": "cs_test_123"}}
+
+	replayed, got, err := store.Remember("stripe", "key-1", "amount=1200", response)
+	if err != nil {
+		t.Fatalf("remember with zero-value store: %v", err)
+	}
+	if replayed || got.Status != http.StatusOK {
+		t.Fatalf("first remember = replayed %v response %#v", replayed, got)
 	}
 }
 

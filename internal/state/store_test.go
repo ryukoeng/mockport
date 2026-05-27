@@ -46,6 +46,21 @@ func TestStoreCreatesRetrievesListsUpdatesAndDeletesResources(t *testing.T) {
 	}
 }
 
+func TestStoreZeroValueIsUsable(t *testing.T) {
+	var store Store
+
+	created, err := store.Create("stripe", "checkout_session", map[string]any{"amount_total": 1200})
+	if err != nil {
+		t.Fatalf("create with zero-value store: %v", err)
+	}
+	if created.ID != "stripe_checkout_session_000001" {
+		t.Fatalf("id = %q, want deterministic first id", created.ID)
+	}
+	if got, ok := store.Get("stripe", "checkout_session", created.ID); !ok || got.ID != created.ID {
+		t.Fatalf("get from zero-value store = %#v, %v", got, ok)
+	}
+}
+
 func TestStoreResetClearsResourcesAndCounters(t *testing.T) {
 	store := NewStore()
 	first, err := store.Create("openai", "chat_completion", map[string]any{"model": "gpt-4o-mini"})

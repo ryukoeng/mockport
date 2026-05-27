@@ -146,13 +146,17 @@ func (r *routes) writePostMessage(w http.ResponseWriter, req *http.Request) {
 		if text == "" {
 			text = "Mockport message"
 		}
-		message, _ := r.store.Create("slack", "message", map[string]any{
+		message, err := r.store.Create("slack", "message", map[string]any{
 			"channel": channel,
 			"deleted": false,
 			"text":    text,
 			"team":    "T_MOCKPORT",
 			"user":    "U_MOCKPORT",
 		})
+		if err != nil {
+			writeSlackError(w, http.StatusInternalServerError, "mockport_state_error")
+			return
+		}
 		httpx.WriteJSON(w, http.StatusOK, postMessageResponse{OK: true, Channel: channel, TS: message.ID, Message: messageBody(message.ID, message.Data)})
 	}
 }
@@ -287,13 +291,16 @@ func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 			if user == "" {
 				user = "U_MOCKPORT"
 			}
-			_, _ = r.store.Create("slack", "message", map[string]any{
+			if _, err := r.store.Create("slack", "message", map[string]any{
 				"channel": channel,
 				"deleted": false,
 				"text":    text,
 				"team":    "T_MOCKPORT",
 				"user":    user,
-			})
+			}); err != nil {
+				writeSlackError(w, http.StatusInternalServerError, "mockport_state_error")
+				return
+			}
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true})
 	default:

@@ -49,25 +49,25 @@ func (r *Recorder) SetAdapters(adapters []AdapterStatus) {
 func (r *Recorder) SetScenarioCoverage(coverage []ScenarioCoverage) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.coverage = append([]ScenarioCoverage(nil), coverage...)
+	r.coverage = cloneScenarioCoverage(coverage)
 }
 
 func (r *Recorder) SetBehaviorMatrix(matrix []BehaviorMatrixEntry) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.matrix = append([]BehaviorMatrixEntry(nil), matrix...)
+	r.matrix = cloneBehaviorMatrix(matrix)
 }
 
 func (r *Recorder) SetCompatibility(compatibility []CompatibilityStatus) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.compatibility = append([]CompatibilityStatus(nil), compatibility...)
+	r.compatibility = cloneCompatibility(compatibility)
 }
 
 func (r *Recorder) SetStateCoverage(coverage []StateCoverageStatus) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.stateCoverage = append([]StateCoverageStatus(nil), coverage...)
+	r.stateCoverage = cloneStateCoverage(coverage)
 }
 
 func (r *Recorder) RecordRequest(method, path string, status int) {
@@ -109,10 +109,10 @@ func (r *Recorder) Snapshot() Snapshot {
 		Adapters:             append([]AdapterStatus(nil), r.adapters...),
 		Requests:             append([]Request(nil), r.requests...),
 		SafetyWarnings:       append([]SafetyWarning(nil), r.safetyWarnings...),
-		ScenarioCoverage:     append([]ScenarioCoverage(nil), r.coverage...),
-		BehaviorMatrix:       append([]BehaviorMatrixEntry(nil), r.matrix...),
-		Compatibility:        append([]CompatibilityStatus(nil), r.compatibility...),
-		StateCoverage:        append([]StateCoverageStatus(nil), r.stateCoverage...),
+		ScenarioCoverage:     cloneScenarioCoverage(r.coverage),
+		BehaviorMatrix:       cloneBehaviorMatrix(r.matrix),
+		Compatibility:        cloneCompatibility(r.compatibility),
+		StateCoverage:        cloneStateCoverage(r.stateCoverage),
 		UnsupportedEndpoints: unsupportedEndpoints(r.requests),
 	}
 }
@@ -144,4 +144,37 @@ func unsupportedEndpoints(requests []Request) []UnsupportedEndpoint {
 		})
 	}
 	return unsupported
+}
+
+func cloneScenarioCoverage(in []ScenarioCoverage) []ScenarioCoverage {
+	out := append([]ScenarioCoverage(nil), in...)
+	for i := range out {
+		out[i].Scenarios = append([]ScenarioSupport(nil), out[i].Scenarios...)
+	}
+	return out
+}
+
+func cloneBehaviorMatrix(in []BehaviorMatrixEntry) []BehaviorMatrixEntry {
+	out := append([]BehaviorMatrixEntry(nil), in...)
+	for i := range out {
+		out[i].SupportedScenarios = append([]string(nil), out[i].SupportedScenarios...)
+	}
+	return out
+}
+
+func cloneCompatibility(in []CompatibilityStatus) []CompatibilityStatus {
+	out := append([]CompatibilityStatus(nil), in...)
+	for i := range out {
+		out[i].SDKVersions = append([]string(nil), out[i].SDKVersions...)
+		out[i].UnsupportedEndpoints = append([]string(nil), out[i].UnsupportedEndpoints...)
+	}
+	return out
+}
+
+func cloneStateCoverage(in []StateCoverageStatus) []StateCoverageStatus {
+	out := append([]StateCoverageStatus(nil), in...)
+	for i := range out {
+		out[i].StatefulResources = append([]string(nil), out[i].StatefulResources...)
+	}
+	return out
 }

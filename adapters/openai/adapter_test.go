@@ -222,6 +222,17 @@ func TestOpenAIRejectsOversizedJSONBody(t *testing.T) {
 	assertErrorCode(t, rec, "request_too_large")
 }
 
+func TestOpenAIRejectsMalformedFileJSON(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+
+	rec := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/files", `{"purpose":`)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	assertErrorCode(t, rec, "invalid_json")
+}
+
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
 	if meta.Name != "openai" {
