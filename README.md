@@ -122,12 +122,12 @@ Supported:
 | OpenAI-compatible API | `openai` | `/openai` | `workflow-compatible` | models, chat completions, responses, streaming, embeddings, files, batches, SDK contract, state, validation |
 | GitHub OAuth-like API | `github-oauth` | `/github` | `workflow-compatible` | authorize redirect, access token exchange, user profile, user emails, user orgs, client contract, state, scope validation |
 | Slack-like messaging API | `slack` | `/slack` | `workflow-compatible` | auth test, conversations list/history, message post/update/delete, Events API URL verification/message callback subset, client contract, state, Slack-style errors |
+| LINE-like platform APIs | `line` | `/line` | `workflow-compatible` | Messaging API send/content/webhook/rich menu/channel token workflows, LINE Login OAuth/profile, LIFF helpers, MINI App service messages, LINE Pay v3 request/confirm, Mini Dapp wallet/payment helpers |
 
 Planned:
 
 | Service | Planned adapter | Target workflows | Status |
 | --- | --- | --- | --- |
-| LINE Messaging-like API | `line` | message push/reply, webhook signature, delivery failure, rate limit | Later candidate |
 | SendGrid-like email API | `sendgrid` | email send success/failure, auth error, rate limit, webhook events | Later candidate |
 
 ## AI-safe By Default
