@@ -615,20 +615,18 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		code := req.Form.Get("code")
-		var codeResource state.Resource
-		if code != "" {
-			var ok bool
-			codeResource, ok = r.store.Get("line", "oauth_code", code)
-			if !ok {
-				writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization code is invalid or expired")
-				return
-			}
-			if want, _ := codeResource.Data["redirect_uri"].(string); want != "" && req.Form.Get("redirect_uri") != "" && req.Form.Get("redirect_uri") != want {
-				writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri does not match")
-				return
-			}
-		} else {
-			codeResource = state.Resource{Data: map[string]any{"scope": "profile openid", "user_id": "Umockport"}}
+		if code == "" {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization code is invalid or expired")
+			return
+		}
+		codeResource, ok := r.store.Get("line", "oauth_code", code)
+		if !ok {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization code is invalid or expired")
+			return
+		}
+		if want, _ := codeResource.Data["redirect_uri"].(string); want != "" && req.Form.Get("redirect_uri") != "" && req.Form.Get("redirect_uri") != want {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri does not match")
+			return
 		}
 		token, err := r.store.Create("line", "oauth_token", map[string]any{
 			"scope":      codeResource.Data["scope"],

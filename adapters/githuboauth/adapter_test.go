@@ -35,7 +35,6 @@ func TestAccessTokenScenarios(t *testing.T) {
 		scenario string
 		status   int
 	}{
-		{"success", "oauth_success", http.StatusOK},
 		{"invalid", "invalid_code", http.StatusBadRequest},
 		{"expired", "expired_token", http.StatusUnauthorized},
 		{"scope", "scope_missing", http.StatusForbidden},
@@ -48,6 +47,15 @@ func TestAccessTokenScenarios(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccessTokenRequiresAuthorizationCode(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "", map[string]string{"Accept": "application/json"})
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	assertGitHubOAuthError(t, rec, "bad_verification_code")
 }
 
 func TestUser(t *testing.T) {

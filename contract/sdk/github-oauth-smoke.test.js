@@ -2,7 +2,7 @@
 
 async function runGitHubOAuthSmoke(options) {
   const baseURL = new URL("/github", options.baseURL).toString().replace(/\/$/, "");
-  const redirectURI = "http://app.local/callback";
+  const redirectURI = "http://localhost/callback";
   const authURL = new URL(`${baseURL}/login/oauth/authorize`);
   authURL.searchParams.set("client_id", "mockport_github_client");
   authURL.searchParams.set("redirect_uri", redirectURI);

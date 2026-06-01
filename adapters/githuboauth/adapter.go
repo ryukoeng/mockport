@@ -151,7 +151,7 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 		}
 		code := req.Form.Get("code")
 		if code == "" {
-			httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: "gho_mockport", TokenType: "bearer", Scope: "read:user"})
+			writeOAuthError(w, http.StatusBadRequest, "bad_verification_code", "The code passed is incorrect or expired.")
 			return
 		}
 		codeResource, ok := r.store.Get("github-oauth", "oauth_code", code)
