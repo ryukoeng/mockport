@@ -27,8 +27,9 @@ cat >"$WORK_DIR/docker-compose.mockport.yml" <<'COMPOSE'
 services:
   mockport:
     image: mockport:local
+    command: ["run", "--config", "/etc/mockport/mockport.yml", "--host", "0.0.0.0"]
     ports:
-      - "43101:43101"
+      - "127.0.0.1:43101:43101"
     volumes:
       - ./mockport.yml:/etc/mockport/mockport.yml
 COMPOSE
@@ -49,14 +50,22 @@ curl -fsS -X POST http://localhost:43101/stripe/v1/checkout/sessions
 printf '\n'
 curl -fsS http://localhost:43101/openai/v1/models
 printf '\n'
-curl -fsS http://localhost:43101/github/user
+github_status="$(curl -sS -o "$WORK_DIR/github-user.json" -w '%{http_code}' http://localhost:43101/github/user)"
+if [[ "$github_status" != "401" ]]; then
+  cat "$WORK_DIR/github-user.json" >&2
+  echo "expected github unauthenticated user request to return 401, got $github_status" >&2
+  exit 1
+fi
+cat "$WORK_DIR/github-user.json"
 printf '\n'
 curl -fsS -X POST http://localhost:43101/slack/api/auth.test
+printf '\n'
+curl -fsS -X POST http://localhost:43101/line/v2/bot/message/push
 printf '\n'
 report="$(curl -fsS http://localhost:43101/_mockport/report)"
 printf '%s\n' "$report"
 
-for adapter in stripe openai github-oauth slack; do
+for adapter in stripe openai github-oauth slack line; do
   if ! printf '%s' "$report" | grep -q "\"name\":\"$adapter\""; then
     echo "missing adapter in report: $adapter" >&2
     exit 1

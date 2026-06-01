@@ -52,6 +52,21 @@ func TestRecorderStoresReplayMetadataAndUnsupportedEndpoints(t *testing.T) {
 	}
 }
 
+func TestRecorderCapsStoredRequests(t *testing.T) {
+	rec := NewRecorder()
+	for i := 0; i < MaxRecordedRequests+5; i++ {
+		rec.RecordRequest(http.MethodGet, "/health", http.StatusOK)
+	}
+
+	snapshot := rec.Snapshot()
+	if len(snapshot.Requests) != MaxRecordedRequests {
+		t.Fatalf("request count = %d, want %d", len(snapshot.Requests), MaxRecordedRequests)
+	}
+	if snapshot.Requests[0].ID != 6 {
+		t.Fatalf("first retained request id = %d, want 6", snapshot.Requests[0].ID)
+	}
+}
+
 func TestRecorderStoresCompatibility(t *testing.T) {
 	rec := NewRecorder()
 	rec.SetCompatibility([]CompatibilityStatus{{

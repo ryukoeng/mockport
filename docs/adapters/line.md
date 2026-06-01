@@ -7,7 +7,7 @@ This document describes the Mockport `line` adapter contract. It is not a copy o
 The `line` adapter provides deterministic local behavior for selected LINE platform workflows:
 
 - Messaging API-like push, reply, profile, and webhook test calls.
-- Messaging API-like multicast, broadcast, narrowcast, message validation, content retrieval, quota/delivery lookups, mark-as-read, loading animation, webhook endpoint settings, group/room lookups, rich menu operations, and channel access token helpers.
+- Messaging API-like multicast, broadcast, narrowcast, message validation, signed webhook delivery helper, content retrieval, quota/delivery lookups, mark-as-read, loading animation, webhook endpoint settings, group/room lookups, rich menu operations, and channel access token helpers.
 - LINE Login-like OAuth 2.0 authorization code flow, token exchange, and profile lookup.
 - LIFF local helpers for profile and context.
 - LINE MINI App service message-like notification token and send calls.
@@ -31,6 +31,9 @@ adapters:
     base_path: /line
     scenario: line_success
     fake_secret: mockport_line_channel_token
+    webhook:
+      target_url: http://app:3000/webhooks/line
+      signing_secret: mockport_line_secret
 ```
 
 ## Source References
@@ -41,11 +44,59 @@ The LINE Login section is based on the official LINE Developers overview supplie
 
 Primary public references:
 
+- LINE Developers top page: `https://developers.line.biz/en/`
 - Messaging API reference: `https://developers.line.biz/en/reference/messaging-api/`
 - LINE Login overview: `https://developers.line.biz/en/docs/line-login/overview/`
 - LINE Login v2.1 API reference: `https://developers.line.biz/en/reference/line-login/`
+- LIFF overview: `https://developers.line.biz/en/docs/liff/overview/`
+- LINE MINI App API reference: `https://developers.line.biz/en/reference/line-mini-app/`
+- LINE MINI App service messages: `https://developers.line.biz/en/docs/line-mini-app/develop/service-messages/`
+- LINE Pay payment request: `https://developers-pay.line.me/online-api-v3/request-payment`
+- Mini Dapp SDK: `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk`
 - OpenID Provider Configuration Document: `https://access.line.me/.well-known/openid-configuration`
 - LINE Login security checklist: `https://developers.line.biz/en/docs/line-login/security-checklist/`
+
+## Official Reference Map
+
+Use this table to jump from Mockport's supported local surface to the closest official documentation. These links are references for behavior shape only; Mockport remains a deterministic local emulator and doesn't claim complete provider compatibility.
+
+| Mockport surface | Official reference |
+| --- | --- |
+| Messaging API common response shape, domains, status codes, errors, and rate-limit concepts | `https://developers.line.biz/en/reference/messaging-api/#common-specifications` |
+| Webhook request body, event objects, and signature validation | `https://developers.line.biz/en/reference/messaging-api/#webhooks` |
+| Webhook endpoint settings and webhook test | `https://developers.line.biz/en/reference/messaging-api/#webhook-settings` |
+| Message content, preview, and transcoding status | `https://developers.line.biz/en/reference/messaging-api/#getting-content` |
+| Channel access tokens | `https://developers.line.biz/en/reference/messaging-api/#channel-access-token` |
+| Reply, push, multicast, narrowcast, broadcast, mark-as-read, loading animation, quotas, delivery stats, and message validation | `https://developers.line.biz/en/reference/messaging-api/#message` |
+| Users, profile, and follower IDs | `https://developers.line.biz/en/reference/messaging-api/#users` |
+| LINE Official Account bot info | `https://developers.line.biz/en/reference/messaging-api/#line-official-account-bot` |
+| Group chat endpoints | `https://developers.line.biz/en/reference/messaging-api/#group-chats` |
+| Multi-person chat endpoints | `https://developers.line.biz/en/reference/messaging-api/#multi-person-chats` |
+| Rich menu endpoints | `https://developers.line.biz/en/reference/messaging-api/#rich-menu` |
+| Per-user rich menu endpoints | `https://developers.line.biz/en/reference/messaging-api/#per-user-rich-menu` |
+| Rich menu alias endpoints | `https://developers.line.biz/en/reference/messaging-api/#rich-menu-alias` |
+| Account link token | `https://developers.line.biz/en/reference/messaging-api/#account-link` |
+| Message object and action object shapes | `https://developers.line.biz/en/reference/messaging-api/#message-objects` and `https://developers.line.biz/en/reference/messaging-api/#action-objects` |
+| LINE Login OAuth and profile flow | `https://developers.line.biz/en/docs/line-login/overview/` and `https://developers.line.biz/en/reference/line-login/` |
+| LIFF browser and LIFF app behavior | `https://developers.line.biz/en/docs/liff/overview/` |
+| LINE MINI App service message API | `https://developers.line.biz/en/reference/line-mini-app/#service-messages` |
+| LINE MINI App service message workflow and policy | `https://developers.line.biz/en/docs/line-mini-app/develop/service-messages/` |
+| LINE Pay request flow | `https://developers-pay.line.me/online-api-v3/request-payment` |
+| Mini Dapp SDK wallet/payment context | `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk` |
+
+## Minimum Required Coverage
+
+This adapter treats the following surfaces as the minimum useful LINE baseline for local bot integration tests:
+
+| Requirement | Status | Mockport behavior |
+| --- | --- | --- |
+| Send a message from app code | Implemented | Push/reply return `sentMessages`; multicast/broadcast return `{}`; narrowcast returns `202` plus progress. |
+| Receive a LINE-like webhook in app code | Implemented | `POST /line/test/webhook/send` sends a webhook payload to the configured `webhook.target_url`. |
+| Verify webhook signature in app code | Implemented for local delivery | The webhook sender signs the raw JSON body with HMAC-SHA256 and the `x-line-signature` header, using `webhook.signing_secret` or `mockport_line_secret`. |
+| Validate common bad message payloads | Partial | Message validation returns LINE-style `details[].property` errors for missing message count, non-object messages, unsupported `type`, and empty text messages. |
+| Exercise profile and account lookup paths | Implemented | Profile, bot info, follower IDs, group, and room helper endpoints return deterministic data. |
+| Exercise rich menu lifecycle | Partial | Core rich menu create/list/get/delete/image/link/alias paths are stateful; deep image, area, and action validation is not complete. |
+| Exercise token lifecycle | Partial | Channel token issue/verify/revoke helpers return deterministic fake tokens; JWT assertion and key registration are not cryptographically enforced. |
 
 ## Messaging API Contract
 
@@ -58,7 +109,7 @@ Supported Messaging API-like endpoint groups:
 | Send messages | Push/reply return `sentMessages`; multicast/broadcast return `{}`; narrowcast returns `202` and exposes a deterministic progress lookup. |
 | Validate messages | `POST /v2/bot/message/validate/{type}` accepts 1 to 5 message objects and returns LINE-style details for invalid payloads. |
 | Message content | Content, preview, and transcoding endpoints return deterministic local binary/status responses. No retention window is modeled. |
-| Webhook settings | Webhook endpoint `PUT`/`GET` stores a valid HTTPS URL in process memory; webhook test returns a deterministic success result. |
+| Webhook settings and delivery | Webhook endpoint `PUT`/`GET` stores a valid HTTPS URL in process memory; webhook test returns a deterministic success result; `/test/webhook/send` sends a signed LINE-like webhook to the configured local target. |
 | Bot/account info | Bot info, quota, quota consumption, delivery statistics, aggregation info/list, and follower ID lookups return deterministic data. |
 | Chats | Mark-as-read and loading animation endpoints acknowledge valid local calls. |
 | Group/room | Group summary, member IDs, member profile, room member IDs/profile, and leave acknowledgements are supported. |
@@ -142,9 +193,9 @@ Known gaps:
 - No OpenID Connect discovery endpoint exposed by Mockport.
 - No real LINE SDK contract harness yet.
 - No real LIFF browser runtime.
-- No webhook signature verification, webhook redelivery, or outbound webhook delivery loop.
+- No provider-driven webhook redelivery, retry scheduler, or complete webhook event catalog. The local helper can send signed webhook payloads on demand.
 - No monthly quota, free-message, rate-limit bucket, or concurrent audience operation enforcement beyond deterministic scenarios.
-- No full Messaging API schema validation for every message, Flex, action, audience, insight, coupon, membership, or rich menu field.
+- No full Messaging API schema validation for every message, Flex, template, action, audience, insight, coupon, membership, or rich menu field.
 - No real media storage lifecycle; content and preview endpoints return local placeholder bytes.
 - No LINE Developers Console channel settings or review workflow.
 - No regional policy enforcement.

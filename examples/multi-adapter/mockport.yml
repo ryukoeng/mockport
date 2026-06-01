@@ -1,7 +1,7 @@
 version: "0.1"
 
 server:
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 43101
 
 mode: ai-safe
@@ -30,3 +30,8 @@ adapters:
     base_path: /slack
     scenario: message_success
     fake_secret: mockport_slack_token
+  line:
+    enabled: true
+    base_path: /line
+    scenario: line_success
+    fake_secret: mockport_line_channel_token

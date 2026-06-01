@@ -53,7 +53,7 @@ In CI or local release workflow:
 
 ```bash
 docker build -t mockport:test -f docker/Dockerfile .
-docker run -d -p 43101:43101 --name mockport-test mockport:test
+docker run -d -p 127.0.0.1:43101:43101 --name mockport-test mockport:test
 curl http://localhost:43101/health
 docker rm -f mockport-test
 ```

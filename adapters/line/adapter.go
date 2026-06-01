@@ -1,15 +1,21 @@
 package line
 
 import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
+	"github.com/albert-einshutoin/mockport/internal/security"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -71,6 +77,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			"messaging_reply",
 			"messaging_profile",
 			"messaging_rich_menu",
+			"messaging_webhook_delivery",
 			"messaging_webhook_settings",
 			"login_oauth",
 			"login_profile",
@@ -109,6 +116,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodPut, Path: "/line/v2/bot/channel/webhook/endpoint", SupportedScenarios: []string{"line_success", "invalid_request"}, Notes: "LINE Messaging API-like webhook endpoint update"},
 			{Method: http.MethodGet, Path: "/line/v2/bot/channel/webhook/endpoint", SupportedScenarios: []string{"line_success", "invalid_request"}, Notes: "LINE Messaging API-like webhook endpoint lookup"},
 			{Method: http.MethodPost, Path: "/line/v2/bot/channel/webhook/test", SupportedScenarios: []string{"line_success", "auth_error"}, Notes: "LINE Messaging API-like webhook test"},
+			{Method: http.MethodPost, Path: "/line/test/webhook/send", SupportedScenarios: []string{"line_success", "invalid_request"}, Notes: "Sends a fake LINE signed webhook to the configured target"},
 			{Method: http.MethodGet, Path: "/line/v2/bot/info", SupportedScenarios: []string{"line_success"}, Notes: "LINE Messaging API-like bot information"},
 			{Method: http.MethodGet, Path: "/line/v2/bot/message/quota", SupportedScenarios: []string{"line_success"}, Notes: "LINE Messaging API-like quota lookup"},
 			{Method: http.MethodGet, Path: "/line/v2/bot/message/quota/consumption", SupportedScenarios: []string{"line_success"}, Notes: "LINE Messaging API-like quota consumption lookup"},
@@ -194,6 +202,8 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeGetWebhookEndpoint(w)
 	case req.Method == http.MethodPost && path == "/v2/bot/channel/webhook/test":
 		r.writeWebhookTest(w)
+	case req.Method == http.MethodPost && path == "/test/webhook/send":
+		r.sendWebhook(w, req)
 	case req.Method == http.MethodGet && path == "/oauth2/v2.1/authorize":
 		r.writeAuthorize(w, req)
 	case req.Method == http.MethodPost && path == "/oauth2/v2.1/token":
@@ -320,13 +330,37 @@ func (r *routes) writeValidateMessage(w http.ResponseWriter, req *http.Request) 
 	}
 	messages, _ := payload["messages"].([]any)
 	if len(messages) == 0 || len(messages) > 5 {
-		httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{
-			"message": "The request body has 1 error(s)",
-			"details": []map[string]string{{
-				"message":  "Size must be between 1 and 5",
-				"property": "messages",
-			}},
-		})
+		writeValidationDetails(w, []lineErrorDetail{{Message: "Size must be between 1 and 5", Property: "messages"}})
+		return
+	}
+	details := make([]lineErrorDetail, 0)
+	allowedMessageTypes := map[string]bool{
+		"text": true, "image": true, "video": true, "audio": true, "location": true,
+		"sticker": true, "template": true, "imagemap": true, "flex": true, "coupon": true,
+	}
+	for i, message := range messages {
+		messageObject, ok := message.(map[string]any)
+		if !ok {
+			details = append(details, lineErrorDetail{Message: "Must be a JSON object", Property: fmt.Sprintf("messages[%d]", i)})
+			continue
+		}
+		messageType, _ := messageObject["type"].(string)
+		if !allowedMessageTypes[messageType] {
+			details = append(details, lineErrorDetail{
+				Message:  "Must be one of the following values: [text, image, video, audio, location, sticker, template, imagemap, flex, coupon]",
+				Property: fmt.Sprintf("messages[%d].type", i),
+			})
+			continue
+		}
+		if messageType == "text" {
+			text, _ := messageObject["text"].(string)
+			if strings.TrimSpace(text) == "" {
+				details = append(details, lineErrorDetail{Message: "May not be empty", Property: fmt.Sprintf("messages[%d].text", i)})
+			}
+		}
+	}
+	if len(details) > 0 {
+		writeValidationDetails(w, details)
 		return
 	}
 	writeEmptyJSON(w, http.StatusOK)
@@ -417,6 +451,92 @@ func (r *routes) writeWebhookTest(w http.ResponseWriter) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"success": true, "timestamp": "2999-01-01T00:00:00Z", "statusCode": 200, "reason": "OK", "detail": "200"})
 }
 
+func (r *routes) sendWebhook(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeLINEError(w, http.StatusForbidden, "webhook delivery can only be triggered from loopback")
+		return
+	}
+	if r.cfg.WebhookTargetURL == "" {
+		writeLINEError(w, http.StatusBadRequest, "webhook target URL is not configured")
+		return
+	}
+	if !security.IsSafeWebhookTargetURL(r.cfg.WebhookTargetURL) {
+		writeLINEError(w, http.StatusBadRequest, "webhook target URL must be a local Mockport target")
+		return
+	}
+	payload, err := decodePayload(req)
+	if err != nil {
+		writeDecodeError(w, err)
+		return
+	}
+	destination, _ := payload["destination"].(string)
+	if destination == "" {
+		destination = "U00000000000000000000000000000000"
+	}
+	events, _ := payload["events"].([]any)
+	if len(events) == 0 {
+		events = []any{map[string]any{
+			"type":       "message",
+			"replyToken": "mockport_line_reply_token",
+			"message": map[string]any{
+				"type": "text",
+				"id":   "mockport_line_message",
+				"text": "Mockport LINE webhook message",
+			},
+		}}
+	}
+	for i, event := range events {
+		eventObject, ok := event.(map[string]any)
+		if !ok {
+			writeValidationDetails(w, []lineErrorDetail{{Message: "Must be a JSON object", Property: fmt.Sprintf("events[%d]", i)}})
+			return
+		}
+		if eventObject["timestamp"] == nil {
+			eventObject["timestamp"] = int64(4102444800000)
+		}
+		if eventObject["source"] == nil {
+			eventObject["source"] = map[string]any{"type": "user", "userId": "Umockport"}
+		}
+		if eventObject["mode"] == nil {
+			eventObject["mode"] = "active"
+		}
+		if eventObject["webhookEventId"] == nil {
+			eventObject["webhookEventId"] = fmt.Sprintf("01MOCKPORTLINEEVENT%02d", i+1)
+		}
+		if eventObject["deliveryContext"] == nil {
+			eventObject["deliveryContext"] = map[string]any{"isRedelivery": false}
+		}
+	}
+	body, err := json.Marshal(map[string]any{"destination": destination, "events": events})
+	if err != nil {
+		writeLINEError(w, http.StatusInternalServerError, "failed to encode webhook payload")
+		return
+	}
+	outbound, err := http.NewRequestWithContext(req.Context(), http.MethodPost, r.cfg.WebhookTargetURL, bytes.NewReader(body))
+	if err != nil {
+		writeLINEError(w, http.StatusBadRequest, "webhook target URL is invalid")
+		return
+	}
+	secret := r.cfg.WebhookSigningSecret
+	if secret == "" {
+		secret = "mockport_line_secret"
+	}
+	outbound.Header.Set("Content-Type", "application/json")
+	outbound.Header.Set("x-line-signature", signWebhookPayload(secret, body))
+	resp, err := (&http.Client{Timeout: 5 * time.Second}).Do(outbound)
+	if err != nil {
+		writeLINEError(w, http.StatusBadGateway, "failed to send webhook")
+		return
+	}
+	defer resp.Body.Close()
+	httpx.WriteJSON(w, http.StatusAccepted, map[string]any{
+		"sent":        true,
+		"target_url":  r.cfg.WebhookTargetURL,
+		"event_count": len(events),
+		"status_code": resp.StatusCode,
+	})
+}
+
 func (r *routes) writeContentEndpoint(w http.ResponseWriter, path string) {
 	switch {
 	case strings.HasSuffix(path, "/content/transcoding"):
@@ -438,6 +558,10 @@ func (r *routes) writeAuthorize(w http.ResponseWriter, req *http.Request) {
 	redirectURI := req.URL.Query().Get("redirect_uri")
 	if redirectURI == "" {
 		redirectURI = "http://localhost/callback"
+	}
+	if !security.IsSafeOAuthRedirectURL(redirectURI) {
+		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri must be a loopback URL in Mockport")
+		return
 	}
 	if normalizeScenario(r.cfg.Scenario) == "invalid_request" {
 		redirectWithQuery(w, req, redirectURI, map[string]string{
@@ -1146,6 +1270,21 @@ func writeDecodeError(w http.ResponseWriter, err error) {
 	writeLINEError(w, http.StatusBadRequest, "Request body must be JSON")
 }
 
+type lineErrorDetail struct {
+	Message  string `json:"message"`
+	Property string `json:"property"`
+}
+
+func writeValidationDetails(w http.ResponseWriter, details []lineErrorDetail) {
+	httpx.WriteJSON(w, http.StatusBadRequest, struct {
+		Message string            `json:"message"`
+		Details []lineErrorDetail `json:"details"`
+	}{
+		Message: fmt.Sprintf("The request body has %d error(s)", len(details)),
+		Details: details,
+	})
+}
+
 type lineProfileResponse struct {
 	UserID        string `json:"userId"`
 	DisplayName   string `json:"displayName"`
@@ -1181,6 +1320,12 @@ func lineProfile(userID string) lineProfileResponse {
 
 func writeLINEError(w http.ResponseWriter, status int, message string) {
 	httpx.WriteJSON(w, status, map[string]any{"message": message})
+}
+
+func signWebhookPayload(secret string, payload []byte) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write(payload)
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
 func writeOAuthError(w http.ResponseWriter, status int, code, description string) {

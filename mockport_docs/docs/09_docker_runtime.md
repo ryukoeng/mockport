@@ -11,9 +11,9 @@ Mockport should be Docker-first.
 Primary usage:
 
 ```bash
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/mockport.yml:/etc/mockport/mockport.yml \
-  ghcr.io/albert-einshutoin/mockport:latest
+  ghcr.io/albert-einshutoin/mockport:latest run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```
 
 ## Docker Compose usage
@@ -22,8 +22,9 @@ docker run --rm -p 43101:43101 \
 services:
   mockport:
     image: ghcr.io/albert-einshutoin/mockport:latest
+    command: ["run", "--config", "/etc/mockport/mockport.yml", "--host", "0.0.0.0"]
     ports:
-      - "43101:43101"
+      - "127.0.0.1:43101:43101"
     volumes:
       - ./mockport.yml:/etc/mockport/mockport.yml
 ```
@@ -106,7 +107,7 @@ docker build -t mockport:local -f docker/Dockerfile .
 ## Run command
 
 ```bash
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/mockport.yml:/etc/mockport/mockport.yml \
-  mockport:local
+  mockport:local run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```

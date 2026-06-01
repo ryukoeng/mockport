@@ -8,6 +8,7 @@ import (
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
+	"github.com/albert-einshutoin/mockport/internal/security"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -84,6 +85,10 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		if redirectURI == "" {
 			redirectURI = "http://localhost/callback"
 		}
+		if !security.IsSafeOAuthRedirectURL(redirectURI) {
+			writeOAuthError(w, http.StatusBadRequest, "redirect_uri_mismatch", "redirect_uri must be a loopback URL in Mockport")
+			return
+		}
 		scope := req.URL.Query().Get("scope")
 		if unsupportedScope(scope) {
 			redirectWithQuery(w, req, redirectURI, map[string]string{
@@ -93,7 +98,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 			})
 			return
 		}
-		code, err := r.createCode(req)
+		code, err := r.createCode(req, redirectURI)
 		if err != nil {
 			writeAPIError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -112,14 +117,14 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *routes) createCode(req *http.Request) (string, error) {
+func (r *routes) createCode(req *http.Request, redirectURI string) (string, error) {
 	scope := req.URL.Query().Get("scope")
 	if scope == "" {
 		scope = "read:user"
 	}
 	resource, err := r.store.Create("github-oauth", "oauth_code", map[string]any{
 		"client_id":    req.URL.Query().Get("client_id"),
-		"redirect_uri": req.URL.Query().Get("redirect_uri"),
+		"redirect_uri": redirectURI,
 		"scope":        scope,
 		"user":         "mockport-user",
 		"expires_at":   "2999-01-01T00:00:00Z",

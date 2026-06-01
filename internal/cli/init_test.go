@@ -25,6 +25,20 @@ func TestInitGeneratesStripeFiles(t *testing.T) {
 			t.Fatalf("expected generated file %s: %v", name, err)
 		}
 	}
+	configData, err := os.ReadFile(filepath.Join(dir, "mockport.yml"))
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if !strings.Contains(string(configData), "host: 127.0.0.1") {
+		t.Fatalf("config missing loopback host: %s", string(configData))
+	}
+	composeData, err := os.ReadFile(filepath.Join(dir, "docker-compose.mockport.yml"))
+	if err != nil {
+		t.Fatalf("read compose: %v", err)
+	}
+	if !strings.Contains(string(composeData), "127.0.0.1:43101:43101") {
+		t.Fatalf("compose missing loopback port binding: %s", string(composeData))
+	}
 	envData, err := os.ReadFile(filepath.Join(dir, ".env.mockport"))
 	if err != nil {
 		t.Fatalf("read env: %v", err)
@@ -56,7 +70,7 @@ func TestInitGeneratesMultipleAdapters(t *testing.T) {
 	var out bytes.Buffer
 	cmd.SetOut(&out)
 	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--adapter", "openai"})
+	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--adapter", "openai", "--adapter", "line"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute init: %v", err)
 	}
@@ -66,7 +80,7 @@ func TestInitGeneratesMultipleAdapters(t *testing.T) {
 		t.Fatalf("read config: %v", err)
 	}
 	configText := string(configData)
-	for _, want := range []string{"stripe:", "openai:", "base_path: /openai"} {
+	for _, want := range []string{"stripe:", "openai:", "line:", "base_path: /line"} {
 		if !strings.Contains(configText, want) {
 			t.Fatalf("config missing %q:\n%s", want, configText)
 		}
@@ -77,7 +91,7 @@ func TestInitGeneratesMultipleAdapters(t *testing.T) {
 		t.Fatalf("read env: %v", err)
 	}
 	env := string(envData)
-	for _, want := range []string{"STRIPE_API_URL=http://localhost:43101/stripe", "OPENAI_BASE_URL=http://localhost:43101/openai/v1"} {
+	for _, want := range []string{"STRIPE_API_URL=http://localhost:43101/stripe", "OPENAI_BASE_URL=http://localhost:43101/openai/v1", "LINE_API_BASE_URL=http://localhost:43101/line"} {
 		if !strings.Contains(env, want) {
 			t.Fatalf("env missing %q:\n%s", want, env)
 		}

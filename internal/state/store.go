@@ -24,6 +24,8 @@ type Store struct {
 	counters  map[scope]int64
 }
 
+const MaxResourcesPerScope = 1000
+
 type scope struct {
 	adapter      string
 	resourceType string
@@ -54,6 +56,7 @@ func (s *Store) Create(adapter, resourceType string, data map[string]any) (Resou
 		s.resources[key] = map[string]Resource{}
 	}
 	s.resources[key][resource.ID] = resource
+	evictOldestLocked(s.resources[key], MaxResourcesPerScope)
 	return cloneResource(resource), nil
 }
 
@@ -188,5 +191,20 @@ func cloneValue(value any) any {
 		return out
 	default:
 		return value
+	}
+}
+
+func evictOldestLocked(resources map[string]Resource, max int) {
+	if max <= 0 || len(resources) <= max {
+		return
+	}
+	ids := make([]string, 0, len(resources))
+	for id := range resources {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	for len(resources) > max {
+		delete(resources, ids[0])
+		ids = ids[1:]
 	}
 }

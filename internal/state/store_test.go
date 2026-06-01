@@ -77,6 +77,26 @@ func TestStoreResetClearsResourcesAndCounters(t *testing.T) {
 	}
 }
 
+func TestStoreCapsResourcesPerScope(t *testing.T) {
+	store := NewStore()
+	for i := 0; i < MaxResourcesPerScope+5; i++ {
+		if _, err := store.Create("stripe", "checkout_session", map[string]any{"index": i}); err != nil {
+			t.Fatalf("create %d: %v", i, err)
+		}
+	}
+
+	resources := store.List("stripe", "checkout_session")
+	if len(resources) != MaxResourcesPerScope {
+		t.Fatalf("resource count = %d, want %d", len(resources), MaxResourcesPerScope)
+	}
+	if resources[0].ID != "stripe_checkout_session_000006" {
+		t.Fatalf("first retained id = %q, want stripe_checkout_session_000006", resources[0].ID)
+	}
+	if _, ok := store.Get("stripe", "checkout_session", "stripe_checkout_session_000001"); ok {
+		t.Fatal("oldest resource was retained after cap")
+	}
+}
+
 func TestStoreIsConcurrencySafeForDeterministicIDs(t *testing.T) {
 	store := NewStore()
 	const count = 25

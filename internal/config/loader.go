@@ -30,7 +30,7 @@ func ApplyDefaults(cfg *Config) {
 		cfg.Version = "0.1"
 	}
 	if cfg.Server.Host == "" {
-		cfg.Server.Host = "0.0.0.0"
+		cfg.Server.Host = "127.0.0.1"
 	}
 	if cfg.Mode == "" {
 		cfg.Mode = "ai-safe"

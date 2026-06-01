@@ -1,7 +1,11 @@
 package line
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -84,6 +88,26 @@ func TestMessagingAPICoreEndpoints(t *testing.T) {
 	}
 }
 
+func TestMessageValidationReturnsLINEStyleDetails(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/v2/bot/message/validate/push", strings.NewReader(`{"messages":[{"type":"text","text":""},{"type":"unknown"}]}`))
+	req.Header.Set("Content-Type", "application/json")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"message":"The request body has 2 error(s)"`) {
+		t.Fatalf("body missing error count: %s", rec.Body.String())
+	}
+	for _, want := range []string{`"property":"messages[0].text"`, `"property":"messages[1].type"`} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Fatalf("body missing %s: %s", want, rec.Body.String())
+		}
+	}
+}
+
 func TestWebhookEndpointSettingsAndContent(t *testing.T) {
 	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 
@@ -111,6 +135,86 @@ func TestWebhookEndpointSettingsAndContent(t *testing.T) {
 	mux.ServeHTTP(transcodingRec, httptest.NewRequest(http.MethodGet, "/line/v2/bot/message/mock-message/content/transcoding", nil))
 	if transcodingRec.Code != http.StatusOK || !strings.Contains(transcodingRec.Body.String(), `"status":"succeeded"`) {
 		t.Fatalf("transcoding = status %d body %s", transcodingRec.Code, transcodingRec.Body.String())
+	}
+}
+
+func TestWebhookDeliverySignsLINERequest(t *testing.T) {
+	const secret = "mockport_line_secret"
+	received := make(chan []byte, 1)
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("read target body: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		mac := hmac.New(sha256.New, []byte(secret))
+		_, _ = mac.Write(body)
+		wantSignature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+		if r.Header.Get("x-line-signature") != wantSignature {
+			t.Errorf("signature = %q, want %q", r.Header.Get("x-line-signature"), wantSignature)
+		}
+		if r.Header.Get("Content-Type") != "application/json" {
+			t.Errorf("content-type = %q, want application/json", r.Header.Get("Content-Type"))
+		}
+		received <- body
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer target.Close()
+
+	mux := newLineMux(t, adapter.Config{
+		BasePath:             "/line",
+		Scenario:             "line_success",
+		WebhookTargetURL:     target.URL,
+		WebhookSigningSecret: secret,
+	})
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/test/webhook/send", strings.NewReader(`{"events":[{"type":"message","message":{"type":"text","id":"m1","text":"hello"}}]}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.RemoteAddr = "127.0.0.1:12345"
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want %d: %s", rec.Code, http.StatusAccepted, rec.Body.String())
+	}
+	select {
+	case body := <-received:
+		if !strings.Contains(string(body), `"destination":"U00000000000000000000000000000000"`) || !strings.Contains(string(body), `"webhookEventId"`) {
+			t.Fatalf("webhook body missing LINE fields: %s", string(body))
+		}
+	default:
+		t.Fatal("webhook target did not receive request")
+	}
+}
+
+func TestWebhookDeliveryRejectsNonLocalTriggerAndUnsafeTarget(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{
+		BasePath:             "/line",
+		Scenario:             "line_success",
+		WebhookTargetURL:     "http://127.0.0.1:3000/webhooks/line",
+		WebhookSigningSecret: "mockport_line_secret",
+	})
+	remoteRec := httptest.NewRecorder()
+	remoteReq := httptest.NewRequest(http.MethodPost, "/line/test/webhook/send", strings.NewReader(`{}`))
+	remoteReq.Header.Set("Content-Type", "application/json")
+	remoteReq.RemoteAddr = "192.168.1.10:12345"
+	mux.ServeHTTP(remoteRec, remoteReq)
+	if remoteRec.Code != http.StatusForbidden || !strings.Contains(remoteRec.Body.String(), "loopback") {
+		t.Fatalf("remote trigger = status %d body %s", remoteRec.Code, remoteRec.Body.String())
+	}
+
+	unsafeMux := newLineMux(t, adapter.Config{
+		BasePath:             "/line",
+		Scenario:             "line_success",
+		WebhookTargetURL:     "http://169.254.169.254/latest/meta-data",
+		WebhookSigningSecret: "mockport_line_secret",
+	})
+	unsafeRec := httptest.NewRecorder()
+	unsafeReq := httptest.NewRequest(http.MethodPost, "/line/test/webhook/send", strings.NewReader(`{}`))
+	unsafeReq.Header.Set("Content-Type", "application/json")
+	unsafeReq.RemoteAddr = "127.0.0.1:12345"
+	unsafeMux.ServeHTTP(unsafeRec, unsafeReq)
+	if unsafeRec.Code != http.StatusBadRequest || !strings.Contains(unsafeRec.Body.String(), "local Mockport target") {
+		t.Fatalf("unsafe target = status %d body %s", unsafeRec.Code, unsafeRec.Body.String())
 	}
 }
 
@@ -237,6 +341,16 @@ func TestLoginTokenAndProfile(t *testing.T) {
 	mux.ServeHTTP(profileRec, profileReq)
 	if profileRec.Code != http.StatusOK {
 		t.Fatalf("login profile status = %d, want %d", profileRec.Code, http.StatusOK)
+	}
+}
+
+func TestLoginAuthorizeRejectsExternalRedirectURI(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=https://example.com/callback&state=abc", nil))
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "redirect_uri") {
+		t.Fatalf("authorize external redirect = status %d body %s", rec.Code, rec.Body.String())
 	}
 }
 

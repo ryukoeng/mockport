@@ -93,7 +93,7 @@ Business logic belongs in `internal`.
 The binary should run locally, but product UX should center on Docker:
 
 ```bash
-docker run -p 43101:43101 ghcr.io/albert-einshutoin/mockport:latest
+docker run -p 127.0.0.1:43101:43101 ghcr.io/albert-einshutoin/mockport:latest
 ```
 
 ### 6. Build statically

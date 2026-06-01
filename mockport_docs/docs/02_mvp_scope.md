@@ -56,7 +56,7 @@ timeout
 - `go test ./...` passes
 - `go build ./cmd/mockport` passes
 - Docker image builds
-- `docker run -p 43101:43101 ...` starts the server
+- `docker run -p 127.0.0.1:43101:43101 ...` starts the server
 - `/health` returns 200
 - Stripe-like success scenario returns 200
 - Stripe-like failure scenario returns 402

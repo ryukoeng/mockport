@@ -20,6 +20,8 @@ type Recorder struct {
 	nextID         int64
 }
 
+const MaxRecordedRequests = 1000
+
 func NewRecorder() *Recorder {
 	return &Recorder{now: time.Now}
 }
@@ -92,6 +94,9 @@ func (r *Recorder) RecordRequestWithDetails(method, path string, status int, ada
 		Scenario:  scenario,
 		Reason:    reason,
 	})
+	if len(r.requests) > MaxRecordedRequests {
+		r.requests = r.requests[len(r.requests)-MaxRecordedRequests:]
+	}
 }
 
 func (r *Recorder) RecordSafetyWarning(field, category, message string) {

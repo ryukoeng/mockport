@@ -14,8 +14,9 @@ import (
 const defaultCompose = `services:
   mockport:
     image: ghcr.io/albert-einshutoin/mockport:latest
+    command: ["run", "--config", "/etc/mockport/mockport.yml", "--host", "0.0.0.0"]
     ports:
-      - "43101:43101"
+      - "127.0.0.1:43101:43101"
     volumes:
       - ./mockport.yml:/etc/mockport/mockport.yml
 `
@@ -143,6 +144,23 @@ func adapterSpecFor(name string) (adapterSpec, bool) {
 				"SLACK_BOT_TOKEN": "mockport_slack_token",
 			},
 		}, true
+	case "line":
+		return adapterSpec{
+			Name:       "line",
+			BasePath:   "/line",
+			Scenario:   "line_success",
+			FakeSecret: "mockport_line_channel_token",
+			Env: map[string]string{
+				"LINE_API_BASE_URL":        "http://localhost:43101/line",
+				"LINE_CHANNEL_ID":          "mockport_line_channel",
+				"LINE_CHANNEL_SECRET":      "mockport_line_secret",
+				"LINE_CHANNEL_TOKEN":       "mockport_line_channel_token",
+				"LINE_LIFF_ID":             "mockport-line-liff",
+				"LINE_MINI_DAPP_CLIENT_ID": "mockport_line_mini_dapp_client",
+				"LINE_PAY_CHANNEL_ID":      "mockport_line_pay_channel",
+				"LINE_PAY_CHANNEL_SECRET":  "mockport_line_pay_secret",
+			},
+		}, true
 	default:
 		return adapterSpec{}, false
 	}
@@ -151,7 +169,7 @@ func adapterSpecFor(name string) (adapterSpec, bool) {
 func generatedConfig(specs []adapterSpec) string {
 	cfg := config.Config{
 		Version:  "0.1",
-		Server:   config.ServerConfig{Host: "0.0.0.0", Port: 43101},
+		Server:   config.ServerConfig{Host: "127.0.0.1", Port: 43101},
 		Mode:     "ai-safe",
 		Adapters: map[string]config.AdapterConfig{},
 	}

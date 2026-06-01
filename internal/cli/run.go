@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/albert-einshutoin/mockport/adapters/githuboauth"
+	"github.com/albert-einshutoin/mockport/adapters/line"
 	"github.com/albert-einshutoin/mockport/adapters/openai"
 	"github.com/albert-einshutoin/mockport/adapters/slack"
 	"github.com/albert-einshutoin/mockport/adapters/stripe"
@@ -25,6 +26,7 @@ import (
 func newRunCommand() *cobra.Command {
 	var configPath string
 	var check bool
+	var hostOverride string
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run Mockport server",
@@ -32,6 +34,9 @@ func newRunCommand() *cobra.Command {
 			cfg, err := config.LoadFile(configPath)
 			if err != nil {
 				return err
+			}
+			if hostOverride != "" {
+				cfg.Server.Host = hostOverride
 			}
 			printSafetyWarnings(cmd, cfg)
 			if check {
@@ -58,12 +63,13 @@ func newRunCommand() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&configPath, "config", "mockport.yml", "Path to mockport.yml")
 	cmd.Flags().BoolVar(&check, "check", false, "Validate config and print safety warnings without starting the server")
+	cmd.Flags().StringVar(&hostOverride, "host", "", "Override configured server host")
 	return cmd
 }
 
 func defaultRegistry() (*adapter.Registry, error) {
 	reg := adapter.NewRegistry()
-	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New()} {
+	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New(), line.New()} {
 		if err := reg.Register(adapterImpl); err != nil {
 			return nil, err
 		}

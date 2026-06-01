@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 )
@@ -169,6 +171,12 @@ func TestEventsURLVerificationAndCallback(t *testing.T) {
 		t.Fatalf("bad signature status = %d, body=%s", bad.Code, bad.Body.String())
 	}
 	assertSlackError(t, bad, "invalid_signature")
+
+	old := serveSlackSignedRequestWithTimestamp(mux, http.MethodPost, "/slack/events", callback, "mockport_slack_signing_secret", strconv.FormatInt(time.Now().Add(-10*time.Minute).Unix(), 10))
+	if old.Code != http.StatusUnauthorized {
+		t.Fatalf("old signature status = %d, body=%s", old.Code, old.Body.String())
+	}
+	assertSlackError(t, old, "invalid_signature")
 }
 
 func TestMetadata(t *testing.T) {
@@ -210,7 +218,11 @@ func serveSlackRequest(mux http.Handler, method, path, body string) *httptest.Re
 }
 
 func serveSlackSignedRequest(mux http.Handler, method, path, body, secret string) *httptest.ResponseRecorder {
-	timestamp := "1710000000"
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	return serveSlackSignedRequestWithTimestamp(mux, method, path, body, secret, timestamp)
+}
+
+func serveSlackSignedRequestWithTimestamp(mux http.Handler, method, path, body, secret, timestamp string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Slack-Request-Timestamp", timestamp)

@@ -18,9 +18,9 @@ No local install required:
 
 ```bash
 docker build -t mockport:local -f docker/Dockerfile .
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/configs/mockport.example.yml:/etc/mockport/mockport.yml \
-  mockport:local
+  mockport:local run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```
 
 Then verify the local API:
@@ -75,9 +75,9 @@ The smoke test builds the local Docker image, creates a temporary empty director
 ## Docker
 
 ```bash
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/configs/mockport.example.yml:/etc/mockport/mockport.yml \
-  mockport:local
+  mockport:local run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```
 
 ## Install And Distribution
@@ -88,9 +88,9 @@ Docker preview image:
 
 ```bash
 docker pull ghcr.io/albert-einshutoin/mockport:0.1.0-alpha
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/configs/mockport.example.yml:/etc/mockport/mockport.yml \
-  ghcr.io/albert-einshutoin/mockport:0.1.0-alpha
+  ghcr.io/albert-einshutoin/mockport:0.1.0-alpha run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```
 
 Release archives:
@@ -122,7 +122,7 @@ Supported:
 | OpenAI-compatible API | `openai` | `/openai` | `workflow-compatible` | models, chat completions, responses, streaming, embeddings, files, batches, SDK contract, state, validation |
 | GitHub OAuth-like API | `github-oauth` | `/github` | `workflow-compatible` | authorize redirect, access token exchange, user profile, user emails, user orgs, client contract, state, scope validation |
 | Slack-like messaging API | `slack` | `/slack` | `workflow-compatible` | auth test, conversations list/history, message post/update/delete, Events API URL verification/message callback subset, client contract, state, Slack-style errors |
-| LINE-like platform APIs | `line` | `/line` | `workflow-compatible` | Messaging API send/content/webhook/rich menu/channel token workflows, LINE Login OAuth/profile, LIFF helpers, MINI App service messages, LINE Pay v3 request/confirm, Mini Dapp wallet/payment helpers |
+| LINE-like platform APIs | `line` | `/line` | `workflow-compatible` | Messaging API send/content/signed webhook/rich menu/channel token workflows, LINE Login OAuth/profile, LIFF helpers, MINI App service messages, LINE Pay v3 request/confirm, Mini Dapp wallet/payment helpers |
 
 Planned:
 

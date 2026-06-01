@@ -12,13 +12,21 @@ import (
 )
 
 func TestAuthorizeRedirect(t *testing.T) {
-	rec := performRequest(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"}, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1")
+	rec := performRequest(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"}, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1")
 	if rec.Code != http.StatusFound {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusFound)
 	}
 	if rec.Header().Get("Location") == "" {
 		t.Fatal("missing Location header")
 	}
+}
+
+func TestAuthorizeRejectsExternalRedirectURI(t *testing.T) {
+	rec := performRequest(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"}, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=https://example.com/callback&state=s1")
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	assertGitHubOAuthError(t, rec, "redirect_uri_mismatch")
 }
 
 func TestAccessTokenScenarios(t *testing.T) {
@@ -77,7 +85,7 @@ func TestUserRequiresValidBearerToken(t *testing.T) {
 func TestOAuthCodeTokenAndUserAreStateful(t *testing.T) {
 	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
 
-	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1&scope=read:user,user:email", "", nil)
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1&scope=read:user,user:email", "", nil)
 	if auth.Code != http.StatusFound {
 		t.Fatalf("authorize status = %d, want %d", auth.Code, http.StatusFound)
 	}
@@ -142,7 +150,7 @@ func TestEmailsAndOrgsRequireScopes(t *testing.T) {
 
 func TestTokenRejectsRedirectURIMismatch(t *testing.T) {
 	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
-	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1", "", nil)
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1", "", nil)
 	code := redirectCode(t, auth)
 
 	rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://other/callback", map[string]string{"Accept": "application/json"})
@@ -154,7 +162,7 @@ func TestTokenRejectsRedirectURIMismatch(t *testing.T) {
 
 func TestAuthorizeReportsUnsupportedScope(t *testing.T) {
 	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
-	rec := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1&scope=repo", "", nil)
+	rec := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1&scope=repo", "", nil)
 	if rec.Code != http.StatusFound {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusFound)
 	}
@@ -215,9 +223,9 @@ func serveGitHubRequest(mux http.Handler, method, path, body string, headers map
 
 func issueGitHubToken(t *testing.T, mux http.Handler, scope string) string {
 	t.Helper()
-	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://app/callback&state=s1&scope="+url.QueryEscape(scope), "", nil)
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1&scope="+url.QueryEscape(scope), "", nil)
 	code := redirectCode(t, auth)
-	token := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://app/callback", map[string]string{"Accept": "application/json"})
+	token := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://localhost/callback", map[string]string{"Accept": "application/json"})
 	if token.Code != http.StatusOK {
 		t.Fatalf("issue token status = %d, body=%s", token.Code, token.Body.String())
 	}

@@ -5,11 +5,21 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/albert-einshutoin/mockport/internal/security"
 )
 
 func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
+	if !security.IsLoopbackRemoteAddr(r.RemoteAddr) {
+		rt.writeStripeError(w, http.StatusForbidden, "invalid_request_error", "local_request_required", "webhook delivery can only be triggered from loopback")
+		return
+	}
 	if rt.cfg.WebhookTargetURL == "" {
 		rt.writeStripeError(w, http.StatusBadRequest, "invalid_request_error", "missing_webhook_target", "webhook target URL is not configured")
+		return
+	}
+	if !security.IsSafeWebhookTargetURL(rt.cfg.WebhookTargetURL) {
+		rt.writeStripeError(w, http.StatusBadRequest, "invalid_request_error", "unsafe_webhook_target", "webhook target URL must be a local Mockport target")
 		return
 	}
 	secret := rt.cfg.WebhookSigningSecret

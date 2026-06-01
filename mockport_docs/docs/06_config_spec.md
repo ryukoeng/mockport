@@ -20,7 +20,7 @@ Docker path:
 version: "0.1"
 
 server:
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 43101
 
 mode: ai-safe
@@ -40,7 +40,7 @@ adapters:
 
 ```yaml
 server:
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 43101
 ```
 

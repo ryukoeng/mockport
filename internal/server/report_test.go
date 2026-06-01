@@ -15,7 +15,7 @@ import (
 func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	cfg := config.Config{
 		Mode:   "ai-safe",
-		Server: config.ServerConfig{Host: "0.0.0.0", Port: 43101},
+		Server: config.ServerConfig{Host: "127.0.0.1", Port: 43101},
 		Adapters: map[string]config.AdapterConfig{
 			"stripe": {Enabled: true, BasePath: "/stripe", Scenario: "payment_success", FakeSecret: "sk_live_123"},
 		},
@@ -97,7 +97,7 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 func TestReportEndpointRecordsUnsupportedEndpoint(t *testing.T) {
 	cfg := config.Config{
 		Mode:   "ai-safe",
-		Server: config.ServerConfig{Host: "0.0.0.0", Port: 43101},
+		Server: config.ServerConfig{Host: "127.0.0.1", Port: 43101},
 		Adapters: map[string]config.AdapterConfig{
 			"stripe": {Enabled: true, BasePath: "/stripe", Scenario: "payment_success", FakeSecret: "mockport_stripe_secret"},
 		},

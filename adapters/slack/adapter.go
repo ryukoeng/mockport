@@ -8,7 +8,9 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
@@ -16,6 +18,8 @@ import (
 )
 
 type Adapter struct{}
+
+const slackSignatureTolerance = 5 * time.Minute
 
 func New() Adapter { return Adapter{} }
 
@@ -316,6 +320,15 @@ func (r *routes) validSignature(req *http.Request, raw []byte) bool {
 	signature := req.Header.Get("X-Slack-Signature")
 	timestamp := req.Header.Get("X-Slack-Request-Timestamp")
 	if signature == "" || timestamp == "" {
+		return false
+	}
+	requestTime, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return false
+	}
+	now := time.Now().Unix()
+	toleranceSeconds := int64(slackSignatureTolerance / time.Second)
+	if requestTime < now-toleranceSeconds || requestTime > now+toleranceSeconds {
 		return false
 	}
 	mac := hmac.New(sha256.New, []byte(secret))

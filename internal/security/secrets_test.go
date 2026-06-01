@@ -78,6 +78,65 @@ func TestLooksLikeExternalServiceURL(t *testing.T) {
 	}
 }
 
+func TestSafeWebhookTargetURLAllowsOnlyLocalTargets(t *testing.T) {
+	for _, value := range []string{
+		"http://localhost:3000/webhook",
+		"http://127.0.0.1:3000/webhook",
+		"http://[::1]:3000/webhook",
+		"http://host.docker.internal:3000/webhook",
+		"http://app:3000/webhook",
+	} {
+		if !IsSafeWebhookTargetURL(value) {
+			t.Fatalf("target %q was rejected, want allowed", value)
+		}
+	}
+	for _, value := range []string{
+		"https://example.com/webhook",
+		"http://169.254.169.254/latest/meta-data",
+		"ftp://localhost/webhook",
+		"http://user:pass@localhost/webhook",
+	} {
+		if IsSafeWebhookTargetURL(value) {
+			t.Fatalf("target %q was allowed, want rejected", value)
+		}
+	}
+}
+
+func TestSafeOAuthRedirectURLAllowsOnlyLoopbackTargets(t *testing.T) {
+	for _, value := range []string{
+		"http://localhost/callback",
+		"http://127.0.0.1:3000/callback",
+		"http://[::1]:3000/callback",
+	} {
+		if !IsSafeOAuthRedirectURL(value) {
+			t.Fatalf("redirect %q was rejected, want allowed", value)
+		}
+	}
+	for _, value := range []string{
+		"http://app/callback",
+		"https://example.com/callback",
+		"javascript:alert(1)",
+		"http://user:pass@localhost/callback",
+	} {
+		if IsSafeOAuthRedirectURL(value) {
+			t.Fatalf("redirect %q was allowed, want rejected", value)
+		}
+	}
+}
+
+func TestIsLoopbackRemoteAddr(t *testing.T) {
+	for _, value := range []string{"127.0.0.1:43101", "[::1]:43101", "localhost:43101"} {
+		if !IsLoopbackRemoteAddr(value) {
+			t.Fatalf("remote addr %q was rejected, want loopback", value)
+		}
+	}
+	for _, value := range []string{"192.168.1.10:43101", "10.0.0.5:43101", "example.com:43101"} {
+		if IsLoopbackRemoteAddr(value) {
+			t.Fatalf("remote addr %q was allowed, want rejected", value)
+		}
+	}
+}
+
 func TestScanPublicEnvRejectsRealProviderSecretsAndURLs(t *testing.T) {
 	env := strings.Join([]string{
 		"STRIPE_SECRET_KEY=sk_live_123",

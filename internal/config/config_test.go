@@ -19,8 +19,8 @@ func TestLoadValidConfigAppliesDefaults(t *testing.T) {
 		t.Fatalf("load config: %v", err)
 	}
 
-	if cfg.Server.Host != "0.0.0.0" {
-		t.Fatalf("host = %q, want default 0.0.0.0", cfg.Server.Host)
+	if cfg.Server.Host != "127.0.0.1" {
+		t.Fatalf("host = %q, want default 127.0.0.1", cfg.Server.Host)
 	}
 	if cfg.Server.Port != 43101 {
 		t.Fatalf("port = %d, want 43101", cfg.Server.Port)

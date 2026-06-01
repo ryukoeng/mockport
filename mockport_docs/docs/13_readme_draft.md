@@ -36,9 +36,9 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 ## Docker
 
 ```bash
-docker run --rm -p 43101:43101 \
+docker run --rm -p 127.0.0.1:43101:43101 \
   -v $(pwd)/mockport.yml:/etc/mockport/mockport.yml \
-  ghcr.io/albert-einshutoin/mockport:latest
+  ghcr.io/albert-einshutoin/mockport:latest run --config /etc/mockport/mockport.yml --host 0.0.0.0
 ```
 
 ## Supported adapters

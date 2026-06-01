@@ -19,7 +19,7 @@ func TestAddAdaptersUpdatesConfig(t *testing.T) {
 	var out bytes.Buffer
 	cmd.SetOut(&out)
 	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"add", "openai", "github-oauth", "slack", "--config", configPath})
+	cmd.SetArgs([]string{"add", "openai", "github-oauth", "slack", "line", "--config", configPath})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute add: %v", err)
 	}
@@ -29,7 +29,7 @@ func TestAddAdaptersUpdatesConfig(t *testing.T) {
 		t.Fatalf("read config: %v", err)
 	}
 	configText := string(data)
-	for _, want := range []string{"stripe:", "openai:", "github-oauth:", "slack:"} {
+	for _, want := range []string{"stripe:", "openai:", "github-oauth:", "slack:", "line:"} {
 		if !strings.Contains(configText, want) {
 			t.Fatalf("config missing %q:\n%s", want, configText)
 		}

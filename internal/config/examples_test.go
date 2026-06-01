@@ -26,7 +26,7 @@ func TestExampleConfigsLoad(t *testing.T) {
 		{
 			name:     "multi-adapter",
 			path:     "../../examples/multi-adapter/mockport.yml",
-			adapters: []string{"stripe", "openai", "github-oauth", "slack"},
+			adapters: []string{"stripe", "openai", "github-oauth", "slack", "line"},
 		},
 	}
 

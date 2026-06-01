@@ -249,6 +249,31 @@ func TestWebhookSender(t *testing.T) {
 	}
 }
 
+func TestWebhookSenderRejectsNonLocalTriggerAndUnsafeTarget(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{
+		BasePath:             "/stripe",
+		Scenario:             "payment_success",
+		WebhookTargetURL:     "http://127.0.0.1:3000/webhooks/stripe",
+		WebhookSigningSecret: "whsec_mockport",
+	})
+	remote := serveStripeRequestWithRemote(mux, http.MethodPost, "/stripe/test/webhook/send", "", nil, "192.168.1.10:12345")
+	if remote.Code != http.StatusForbidden {
+		t.Fatalf("remote trigger status = %d, want %d, body=%s", remote.Code, http.StatusForbidden, remote.Body.String())
+	}
+	assertStripeErrorCode(t, remote, "local_request_required")
+
+	unsafe := performStripeRequest(t, adapter.Config{
+		BasePath:             "/stripe",
+		Scenario:             "payment_success",
+		WebhookTargetURL:     "http://169.254.169.254/latest/meta-data",
+		WebhookSigningSecret: "whsec_mockport",
+	}, http.MethodPost, "/stripe/test/webhook/send")
+	if unsafe.Code != http.StatusBadRequest {
+		t.Fatalf("unsafe target status = %d, want %d, body=%s", unsafe.Code, http.StatusBadRequest, unsafe.Body.String())
+	}
+	assertStripeErrorCode(t, unsafe, "unsafe_webhook_target")
+}
+
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
 	if meta.Name != "stripe" {
@@ -306,8 +331,13 @@ func createStripeResource(t *testing.T, mux http.Handler, path, body string) map
 }
 
 func serveStripeRequest(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
+	return serveStripeRequestWithRemote(mux, method, path, body, headers, "127.0.0.1:12345")
+}
+
+func serveStripeRequestWithRemote(mux http.Handler, method, path, body string, headers map[string]string, remoteAddr string) *httptest.ResponseRecorder {
 	reader := strings.NewReader(body)
 	req := httptest.NewRequest(method, path, reader)
+	req.RemoteAddr = remoteAddr
 	if body != "" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
