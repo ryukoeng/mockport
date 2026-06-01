@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
@@ -180,11 +181,50 @@ func (a Adapter) Metadata() adapter.Metadata {
 }
 
 type routes struct {
-	basePath          string
-	cfg               adapter.Config
-	store             *state.Store
+	basePath string
+	cfg      adapter.Config
+	store    *state.Store
+
+	// mu guards the singleton mutable state below. net/http dispatches
+	// concurrent requests to the same routes instance, so these fields must
+	// not be touched without holding the lock.
+	mu                sync.RWMutex
 	webhookEndpoint   string
 	defaultRichMenuID string
+}
+
+func (r *routes) setWebhookEndpoint(endpoint string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.webhookEndpoint = endpoint
+}
+
+func (r *routes) getWebhookEndpoint() string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.webhookEndpoint
+}
+
+func (r *routes) setDefaultRichMenu(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.defaultRichMenuID = id
+}
+
+func (r *routes) getDefaultRichMenu() string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.defaultRichMenuID
+}
+
+// clearDefaultRichMenuIf clears the default rich menu only when it still points
+// at id, keeping the compare-and-clear atomic against concurrent updates.
+func (r *routes) clearDefaultRichMenuIf(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.defaultRichMenuID == id {
+		r.defaultRichMenuID = ""
+	}
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
@@ -295,7 +335,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	case req.Method == http.MethodGet && path == "/v2/bot/user/all/richmenu":
 		r.writeGetDefaultRichMenu(w)
 	case req.Method == http.MethodDelete && path == "/v2/bot/user/all/richmenu":
-		r.defaultRichMenuID = ""
+		r.setDefaultRichMenu("")
 		writeEmptyJSON(w, http.StatusOK)
 	case req.Method == http.MethodPost && strings.HasPrefix(path, "/v2/bot/user/") && strings.Contains(path, "/richmenu/"):
 		r.writeLinkRichMenuToUser(w, path)
@@ -445,16 +485,17 @@ func (r *routes) writeSetWebhookEndpoint(w http.ResponseWriter, req *http.Reques
 		writeLINEError(w, http.StatusBadRequest, "Invalid webhook endpoint URL")
 		return
 	}
-	r.webhookEndpoint = endpoint
+	r.setWebhookEndpoint(endpoint)
 	writeEmptyJSON(w, http.StatusOK)
 }
 
 func (r *routes) writeGetWebhookEndpoint(w http.ResponseWriter) {
-	if r.webhookEndpoint == "" {
+	endpoint := r.getWebhookEndpoint()
+	if endpoint == "" {
 		writeLINEError(w, http.StatusNotFound, "Webhook endpoint not found")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"endpoint": r.webhookEndpoint, "active": true})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"endpoint": endpoint, "active": true})
 }
 
 func (r *routes) writeWebhookTest(w http.ResponseWriter) {
@@ -879,9 +920,7 @@ func (r *routes) writeDeleteRichMenu(w http.ResponseWriter, id string) {
 		writeLINEError(w, http.StatusNotFound, "Not found")
 		return
 	}
-	if r.defaultRichMenuID == id {
-		r.defaultRichMenuID = ""
-	}
+	r.clearDefaultRichMenuIf(id)
 	writeEmptyJSON(w, http.StatusOK)
 }
 
@@ -920,16 +959,17 @@ func (r *routes) writeSetDefaultRichMenu(w http.ResponseWriter, id string) {
 		writeLINEError(w, http.StatusBadRequest, "must upload richmenu image before applying it to user")
 		return
 	}
-	r.defaultRichMenuID = id
+	r.setDefaultRichMenu(id)
 	writeEmptyJSON(w, http.StatusOK)
 }
 
 func (r *routes) writeGetDefaultRichMenu(w http.ResponseWriter) {
-	if r.defaultRichMenuID == "" {
+	id := r.getDefaultRichMenu()
+	if id == "" {
 		writeLINEError(w, http.StatusNotFound, "no default richmenu")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"richMenuId": r.defaultRichMenuID})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"richMenuId": id})
 }
 
 func (r *routes) writeLinkRichMenuToUser(w http.ResponseWriter, path string) {
