@@ -11,11 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/albert-einshutoin/mockport/adapters/githuboauth"
-	"github.com/albert-einshutoin/mockport/adapters/line"
-	"github.com/albert-einshutoin/mockport/adapters/openai"
-	"github.com/albert-einshutoin/mockport/adapters/slack"
-	"github.com/albert-einshutoin/mockport/adapters/stripe"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
@@ -69,7 +64,7 @@ func newRunCommand() *cobra.Command {
 
 func defaultRegistry() (*adapter.Registry, error) {
 	reg := adapter.NewRegistry()
-	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New(), line.New()} {
+	for _, adapterImpl := range builtinAdapters() {
 		if err := reg.Register(adapterImpl); err != nil {
 			return nil, err
 		}
