@@ -52,7 +52,10 @@ Primary public references:
 - LINE MINI App API reference: `https://developers.line.biz/en/reference/line-mini-app/`
 - LINE MINI App service messages: `https://developers.line.biz/en/docs/line-mini-app/develop/service-messages/`
 - LINE Pay payment request: `https://developers-pay.line.me/online-api-v3/request-payment`
+- LINE Pay payment confirmation: `https://developers-pay.line.me/online-api-v3/confirm-payment`
+- LINE Pay payment request status: `https://developers-pay.line.me/online-api-v3/check-payment-request-status`
 - Mini Dapp SDK: `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk`
+- Mini Dapp payment provider: `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk/payment`
 - OpenID Provider Configuration Document: `https://access.line.me/.well-known/openid-configuration`
 - LINE Login security checklist: `https://developers.line.biz/en/docs/line-login/security-checklist/`
 
@@ -82,7 +85,10 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | LINE MINI App service message API | `https://developers.line.biz/en/reference/line-mini-app/#service-messages` |
 | LINE MINI App service message workflow and policy | `https://developers.line.biz/en/docs/line-mini-app/develop/service-messages/` |
 | LINE Pay request flow | `https://developers-pay.line.me/online-api-v3/request-payment` |
+| LINE Pay confirmation flow | `https://developers-pay.line.me/online-api-v3/confirm-payment` |
+| LINE Pay payment request status check | `https://developers-pay.line.me/online-api-v3/check-payment-request-status` |
 | Mini Dapp SDK wallet/payment context | `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk` |
+| Mini Dapp payment flow and payment APIs | `https://docs.dappportal.io/mini-dapp/mini-dapp-sdk/payment` |
 
 ## Minimum Required Coverage
 

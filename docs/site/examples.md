@@ -54,4 +54,5 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 curl http://localhost:43101/openai/v1/models
 curl http://localhost:43101/github/user
 curl -X POST http://localhost:43101/slack/api/auth.test
+curl -X POST http://localhost:43101/line/v2/bot/message/push
 ```

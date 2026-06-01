@@ -31,6 +31,9 @@ const knownGaps = {
   slack: [
     "No real delivery, Events API completeness, Block Kit validation, files, app scopes, enterprise policy, or full workspace directory.",
   ],
+  line: [
+    "No official LINE SDK contract yet, no real LIFF browser runtime, no provider-driven webhook redelivery, no monthly quota/rate bucket enforcement, no complete Messaging API schema validation, no regional policy enforcement, and Mini Dapp endpoints are local SDK helpers rather than a full Dapp Portal clone.",
+  ],
 };
 
 const adapters = (snapshot.compatibility || []).map((entry) => {

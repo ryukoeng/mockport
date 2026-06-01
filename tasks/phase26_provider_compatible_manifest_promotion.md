@@ -18,6 +18,7 @@
 - Create: `compat/manifests/openai.json`
 - Create: `compat/manifests/github-oauth.json`
 - Create: `compat/manifests/slack.json`
+- Create: `compat/manifests/line.json`
 - Create: `scripts/check-compat-manifests.mjs`
 - Modify: `scripts/check-compatibility-release.sh`
 - Modify: `scripts/render-compatibility-report.mjs`
@@ -41,6 +42,7 @@
 - [ ] Create `openai.json` with current workflow-compatible evidence and explicit known gaps for model quality, tokenization, tools, and vector stores.
 - [ ] Create `github-oauth.json` with OAuth/client contract evidence and known gaps for repository/org policy.
 - [ ] Create `slack.json` with Web API/client contract evidence and known gaps for delivery, files, Block Kit, and enterprise policy.
+- [ ] Create `line.json` with current workflow-compatible evidence and explicit known gaps for LINE SDK contract coverage, LIFF runtime, provider webhook redelivery, quota/rate buckets, schema validation, regional policy, and Mini Dapp helper boundaries.
 
 ## Task P26-T03: Report Integration
 
@@ -62,7 +64,7 @@
 
 ## Phase 26 Exit
 
-- [ ] Versioned manifests exist for every current adapter.
+- [ ] Versioned manifests exist for every current registered adapter.
 - [ ] Release checks fail on invalid maturity promotion.
 - [ ] Compatibility report includes manifest evidence.
 - [ ] `provider-compatible` has a concrete, automated gate.

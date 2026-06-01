@@ -15,8 +15,10 @@ Important fields:
 - `requests`: replay-safe request metadata. Request bodies and secret headers are not stored by default.
 - `scenario_coverage`: supported scenarios per adapter.
 - `behavior_matrix`: supported endpoints and their scenarios.
-- `compatibility`: measured compatibility level, score, provider version, SDK evidence, and known gaps.
+- `compatibility`: measured compatibility level, score, provider version, SDK/client evidence, and unsupported endpoint ids.
 - `unsupported_endpoints`: requests that returned unsupported endpoint classifications.
+
+Generated compatibility reports under `docs/compatibility-reports/` add release-facing known gaps for each adapter.
 
 ## Text Report
 
@@ -38,6 +40,6 @@ workflow-compatible
 provider-compatible
 ```
 
-Stripe compatibility is `partial`. OpenAI-compatible, GitHub OAuth-like, and Slack-like adapters start as `experimental`.
+Current built-in adapters on the mainline runtime are `workflow-compatible` for selected local workflows: Stripe-like payments, OpenAI-compatible API, GitHub OAuth-like API, Slack-like messaging API, and LINE-like platform APIs.
 
 All adapters are scenario-driven today, not full provider clones. Use the behavior matrix, compatibility section, and unsupported endpoint list as the source of truth for what a test run actually exercised.

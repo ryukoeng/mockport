@@ -43,8 +43,14 @@ require_text "CHANGELOG.md" "compatibility scores"
 node <<'NODE'
 const fs = require("fs");
 const report = JSON.parse(fs.readFileSync("docs/compatibility-reports/latest.json", "utf8"));
-if (!Array.isArray(report.adapters) || report.adapters.length < 4) {
-  throw new Error("compatibility report must include at least four adapters");
+if (!Array.isArray(report.adapters) || report.adapters.length < 5) {
+  throw new Error("compatibility report must include at least five adapters");
+}
+const requiredAdapters = new Set(["stripe", "openai", "github-oauth", "slack", "line"]);
+for (const name of requiredAdapters) {
+  if (!report.adapters.some((adapter) => adapter.name === name)) {
+    throw new Error(`compatibility report missing adapter: ${name}`);
+  }
 }
 for (const adapter of report.adapters) {
   if (!adapter.name || !adapter.maturity || !Number.isInteger(adapter.score)) {

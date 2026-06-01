@@ -43,6 +43,10 @@ Use fake local values:
 STRIPE_API_URL=http://localhost:43101/stripe
 STRIPE_SECRET_KEY=mockport_stripe_secret
 STRIPE_WEBHOOK_SECRET=whsec_mockport
+GITHUB_OAUTH_BASE_URL=http://localhost:43101/github
+GITHUB_OAUTH_CLIENT_SECRET=mockport_github_secret
+LINE_API_BASE_URL=http://localhost:43101/line
+LINE_CHANNEL_TOKEN=mockport_line_channel_token
 ```
 
 Mockport treats these prefixes as local fake values:

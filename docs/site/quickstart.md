@@ -9,6 +9,6 @@ curl http://localhost:43101/health
 For multiple adapters:
 
 ```bash
-mockport init --adapter stripe --adapter openai --adapter github-oauth --adapter slack
+mockport init --adapter stripe --adapter openai --adapter github-oauth --adapter slack --adapter line
 docker compose -f docker-compose.mockport.yml up
 ```

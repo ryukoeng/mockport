@@ -12,4 +12,8 @@ Adapters are scenario-driven today and are moving toward provider-compatible loc
 
 Detailed adapter specifications:
 
+- [Stripe adapter](../adapters/stripe.md)
+- [OpenAI adapter](../adapters/openai.md)
+- [GitHub OAuth adapter](../adapters/github-oauth.md)
+- [Slack adapter](../adapters/slack.md)
 - [LINE adapter](../adapters/line.md)

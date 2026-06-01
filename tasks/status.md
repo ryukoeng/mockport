@@ -402,6 +402,15 @@
 | P30-T03 | Publish release artifacts | pending | GitHub Release, checksums, and GHCR image exist or blockers are documented |
 | P30-T04 | Run post-release smoke | pending | Clean download/container smoke verifies health plus all major adapters |
 
+## Phase 31 Tasks
+
+| ID | Task | Status | Test First |
+| --- | --- | --- | --- |
+| P31-T01 | Inventory registered adapters and open adapter work | done | Task audit fails if `internal/cli/run.go` has an adapter missing from docs/task inventory |
+| P31-T02 | Add official reference maps for adapter docs | done | Docs link check fails on missing per-adapter spec links |
+| P31-T03 | Keep adapter task inventory current | pending | Future adapter additions require matching `docs/adapters/*.md` and task inventory entries |
+| P31-T04 | Freeze adapter implementation line | done | Compatibility model and Phase 31 define in-scope/out-of-scope boundaries before adapter implementation continues |
+
 ## Verification Notes
 
 - `/usr/local/go/bin/go version`: `go version go1.26.3 darwin/arm64`.

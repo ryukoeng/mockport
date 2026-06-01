@@ -4,7 +4,7 @@ Mockport targets provider-compatible local APIs for selected workflows. It does 
 
 ## Current Preview Scope
 
-Current adapters are scenario-compatible or partial. They are useful for local and CI integration paths, but they are not a substitute for provider sandboxes or production validation.
+Current mainline adapters are workflow-compatible for selected local and CI integration paths. They are not a substitute for provider sandboxes or production validation.
 
 ## What Mockport Does Not Reproduce
 
@@ -12,6 +12,7 @@ Current adapters are scenario-compatible or partial. They are useful for local a
 - Real AI inference, model quality, provider tokenization, or private scheduling behavior.
 - Real GitHub organization, enterprise, or permission policy.
 - Real Slack workspace delivery, enterprise policy, or full directory state.
+- Real LINE Login UI, LIFF browser runtime, provider webhook redelivery, quota/rate-bucket enforcement, regional policy, or Dapp Portal behavior.
 - Undocumented provider behavior.
 
 ## How To Evaluate Support

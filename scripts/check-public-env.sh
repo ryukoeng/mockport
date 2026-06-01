@@ -19,7 +19,7 @@ for file in "${files[@]}"; do
     echo "real-looking webhook secret found in $file" >&2
     exit 1
   fi
-  if grep -En 'https://api\.stripe\.com|https://api\.openai\.com|https://slack\.com/api' "$file"; then
+  if grep -En 'https://api\.stripe\.com|https://api\.openai\.com|https://api\.github\.com|https://api\.line\.me|https://slack\.com/api' "$file"; then
     echo "production provider URL found in $file" >&2
     exit 1
   fi

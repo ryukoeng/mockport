@@ -2,6 +2,15 @@
 
 Mockport compatibility is measured against public provider API behavior, SDK contracts, selected workflows, fake state, and known gaps. It does not mean provider internals, undocumented behavior, model quality, fraud checks, billing networks, delivery guarantees, or production network effects are reproduced.
 
+## Implementation Boundary
+
+Mockport implements selected public API and SDK/client behavior that can be exercised deterministically in local tests. The implementation line is:
+
+- In scope: public endpoint path/method/status/header/response shape, pinned SDK or client contract behavior, deterministic fake state, selected workflow lifecycles, common error envelopes, retry/rate-limit hints, sanitized fixtures, reports, and explicit known gaps.
+- Out of scope: provider internals, undocumented behavior, external provider calls, real account policy, production delivery guarantees, fraud or risk engines, billing networks, settlement, real model quality, tokenization parity, hosted tools, enterprise enforcement, UI-level login flows, and provider console review workflows.
+
+No adapter should add broad provider surface area only to make examples pass. New behavior should be added when it is part of a selected workflow, has official-reference grounding, and can be backed by tests, fixtures, and known-gap documentation.
+
 ## Levels
 
 | Level | Meaning |

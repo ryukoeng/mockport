@@ -6,13 +6,19 @@ Mockport is a Docker-first local API environment for AI-native development and C
 
 - `v0.1.0-alpha`: public preview with Docker/GHCR, GitHub release archives, AI-safe env policy, and scenario-compatible adapters.
 
+## Current Mainline
+
+- Workflow-compatible local adapters for Stripe-like payments, OpenAI-compatible API, GitHub OAuth-like API, Slack-like messaging API, and LINE-like platform APIs.
+- Compatibility reports are generated from runtime metadata and known-gap mappings.
+- Shared deterministic state, idempotency primitives, report hooks, and Go engineering hardening are in place.
+
 ## Near Term
 
-- Phase 12: sanitized fixture, provider spec snapshot, and scenario policy.
-- Phase 13: public preview contract cleanup for `mockport up`, OpenAI streaming, and adapter helper boundaries.
-- Phase 14: compatibility level model, compatibility report shape, and provisional promotion rules.
-- Phase 15: SDK contract harness foundation.
-- Phase 16: shared state foundation before provider-specific compatibility tracks.
+- Phase 24: recover observable GitHub Actions execution if compatibility workflow runs are missing.
+- Phase 25: expand the SDK/client contract harness beyond provider-specific smoke coverage.
+- Phase 26: add versioned compatibility manifests and automated provider-compatible promotion gates.
+- Phase 27-29: deepen provider-specific contract evidence for Stripe, OpenAI, GitHub OAuth, Slack, and LINE where applicable.
+- Phase 30: publish `v0.2.0-preview` with refreshed compatibility report and post-release smoke evidence.
 
 ## Public Preview Follow-up
 
@@ -29,10 +35,10 @@ Current adapters:
 - OpenAI-compatible API.
 - GitHub OAuth-like API.
 - Slack-like messaging API.
+- LINE-like platform APIs.
 
 Candidate adapters after the compatibility foundation:
 
-- LINE Messaging-like API.
 - SendGrid-like email API.
 
 ## Compatibility Direction
