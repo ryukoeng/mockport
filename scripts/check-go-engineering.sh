@@ -13,7 +13,7 @@ require_file() {
 require_pattern() {
   local pattern="$1"
   local path="$2"
-  if ! rg -q "$pattern" "$path"; then
+  if ! grep -qE -- "$pattern" "$path"; then
     echo "missing pattern '$pattern' in $path" >&2
     missing=1
   fi
@@ -38,7 +38,7 @@ require_pattern "staticcheck ./..." .github/workflows/ci.yml
 require_pattern "govulncheck ./..." .github/workflows/ci.yml
 require_pattern "Ignored Error Policy" docs/go-engineering-readiness.md
 
-if rg -n -g '!**/*_test.go' "func .*map\\[string\\](any|interface\\{\\})" adapters | rg -v "completionBody|messageBody|stripeDataFromStruct|dataFromStruct|fallbackCheckoutSession|fallbackPaymentIntent|decodePayload|writeGenericResource|createStatefulResource|writeResource"; then
+if grep -rnE --include='*.go' --exclude='*_test.go' "func .*map\\[string\\](any|interface\\{\\})" adapters | grep -vE "completionBody|messageBody|stripeDataFromStruct|dataFromStruct|fallbackCheckoutSession|fallbackPaymentIntent|decodePayload|writeGenericResource|createStatefulResource|writeResource"; then
   echo "raw map-returning adapter builders must be explicitly allowlisted as dynamic boundaries" >&2
   missing=1
 fi
