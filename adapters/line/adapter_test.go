@@ -344,6 +344,19 @@ func TestLoginTokenAndProfile(t *testing.T) {
 	}
 }
 
+func TestLoginTokenRequiresAuthorizationCode(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	form := url.Values{"grant_type": {"authorization_code"}, "redirect_uri": {"http://localhost/callback"}}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "invalid_grant") {
+		t.Fatalf("token without code = status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestLoginAuthorizeRejectsExternalRedirectURI(t *testing.T) {
 	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 
