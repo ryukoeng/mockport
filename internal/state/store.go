@@ -101,7 +101,7 @@ func (s *Store) Update(adapter, resourceType, id string, patch map[string]any) (
 		resource.Data = map[string]any{}
 	}
 	for name, value := range patch {
-		resource.Data[name] = value
+		resource.Data[name] = cloneValue(value)
 	}
 	resource.Revision++
 	s.resources[key][id] = resource
