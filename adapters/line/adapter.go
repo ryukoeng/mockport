@@ -1268,6 +1268,13 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 		}
 		return nil, err
 	}
+	var trailing json.RawMessage
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("unexpected trailing JSON value")
+		}
+		return nil, err
+	}
 	if payload == nil {
 		payload = map[string]any{}
 	}
