@@ -52,6 +52,8 @@ tasks/
   phase28_openai_provider_compatible_track.md
   phase29_oauth_slack_client_evidence.md
   phase30_v0_2_preview_release.md
+  phase31_adapter_reference_docs.md
+  phase32_service_baseline_execution.md
 ```
 
 ## Status の意味
@@ -145,6 +147,10 @@ Phase 28 は「OpenAI の選定 workflow について、real inference をしな
 Phase 29 は「GitHub OAuth と Slack の client/SDK evidence を強化し、score と maturity をより説明可能にする」までです。
 
 Phase 30 は「Phase 23-29 の成果を `v0.2.0-preview` として公開し、release artifact、GHCR、compatibility report、post-release smoke を検証する」までです。
+
+Phase 31 は「登録済み adapter の公式参照 map と実装境界を棚卸しし、adapter docs と docs site の参照関係を揃える」までです。
+
+Phase 32 は「登録済み adapter の最低 baseline を横断定義し、不足 slice と SendGrid 追加順序を実行可能な作業計画に落とす」までです。
 
 ## 参照資料
 

@@ -11,6 +11,18 @@ Mockport implements selected public API and SDK/client behavior that can be exer
 
 No adapter should add broad provider surface area only to make examples pass. New behavior should be added when it is part of a selected workflow, has official-reference grounding, and can be backed by tests, fixtures, and known-gap documentation.
 
+## Spec And Evidence Workflow
+
+Compatibility work follows spec-first TDD:
+
+1. Record the selected local contract in `docs/adapters/<adapter>.md` before widening behavior.
+2. Add sanitized fixture, manifest, or SDK/client evidence when the expected behavior depends on public provider documentation or client behavior.
+3. Write a failing regression, adapter, server, SDK contract, or report test that proves the contract gap.
+4. Implement only the selected behavior needed for that contract slice.
+5. Update adapter `Metadata()`, support docs, known gaps, and generated compatibility reports so runtime claims and public docs stay aligned.
+
+A compatibility claim is valid only when the written spec, implementation, metadata, evidence, tests, and reports agree. If any part is missing or approximate, the gap must remain visible and the maturity level must stay lower.
+
 ## Levels
 
 | Level | Meaning |

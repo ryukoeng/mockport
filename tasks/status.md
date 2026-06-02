@@ -51,6 +51,8 @@
 | Phase 28 | OpenAI provider-compatible track | pending | OpenAI selected workflows have contract-level evidence or explicit blockers |
 | Phase 29 | GitHub OAuth and Slack client evidence | pending | GitHub OAuth and Slack client/SDK evidence is strong enough for honest scoring |
 | Phase 30 | v0.2.0-preview release | pending | Release artifacts, GHCR image, compatibility report, and post-release smoke are verified |
+| Phase 31 | Adapter reference docs | done | Registered adapter docs include official reference maps and implementation boundaries |
+| Phase 32 | Service baseline execution | pending | Registered adapter baselines and SendGrid execution order are explicit and verifiable |
 
 ## Phase 0 Tasks
 
