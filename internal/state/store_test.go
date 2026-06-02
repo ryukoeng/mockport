@@ -77,6 +77,29 @@ func TestStoreResetClearsResourcesAndCounters(t *testing.T) {
 	}
 }
 
+func TestStoreTakeReturnsAndDeletesResource(t *testing.T) {
+	store := NewStore()
+	created, err := store.Create("github-oauth", "oauth_code", map[string]any{
+		"metadata": map[string]any{"client_id": "mockport_github_client"},
+	})
+	if err != nil {
+		t.Fatalf("create resource: %v", err)
+	}
+
+	taken, ok := store.Take("github-oauth", "oauth_code", created.ID)
+	if !ok {
+		t.Fatal("take returned false")
+	}
+	taken.Data["metadata"].(map[string]any)["client_id"] = "mutated"
+
+	if _, ok := store.Get("github-oauth", "oauth_code", created.ID); ok {
+		t.Fatal("taken resource still exists")
+	}
+	if _, ok := store.Take("github-oauth", "oauth_code", created.ID); ok {
+		t.Fatal("second take returned true")
+	}
+}
+
 func TestStoreCapsResourcesPerScope(t *testing.T) {
 	store := NewStore()
 	for i := 0; i < MaxResourcesPerScope+5; i++ {

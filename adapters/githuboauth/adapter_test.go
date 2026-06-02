@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
@@ -168,6 +169,58 @@ func TestTokenRejectsRedirectURIMismatch(t *testing.T) {
 	assertGitHubOAuthError(t, rec, "redirect_uri_mismatch")
 }
 
+func TestTokenRejectsClientIDMismatch(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?client_id=mockport_github_client&redirect_uri=http://localhost/callback&state=s1", "", nil)
+	code := redirectCode(t, auth)
+
+	rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://localhost/callback&client_id=other_client", map[string]string{"Accept": "application/json"})
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusUnauthorized, rec.Body.String())
+	}
+	assertGitHubOAuthError(t, rec, "incorrect_client_credentials")
+
+	valid := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://localhost/callback&client_id=mockport_github_client", map[string]string{"Accept": "application/json"})
+	if valid.Code != http.StatusOK {
+		t.Fatalf("valid retry status = %d, want %d, body=%s", valid.Code, http.StatusOK, valid.Body.String())
+	}
+}
+
+func TestTokenConsumesAuthorizationCode(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?client_id=mockport_github_client&redirect_uri=http://localhost/callback&state=s1", "", nil)
+	code := redirectCode(t, auth)
+	body := "code=" + code + "&redirect_uri=http://localhost/callback&client_id=mockport_github_client"
+
+	first := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", body, map[string]string{"Accept": "application/json"})
+	if first.Code != http.StatusOK {
+		t.Fatalf("first token status = %d, want %d, body=%s", first.Code, http.StatusOK, first.Body.String())
+	}
+	second := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", body, map[string]string{"Accept": "application/json"})
+	if second.Code != http.StatusBadRequest {
+		t.Fatalf("second token status = %d, want %d, body=%s", second.Code, http.StatusBadRequest, second.Body.String())
+	}
+	assertGitHubOAuthError(t, second, "bad_verification_code")
+}
+
+func TestTokenConsumesAuthorizationCodeConcurrently(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?client_id=mockport_github_client&redirect_uri=http://localhost/callback&state=s1", "", nil)
+	code := redirectCode(t, auth)
+	body := "code=" + code + "&redirect_uri=http://localhost/callback&client_id=mockport_github_client"
+
+	statuses := exchangeGitHubTokenConcurrently(mux, body, 50)
+	okCount := 0
+	for _, status := range statuses {
+		if status == http.StatusOK {
+			okCount++
+		}
+	}
+	if okCount != 1 {
+		t.Fatalf("successful token exchanges = %d, want 1; statuses=%v", okCount, statuses)
+	}
+}
+
 func TestAuthorizeReportsUnsupportedScope(t *testing.T) {
 	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
 	rec := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1&scope=repo", "", nil)
@@ -229,11 +282,29 @@ func serveGitHubRequest(mux http.Handler, method, path, body string, headers map
 	return rec
 }
 
+func exchangeGitHubTokenConcurrently(mux http.Handler, body string, attempts int) []int {
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	statuses := make([]int, attempts)
+	for i := range attempts {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", body, map[string]string{"Accept": "application/json"})
+			statuses[i] = rec.Code
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+	return statuses
+}
+
 func issueGitHubToken(t *testing.T, mux http.Handler, scope string) string {
 	t.Helper()
-	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?redirect_uri=http://localhost/callback&state=s1&scope="+url.QueryEscape(scope), "", nil)
+	auth := serveGitHubRequest(mux, http.MethodGet, "/github/login/oauth/authorize?client_id=mockport_github_client&redirect_uri=http://localhost/callback&state=s1&scope="+url.QueryEscape(scope), "", nil)
 	code := redirectCode(t, auth)
-	token := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://localhost/callback", map[string]string{"Accept": "application/json"})
+	token := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", "code="+code+"&redirect_uri=http://localhost/callback&client_id=mockport_github_client", map[string]string{"Accept": "application/json"})
 	if token.Code != http.StatusOK {
 		t.Fatalf("issue token status = %d, body=%s", token.Code, token.Body.String())
 	}

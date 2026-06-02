@@ -71,6 +71,19 @@ func (s *Store) Get(adapter, resourceType, id string) (Resource, bool) {
 	return cloneResource(resource), true
 }
 
+func (s *Store) Take(adapter, resourceType, id string) (Resource, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	key := newScope(adapter, resourceType)
+	resource, ok := s.resources[key][id]
+	if !ok {
+		return Resource{}, false
+	}
+	delete(s.resources[key], id)
+	return cloneResource(resource), true
+}
+
 func (s *Store) List(adapter, resourceType string) []Resource {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
