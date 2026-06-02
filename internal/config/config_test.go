@@ -118,6 +118,44 @@ func TestValidateAllowsDuplicateDisabledBasePath(t *testing.T) {
 	}
 }
 
+func TestAISafeScansDisabledAdaptersForUnsafeValues(t *testing.T) {
+	cfg := Config{
+		Server: ServerConfig{Port: 43101},
+		Mode:   "ai-safe",
+		Adapters: map[string]AdapterConfig{
+			"stripe": {Enabled: false, FakeSecret: "sk_live_123"},
+		},
+	}
+
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("validate ai-safe config: %v", err)
+	}
+	if len(cfg.SafetyWarnings) != 1 {
+		t.Fatalf("warnings = %d, want 1", len(cfg.SafetyWarnings))
+	}
+	if cfg.SafetyWarnings[0].Field != "stripe.fake_secret" {
+		t.Fatalf("field = %q, want stripe.fake_secret", cfg.SafetyWarnings[0].Field)
+	}
+}
+
+func TestStrictRejectsUnsafeDisabledAdapters(t *testing.T) {
+	cfg := Config{
+		Server: ServerConfig{Port: 43101},
+		Mode:   "strict",
+		Adapters: map[string]AdapterConfig{
+			"stripe": {Enabled: false, FakeSecret: "sk_live_123"},
+		},
+	}
+
+	err := Validate(&cfg)
+	if err == nil {
+		t.Fatal("strict config with unsafe disabled adapter returned nil error")
+	}
+	if !strings.Contains(err.Error(), "stripe.fake_secret") {
+		t.Fatalf("error = %q, want stripe.fake_secret", err.Error())
+	}
+}
+
 func TestAISafeRecordsRealLookingSecretWarning(t *testing.T) {
 	cfg := Config{
 		Server: ServerConfig{Port: 43101},

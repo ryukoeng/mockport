@@ -27,12 +27,6 @@ func Validate(cfg *Config) error {
 	seenBasePaths := map[string]string{}
 	for _, name := range sortedAdapterNames(cfg.Adapters) {
 		adapter := cfg.Adapters[name]
-		if !adapter.Enabled {
-			continue
-		}
-		if err := validateBasePath(name, adapter.BasePath, seenBasePaths); err != nil {
-			return err
-		}
 		checks := map[string]string{
 			name + ".fake_secret":            adapter.FakeSecret,
 			name + ".api_url":                adapter.APIURL,
@@ -49,6 +43,12 @@ func Validate(cfg *Config) error {
 			if security.LooksLikeExternalServiceURL(value) {
 				warnings = append(warnings, SafetyWarning{Field: field, Category: "external_url", Message: "external live service URL detected"})
 			}
+		}
+		if !adapter.Enabled {
+			continue
+		}
+		if err := validateBasePath(name, adapter.BasePath, seenBasePaths); err != nil {
+			return err
 		}
 	}
 
