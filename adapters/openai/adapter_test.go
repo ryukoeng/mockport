@@ -233,6 +233,17 @@ func TestOpenAIRejectsMalformedFileJSON(t *testing.T) {
 	assertErrorCode(t, rec, "invalid_json")
 }
 
+func TestOpenAIRejectsTrailingJSONToken(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+
+	rec := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/chat/completions", `{"model":"gpt-mockport","messages":[{"role":"user","content":"hi"}]}{}`)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+	assertErrorCode(t, rec, "invalid_json")
+}
+
 func TestMetadata(t *testing.T) {
 	meta := New().Metadata()
 	if meta.Name != "openai" {

@@ -108,6 +108,18 @@ func TestMessageValidationReturnsLINEStyleDetails(t *testing.T) {
 	}
 }
 
+func TestMessageValidationRejectsTrailingJSONToken(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/v2/bot/message/validate/push", strings.NewReader(`{"messages":[{"type":"text","text":"hello"}]}{}`))
+	req.Header.Set("Content-Type", "application/json")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "Request body must be JSON") {
+		t.Fatalf("trailing JSON token = status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestWebhookEndpointSettingsAndContent(t *testing.T) {
 	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 

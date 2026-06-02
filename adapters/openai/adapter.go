@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strings"
@@ -336,9 +337,17 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 		return map[string]any{}, nil
 	}
 	var payload map[string]any
-	if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
-		if err.Error() == "EOF" {
+	decoder := json.NewDecoder(req.Body)
+	if err := decoder.Decode(&payload); err != nil {
+		if err == io.EOF {
 			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+	var trailing json.RawMessage
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("unexpected trailing JSON value")
 		}
 		return nil, err
 	}
