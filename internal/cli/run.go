@@ -32,6 +32,9 @@ func newRunCommand() *cobra.Command {
 			}
 			if hostOverride != "" {
 				cfg.Server.Host = hostOverride
+				if err := config.Validate(&cfg); err != nil {
+					return err
+				}
 			}
 			printSafetyWarnings(cmd, cfg)
 			if check {

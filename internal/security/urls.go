@@ -28,6 +28,10 @@ func IsLoopbackRemoteAddr(remoteAddr string) bool {
 	if err != nil {
 		host = remoteAddr
 	}
+	return IsLoopbackHost(host)
+}
+
+func IsLoopbackHost(host string) bool {
 	host = strings.Trim(strings.ToLower(strings.TrimSpace(host)), "[]")
 	if host == "localhost" {
 		return true
