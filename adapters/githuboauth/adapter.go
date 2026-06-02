@@ -163,6 +163,10 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusBadRequest, "redirect_uri_mismatch", "The redirect_uri does not match the authorization request.")
 			return
 		}
+		if !clientIDMatches(codeResource, req.Form.Get("client_id")) {
+			writeOAuthError(w, http.StatusUnauthorized, "incorrect_client_credentials", "The client_id does not match the authorization request.")
+			return
+		}
 		token, err := r.store.Create("github-oauth", "oauth_token", map[string]any{
 			"client_id":  codeResource.Data["client_id"],
 			"scope":      codeResource.Data["scope"],
@@ -173,6 +177,7 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeAPIError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		r.store.Delete("github-oauth", "oauth_code", code)
 		httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: token.ID, TokenType: "bearer", Scope: codeResource.Data["scope"]})
 	}
 }
@@ -263,6 +268,11 @@ func splitScopes(value any) []string {
 	return strings.FieldsFunc(scope, func(r rune) bool {
 		return r == ' ' || r == ','
 	})
+}
+
+func clientIDMatches(resource state.Resource, got string) bool {
+	want, _ := resource.Data["client_id"].(string)
+	return want == "" || got == want
 }
 
 func redirectWithQuery(w http.ResponseWriter, req *http.Request, redirectURI string, values map[string]string) {

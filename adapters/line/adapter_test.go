@@ -318,7 +318,7 @@ func TestLoginTokenAndProfile(t *testing.T) {
 		t.Fatalf("redirect location = %s", authorize.Header().Get("Location"))
 	}
 
-	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {"http://localhost/callback"}}
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
 	tokenRec := httptest.NewRecorder()
 	tokenReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
 	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -354,6 +354,57 @@ func TestLoginTokenRequiresAuthorizationCode(t *testing.T) {
 	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "invalid_grant") {
 		t.Fatalf("token without code = status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestLoginTokenRejectsClientIDMismatch(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	mismatch := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"other_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(mismatch.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Body.String(), "invalid_client") {
+		t.Fatalf("mismatch token = status %d body %s", rec.Code, rec.Body.String())
+	}
+
+	valid := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	validRec := httptest.NewRecorder()
+	validReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(valid.Encode()))
+	validReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(validRec, validReq)
+	if validRec.Code != http.StatusOK {
+		t.Fatalf("valid retry status = %d, want %d: %s", validRec.Code, http.StatusOK, validRec.Body.String())
+	}
+}
+
+func TestLoginTokenConsumesAuthorizationCode(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	first := httptest.NewRecorder()
+	firstReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	firstReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(first, firstReq)
+	if first.Code != http.StatusOK {
+		t.Fatalf("first token status = %d, want %d: %s", first.Code, http.StatusOK, first.Body.String())
+	}
+
+	second := httptest.NewRecorder()
+	secondReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	secondReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(second, secondReq)
+	if second.Code != http.StatusBadRequest || !strings.Contains(second.Body.String(), "invalid_grant") {
+		t.Fatalf("second token = status %d body %s", second.Code, second.Body.String())
 	}
 }
 
@@ -467,4 +518,17 @@ func newLineMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 		t.Fatalf("register line adapter: %v", err)
 	}
 	return mux
+}
+
+func redirectCodeFromLocation(t *testing.T, location string) string {
+	t.Helper()
+	parsed, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("parse redirect location: %v", err)
+	}
+	code := parsed.Query().Get("code")
+	if code == "" {
+		t.Fatalf("missing code in location: %q", location)
+	}
+	return code
 }
