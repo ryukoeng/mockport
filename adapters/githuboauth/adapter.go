@@ -167,6 +167,11 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusUnauthorized, "incorrect_client_credentials", "The client_id does not match the authorization request.")
 			return
 		}
+		codeResource, ok = r.store.Take("github-oauth", "oauth_code", code)
+		if !ok {
+			writeOAuthError(w, http.StatusBadRequest, "bad_verification_code", "The code passed is incorrect or expired.")
+			return
+		}
 		token, err := r.store.Create("github-oauth", "oauth_token", map[string]any{
 			"client_id":  codeResource.Data["client_id"],
 			"scope":      codeResource.Data["scope"],
@@ -177,7 +182,6 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeAPIError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		r.store.Delete("github-oauth", "oauth_code", code)
 		httpx.WriteJSON(w, http.StatusOK, tokenResponse{AccessToken: token.ID, TokenType: "bearer", Scope: codeResource.Data["scope"]})
 	}
 }

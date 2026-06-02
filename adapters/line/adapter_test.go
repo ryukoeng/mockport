@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
@@ -408,6 +409,26 @@ func TestLoginTokenConsumesAuthorizationCode(t *testing.T) {
 	}
 }
 
+func TestLoginTokenConsumesAuthorizationCodeConcurrently(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	statuses := exchangeLineTokenConcurrently(mux, form.Encode(), 50)
+	okCount := 0
+	for _, status := range statuses {
+		if status == http.StatusOK {
+			okCount++
+		}
+	}
+	if okCount != 1 {
+		t.Fatalf("successful token exchanges = %d, want 1; statuses=%v", okCount, statuses)
+	}
+}
+
 func TestLoginAuthorizeRejectsExternalRedirectURI(t *testing.T) {
 	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 
@@ -509,6 +530,27 @@ func performLineRequest(t *testing.T, cfg adapter.Config, method, path, body str
 	req.Header.Set("Content-Type", "application/json")
 	mux.ServeHTTP(rec, req)
 	return rec
+}
+
+func exchangeLineTokenConcurrently(mux http.Handler, body string, attempts int) []int {
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	statuses := make([]int, attempts)
+	for i := range attempts {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			mux.ServeHTTP(rec, req)
+			statuses[i] = rec.Code
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+	return statuses
 }
 
 func newLineMux(t *testing.T, cfg adapter.Config) *http.ServeMux {

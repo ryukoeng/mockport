@@ -632,6 +632,11 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "client_id does not match authorization request")
 			return
 		}
+		codeResource, ok = r.store.Take("line", "oauth_code", code)
+		if !ok {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization code is invalid or expired")
+			return
+		}
 		token, err := r.store.Create("line", "oauth_token", map[string]any{
 			"scope":      codeResource.Data["scope"],
 			"user_id":    codeResource.Data["user_id"],
@@ -641,7 +646,6 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", err.Error())
 			return
 		}
-		r.store.Delete("line", "oauth_code", code)
 		body := map[string]any{
 			"access_token":  token.ID,
 			"expires_in":    2592000,
