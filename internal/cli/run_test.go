@@ -111,6 +111,70 @@ adapters:
 	}
 }
 
+func TestRunCheckHostOverrideRecordsPublicBindWarning(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "safe.yml")
+	if err := os.WriteFile(configPath, []byte(`version: "0.1"
+server:
+  host: 127.0.0.1
+  port: 43101
+mode: ai-safe
+adapters:
+  stripe:
+    enabled: true
+    base_path: /stripe
+`), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("run --check --host: %v", err)
+	}
+	got := out.String()
+	for _, want := range []string{"MOCKPORT SECURITY WARNING", "server.host", "public_bind", "Config check passed"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestRunCheckStrictRejectsUnsafeHostOverride(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "safe.yml")
+	if err := os.WriteFile(configPath, []byte(`version: "0.1"
+server:
+  host: 127.0.0.1
+  port: 43101
+mode: strict
+adapters:
+  stripe:
+    enabled: true
+    base_path: /stripe
+`), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("run --check strict --host returned nil error")
+	}
+	if !strings.Contains(err.Error(), "server.host") {
+		t.Fatalf("error = %q, want server.host", err.Error())
+	}
+}
+
 func TestServeHTTPShutsDownWhenContextIsCanceled(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

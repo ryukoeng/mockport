@@ -109,6 +109,18 @@ func TestMessageValidationReturnsLINEStyleDetails(t *testing.T) {
 	}
 }
 
+func TestMessageValidationRejectsTrailingJSONToken(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/v2/bot/message/validate/push", strings.NewReader(`{"messages":[{"type":"text","text":"hello"}]}{}`))
+	req.Header.Set("Content-Type", "application/json")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "Request body must be JSON") {
+		t.Fatalf("trailing JSON token = status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestWebhookEndpointSettingsAndContent(t *testing.T) {
 	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 
@@ -319,7 +331,7 @@ func TestLoginTokenAndProfile(t *testing.T) {
 		t.Fatalf("redirect location = %s", authorize.Header().Get("Location"))
 	}
 
-	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {"http://localhost/callback"}}
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
 	tokenRec := httptest.NewRecorder()
 	tokenReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
 	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -356,6 +368,98 @@ func TestLoginTokenRequiresAuthorizationCode(t *testing.T) {
 	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "invalid_grant") {
 		t.Fatalf("token without code = status %d body %s", rec.Code, rec.Body.String())
 	}
+}
+
+func TestLoginTokenRejectsClientIDMismatch(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	mismatch := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"other_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(mismatch.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized || !strings.Contains(rec.Body.String(), "invalid_client") {
+		t.Fatalf("mismatch token = status %d body %s", rec.Code, rec.Body.String())
+	}
+
+	valid := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	validRec := httptest.NewRecorder()
+	validReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(valid.Encode()))
+	validReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(validRec, validReq)
+	if validRec.Code != http.StatusOK {
+		t.Fatalf("valid retry status = %d, want %d: %s", validRec.Code, http.StatusOK, validRec.Body.String())
+	}
+}
+
+func TestLoginTokenConsumesAuthorizationCode(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	first := httptest.NewRecorder()
+	firstReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	firstReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(first, firstReq)
+	if first.Code != http.StatusOK {
+		t.Fatalf("first token status = %d, want %d: %s", first.Code, http.StatusOK, first.Body.String())
+	}
+
+	second := httptest.NewRecorder()
+	secondReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	secondReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(second, secondReq)
+	if second.Code != http.StatusBadRequest || !strings.Contains(second.Body.String(), "invalid_grant") {
+		t.Fatalf("second token = status %d body %s", second.Code, second.Body.String())
+	}
+}
+
+func TestLoginTokenConsumesAuthorizationCodeConcurrently(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authorize := httptest.NewRecorder()
+	mux.ServeHTTP(authorize, httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil))
+	code := redirectCodeFromLocation(t, authorize.Header().Get("Location"))
+
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "client_id": {"mockport_line_channel"}, "redirect_uri": {"http://localhost/callback"}}
+	statuses := exchangeLineTokenConcurrently(mux, form.Encode(), 50)
+	okCount := 0
+	for _, status := range statuses {
+		if status == http.StatusOK {
+			okCount++
+		}
+	}
+	if okCount != 1 {
+		t.Fatalf("successful token exchanges = %d, want 1; statuses=%v", okCount, statuses)
+	}
+}
+
+func exchangeLineTokenConcurrently(mux http.Handler, body string, attempts int) []int {
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	statuses := make([]int, attempts)
+	for i := range attempts {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			mux.ServeHTTP(rec, req)
+			statuses[i] = rec.Code
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+	return statuses
 }
 
 func TestLoginAuthorizeRejectsExternalRedirectURI(t *testing.T) {
@@ -531,4 +635,17 @@ func newLineMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 		t.Fatalf("register line adapter: %v", err)
 	}
 	return mux
+}
+
+func redirectCodeFromLocation(t *testing.T, location string) string {
+	t.Helper()
+	parsed, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("parse redirect location: %v", err)
+	}
+	code := parsed.Query().Get("code")
+	if code == "" {
+		t.Fatalf("missing code in location: %q", location)
+	}
+	return code
 }

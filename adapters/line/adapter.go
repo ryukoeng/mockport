@@ -669,6 +669,15 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri does not match")
 			return
 		}
+		if !clientIDMatches(codeResource, req.Form.Get("client_id")) {
+			writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "client_id does not match authorization request")
+			return
+		}
+		codeResource, ok = r.store.Take("line", "oauth_code", code)
+		if !ok {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "Authorization code is invalid or expired")
+			return
+		}
 		token, err := r.store.Create("line", "oauth_token", map[string]any{
 			"scope":      codeResource.Data["scope"],
 			"user_id":    codeResource.Data["user_id"],
@@ -1308,6 +1317,13 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 		}
 		return nil, err
 	}
+	var trailing json.RawMessage
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("unexpected trailing JSON value")
+		}
+		return nil, err
+	}
 	if payload == nil {
 		payload = map[string]any{}
 	}
@@ -1476,4 +1492,9 @@ func firstNonEmpty(values ...any) any {
 		return value
 	}
 	return nil
+}
+
+func clientIDMatches(resource state.Resource, got string) bool {
+	want, _ := resource.Data["client_id"].(string)
+	return want == "" || got == want
 }

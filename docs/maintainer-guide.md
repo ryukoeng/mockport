@@ -40,6 +40,34 @@ scripts/verify-release-artifacts.sh 0.1.0-alpha "$tmpdir"
 
 Follow `SECURITY.md`. Do not request real secrets or production provider traffic to reproduce a report.
 
+## Spec-First TDD Development
+
+Mockport development must start from a written contract, not from an implementation shortcut. For adapter work, the human-facing contract lives in `docs/adapters/<adapter>.md`; compatibility evidence lives in `compat/fixtures/<adapter>/`, `compat/manifests/`, SDK/client contract tests, and generated compatibility reports.
+
+Use this loop for new behavior and bug fixes:
+
+1. Define the selected public provider surface in the adapter spec. Include supported paths, request/response shape, status codes, headers, state behavior, scenarios, known gaps, and explicit non-goals.
+2. Add or update sanitized fixtures when public documentation, official schema examples, or SDK/client behavior is needed to explain the expected contract.
+3. Write the failing test first. Prefer the narrowest useful RED test: adapter package tests for provider-shaped responses, server tests for routing and mounting, CLI tests for discovery/help behavior, SDK contract tests for client compatibility, and report tests for compatibility metadata.
+4. Run the targeted test and confirm it fails for the expected reason before changing production code.
+5. Implement the smallest provider-scoped behavior needed to pass the test. Do not add broad provider surface only to make examples pass.
+6. Refactor only while keeping the new test and existing package tests green.
+7. Synchronize the public claim: adapter `Metadata()`, `mockport add <adapter>`, `mockport help <service>`, docs, fixtures, manifests, support matrix, and generated compatibility reports must describe the same surface.
+8. Run the relevant package tests, then the repo gates listed in the release process before merging.
+
+Recommended TDD command sequence:
+
+```bash
+/usr/local/go/bin/go test ./adapters/<adapter>
+/usr/local/go/bin/go test ./internal/server ./internal/cli ./internal/config
+/usr/local/go/bin/go test ./...
+/usr/local/go/bin/go vet ./...
+go test -race ./...
+bash scripts/check-go-engineering.sh
+```
+
+When SDK/client compatibility is part of the claim, also run the relevant checks under `contract/sdk` and regenerate compatibility reports before updating checked-in report artifacts.
+
 ## Dependency And CI Maintenance
 
 - Dependabot covers GitHub Actions, Go modules, the experimental npm wrapper, and test-only SDK contracts.
@@ -53,6 +81,7 @@ Test-only SDK dependencies are pinned in `contract/sdk` and must stay out of the
 
 Adapter pull requests must include:
 
+- A spec-first TDD trail: adapter spec change, failing regression or contract test, implementation, and final verification evidence.
 - Adapter metadata: name, base path, maturity, capabilities, endpoints, and scenarios.
 - HTTP tests for success, auth error, rate limit, and at least one meaningful failure scenario.
 - Example config and user-facing docs when the adapter is exposed publicly.
@@ -63,3 +92,12 @@ Adapter pull requests must include:
 Keep provider-shaped helpers local until `docs/adapter-helper-policy.md` says the abstraction threshold has been met.
 
 Future compatibility levels will be defined in Phase 14. Until then, adapter claims must stay at scenario-compatible or experimental unless stronger evidence exists.
+
+## Mockport Development Invariants
+
+- Adapter specs are Mockport contracts, not copies of provider documentation. Rewrite official behavior into the selected local surface and keep provider internals, undocumented behavior, console policy, billing networks, delivery guarantees, fraud checks, and real model quality out of scope.
+- Fake state must be deterministic, local-only, restart-resettable unless explicitly documented, and safe under concurrent HTTP handlers. `go test -race` is required, but a green race detector does not prove workflow invariants; add tests for ordering-sensitive state transitions when set/delete/default or create/retrieve/list behavior can interleave.
+- Public examples, fixtures, configs, and tests must use AI-safe fake credentials, localhost URLs, deterministic IDs, and sanitized payloads only.
+- Compatibility maturity must never be raised by docs alone. Promotion requires matching implementation, metadata, tests, fixtures or SDK evidence, known-gap documentation, and generated reports.
+- Runtime registration and docs must not drift. `internal/cli/builtin.go`, adapter `Metadata()`, generated config/env output, service help, support matrix, and compatibility reports should be checked together whenever an adapter surface changes.
+- Keep abstractions provider-shaped until duplication is proven. Shared helpers are acceptable only when they preserve provider-specific response shape, headers, errors, and scenario defaults through regression tests.

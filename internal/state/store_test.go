@@ -77,6 +77,29 @@ func TestStoreResetClearsResourcesAndCounters(t *testing.T) {
 	}
 }
 
+func TestStoreTakeReturnsAndDeletesResource(t *testing.T) {
+	store := NewStore()
+	created, err := store.Create("github-oauth", "oauth_code", map[string]any{
+		"metadata": map[string]any{"client_id": "mockport_github_client"},
+	})
+	if err != nil {
+		t.Fatalf("create resource: %v", err)
+	}
+
+	taken, ok := store.Take("github-oauth", "oauth_code", created.ID)
+	if !ok {
+		t.Fatal("take returned false")
+	}
+	taken.Data["metadata"].(map[string]any)["client_id"] = "mutated"
+
+	if _, ok := store.Get("github-oauth", "oauth_code", created.ID); ok {
+		t.Fatal("taken resource still exists")
+	}
+	if _, ok := store.Take("github-oauth", "oauth_code", created.ID); ok {
+		t.Fatal("second take returned true")
+	}
+}
+
 func TestStoreCapsResourcesPerScope(t *testing.T) {
 	store := NewStore()
 	for i := 0; i < MaxResourcesPerScope+5; i++ {
@@ -152,5 +175,37 @@ func TestStoreDeepClonesNestedData(t *testing.T) {
 	again, _ := store.Get("stripe", "checkout_session", created.ID)
 	if again.Data["metadata"].(map[string]any)["order"] != "one" {
 		t.Fatalf("stored data mutated through get clone: %#v", again.Data)
+	}
+}
+
+func TestStoreUpdateDeepClonesPatchData(t *testing.T) {
+	store := NewStore()
+	created, err := store.Create("line", "rich_menu", map[string]any{"name": "menu"})
+	if err != nil {
+		t.Fatalf("create resource: %v", err)
+	}
+	patch := map[string]any{
+		"metadata": map[string]any{"order": "one"},
+		"items":    []any{map[string]any{"sku": "sku_1"}},
+	}
+
+	updated, err := store.Update("line", "rich_menu", created.ID, patch)
+	if err != nil {
+		t.Fatalf("update resource: %v", err)
+	}
+	patch["metadata"].(map[string]any)["order"] = "patch-mutated"
+	patch["items"].([]any)[0].(map[string]any)["sku"] = "patch-mutated"
+	updated.Data["metadata"].(map[string]any)["order"] = "result-mutated"
+	updated.Data["items"].([]any)[0].(map[string]any)["sku"] = "result-mutated"
+
+	got, ok := store.Get("line", "rich_menu", created.ID)
+	if !ok {
+		t.Fatal("resource not found")
+	}
+	if got.Data["metadata"].(map[string]any)["order"] != "one" {
+		t.Fatalf("metadata was mutated through update patch/result: %#v", got.Data)
+	}
+	if got.Data["items"].([]any)[0].(map[string]any)["sku"] != "sku_1" {
+		t.Fatalf("items were mutated through update patch/result: %#v", got.Data)
 	}
 }

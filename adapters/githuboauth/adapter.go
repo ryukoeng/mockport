@@ -163,6 +163,15 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 			writeOAuthError(w, http.StatusBadRequest, "redirect_uri_mismatch", "The redirect_uri does not match the authorization request.")
 			return
 		}
+		if !clientIDMatches(codeResource, req.Form.Get("client_id")) {
+			writeOAuthError(w, http.StatusUnauthorized, "incorrect_client_credentials", "The client_id does not match the authorization request.")
+			return
+		}
+		codeResource, ok = r.store.Take("github-oauth", "oauth_code", code)
+		if !ok {
+			writeOAuthError(w, http.StatusBadRequest, "bad_verification_code", "The code passed is incorrect or expired.")
+			return
+		}
 		token, err := r.store.Create("github-oauth", "oauth_token", map[string]any{
 			"client_id":  codeResource.Data["client_id"],
 			"scope":      codeResource.Data["scope"],
@@ -263,6 +272,11 @@ func splitScopes(value any) []string {
 	return strings.FieldsFunc(scope, func(r rune) bool {
 		return r == ' ' || r == ','
 	})
+}
+
+func clientIDMatches(resource state.Resource, got string) bool {
+	want, _ := resource.Data["client_id"].(string)
+	return want == "" || got == want
 }
 
 func redirectWithQuery(w http.ResponseWriter, req *http.Request, redirectURI string, values map[string]string) {

@@ -19,10 +19,16 @@ type idempotencyRecord struct {
 type IdempotencyStore struct {
 	mu      sync.Mutex
 	records map[string]idempotencyRecord
+	order   map[string][]string
 }
 
+const MaxIdempotencyRecordsPerScope = 1000
+
 func NewIdempotencyStore() *IdempotencyStore {
-	return &IdempotencyStore{records: map[string]idempotencyRecord{}}
+	return &IdempotencyStore{
+		records: map[string]idempotencyRecord{},
+		order:   map[string][]string{},
+	}
 }
 
 func (s *IdempotencyStore) Remember(scope, key, fingerprint string, response IdempotentResponse) (bool, IdempotentResponse, error) {
@@ -34,11 +40,13 @@ func (s *IdempotencyStore) Remember(scope, key, fingerprint string, response Ide
 	defer s.mu.Unlock()
 
 	s.initLocked()
-	recordKey := scope + "\x00" + key
+	recordKey := idempotencyRecordKey(scope, key)
 	if record, ok := s.records[recordKey]; ok {
 		return replayRecord(scope, key, fingerprint, record)
 	}
 	s.records[recordKey] = idempotencyRecord{fingerprint: fingerprint, response: cloneResponse(response)}
+	s.order[scope] = append(s.order[scope], recordKey)
+	s.evictOldestLocked(scope)
 	return false, cloneResponse(response), nil
 }
 
@@ -50,7 +58,7 @@ func (s *IdempotencyStore) Lookup(scope, key, fingerprint string) (bool, Idempot
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	record, ok := s.records[scope+"\x00"+key]
+	record, ok := s.records[idempotencyRecordKey(scope, key)]
 	if !ok {
 		return false, IdempotentResponse{}, nil
 	}
@@ -99,6 +107,26 @@ func (s *IdempotencyStore) initLocked() {
 	if s.records == nil {
 		s.records = map[string]idempotencyRecord{}
 	}
+	if s.order == nil {
+		s.order = map[string][]string{}
+	}
+}
+
+func (s *IdempotencyStore) evictOldestLocked(scope string) {
+	ordered := s.order[scope]
+	if MaxIdempotencyRecordsPerScope <= 0 || len(ordered) <= MaxIdempotencyRecordsPerScope {
+		return
+	}
+
+	evictCount := len(ordered) - MaxIdempotencyRecordsPerScope
+	for _, recordKey := range ordered[:evictCount] {
+		delete(s.records, recordKey)
+	}
+	s.order[scope] = append([]string(nil), ordered[evictCount:]...)
+}
+
+func idempotencyRecordKey(scope, key string) string {
+	return scope + "\x00" + key
 }
 
 func isEmpty(value any) bool {
