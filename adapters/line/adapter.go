@@ -211,20 +211,51 @@ func (r *routes) setDefaultRichMenu(id string) {
 	r.defaultRichMenuID = id
 }
 
-func (r *routes) getDefaultRichMenu() string {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.defaultRichMenuID
-}
-
-// clearDefaultRichMenuIf clears the default rich menu only when it still points
-// at id, keeping the compare-and-clear atomic against concurrent updates.
-func (r *routes) clearDefaultRichMenuIf(id string) {
+// deleteRichMenu removes a rich menu and clears the default pointer in the same
+// critical section, so the default can never be left referencing a menu that no
+// longer exists in the store.
+func (r *routes) deleteRichMenu(id string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.store.Delete("line", "rich_menu", id) {
+		return false
+	}
 	if r.defaultRichMenuID == id {
 		r.defaultRichMenuID = ""
 	}
+	return true
+}
+
+// setDefaultRichMenuChecked validates that the rich menu still exists with an
+// uploaded image and adopts it as the default within a single lock, closing the
+// check-then-set race against a concurrent delete. On success it returns
+// http.StatusOK with an empty message.
+func (r *routes) setDefaultRichMenuChecked(id string) (status int, message string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	resource, ok := r.store.Get("line", "rich_menu", id)
+	if !ok {
+		return http.StatusNotFound, "Not found"
+	}
+	if resource.Data["hasImage"] != true {
+		return http.StatusBadRequest, "must upload richmenu image before applying it to user"
+	}
+	r.defaultRichMenuID = id
+	return http.StatusOK, ""
+}
+
+// currentDefaultRichMenu returns the default rich menu id only while it still
+// exists in the store, so a concurrently deleted menu is never reported.
+func (r *routes) currentDefaultRichMenu() (string, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if r.defaultRichMenuID == "" {
+		return "", false
+	}
+	if _, ok := r.store.Get("line", "rich_menu", r.defaultRichMenuID); !ok {
+		return "", false
+	}
+	return r.defaultRichMenuID, true
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
@@ -925,11 +956,10 @@ func (r *routes) writeGetRichMenu(w http.ResponseWriter, id string) {
 }
 
 func (r *routes) writeDeleteRichMenu(w http.ResponseWriter, id string) {
-	if !r.store.Delete("line", "rich_menu", id) {
+	if !r.deleteRichMenu(id) {
 		writeLINEError(w, http.StatusNotFound, "Not found")
 		return
 	}
-	r.clearDefaultRichMenuIf(id)
 	writeEmptyJSON(w, http.StatusOK)
 }
 
@@ -959,22 +989,16 @@ func (r *routes) writeDownloadRichMenuImage(w http.ResponseWriter, path string) 
 }
 
 func (r *routes) writeSetDefaultRichMenu(w http.ResponseWriter, id string) {
-	resource, ok := r.store.Get("line", "rich_menu", id)
-	if !ok {
-		writeLINEError(w, http.StatusNotFound, "Not found")
+	if status, message := r.setDefaultRichMenuChecked(id); status != http.StatusOK {
+		writeLINEError(w, status, message)
 		return
 	}
-	if resource.Data["hasImage"] != true {
-		writeLINEError(w, http.StatusBadRequest, "must upload richmenu image before applying it to user")
-		return
-	}
-	r.setDefaultRichMenu(id)
 	writeEmptyJSON(w, http.StatusOK)
 }
 
 func (r *routes) writeGetDefaultRichMenu(w http.ResponseWriter) {
-	id := r.getDefaultRichMenu()
-	if id == "" {
+	id, ok := r.currentDefaultRichMenu()
+	if !ok {
 		writeLINEError(w, http.StatusNotFound, "no default richmenu")
 		return
 	}
