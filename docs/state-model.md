@@ -26,6 +26,7 @@ The idempotency primitive stores a provider-neutral request fingerprint and resp
 - Repeated request with the same fingerprint replays the stored response.
 - Repeated request with a different fingerprint returns an idempotency conflict error.
 - Empty idempotency keys are ignored by the primitive so adapters can decide whether a provider requires them.
+- Records are retained up to `MaxIdempotencyRecordsPerScope` per scope. When a scope exceeds that limit, the oldest records are evicted deterministically.
 
 Adapters own provider-shaped error responses. The shared primitive only identifies replay vs conflict.
 
