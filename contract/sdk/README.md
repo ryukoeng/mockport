@@ -1,5 +1,7 @@
 # Mockport SDK Contract Harness
 
+[日本語版](README.ja.md)
+
 This workspace is test-only. It keeps future official SDK contract tests outside the Go runtime and outside the experimental npm wrapper.
 
 ## Commands
