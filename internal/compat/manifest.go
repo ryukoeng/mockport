@@ -33,6 +33,7 @@ type Manifest struct {
 	ProviderVersion string                `json:"provider_version"`
 	Maturity        string                `json:"maturity,omitempty"`
 	SDKVersions     []SDKVersion          `json:"sdk_versions,omitempty"`
+	ClientEvidence  []string              `json:"client_evidence,omitempty"`
 	Levels          []Level               `json:"levels,omitempty"`
 	Endpoints       []Endpoint            `json:"endpoints,omitempty"`
 	Scenarios       []Scenario            `json:"scenarios,omitempty"`
@@ -122,6 +123,7 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 	for _, sdk := range meta.SDKVersions {
 		manifest.SDKVersions = append(manifest.SDKVersions, SDKVersion{Name: sdk.Name, Version: sdk.Version})
 	}
+	manifest.ClientEvidence = append(manifest.ClientEvidence, meta.ClientEvidence...)
 	for _, endpoint := range meta.Endpoints {
 		manifest.Endpoints = append(manifest.Endpoints, Endpoint{
 			ID:        endpointID(endpoint.Method, endpoint.Path),
