@@ -8,6 +8,7 @@ import (
 
 	"github.com/albert-einshutoin/mockport/adapters/stripe"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/compat"
 	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
 )
@@ -89,6 +90,9 @@ func TestReportEndpointReturnsRequestsAndSafety(t *testing.T) {
 	if snapshot.Compatibility[0].SDKCoverage != 100 || snapshot.Compatibility[0].StateCoverage != 100 || snapshot.Compatibility[0].ErrorCoverage != 100 {
 		t.Fatalf("compatibility coverage = %#v", snapshot.Compatibility[0])
 	}
+	if !snapshot.Compatibility[0].PromotionEligible {
+		t.Fatalf("stripe should be promotion-eligible: %#v", snapshot.Compatibility[0])
+	}
 	if len(snapshot.StateCoverage) != 1 || snapshot.StateCoverage[0].Adapter != "stripe" || !snapshot.StateCoverage[0].Idempotency {
 		t.Fatalf("state coverage = %#v", snapshot.StateCoverage)
 	}
@@ -154,5 +158,37 @@ func TestStateCoverageFromAdapterMetadata(t *testing.T) {
 func TestStateCoverageSkipsStatelessAdapterMetadata(t *testing.T) {
 	if got, ok := stateCoverage(adapter.Metadata{Name: "openai"}); ok {
 		t.Fatalf("state coverage = %#v, want skipped", got)
+	}
+}
+
+// TestCompatibilityStatusReportsPromotionEligibility pins that the PromotionEligible
+// value emitted in the report is computed from internal/compat.CanPromote as the single
+// source of truth. In particular, a declaration missing a hierarchy level (e.g.
+// LevelWorkflow) must be emitted as not promotion-eligible even when coverage is full.
+func TestCompatibilityStatusReportsPromotionEligibility(t *testing.T) {
+	eligible := compat.Manifest{
+		Adapter:         "demo",
+		Maturity:        "workflow-compatible",
+		ProviderVersion: "1",
+		Levels:          []compat.Level{compat.LevelWire, compat.LevelWorkflow, compat.LevelState, compat.LevelError},
+		Endpoints:       []compat.Endpoint{{ID: "one", Supported: true}},
+		Scenarios: []compat.Scenario{
+			{Name: "ok", BuiltIn: true, Supported: true},
+			{Name: "failed", BuiltIn: true, Supported: true},
+		},
+		StateEvidence: &compat.StateEvidence{StatefulResources: []string{"resource"}, Reset: true},
+	}
+	if status := compatibilityStatus(eligible); !status.PromotionEligible {
+		t.Fatalf("workflow-compatible manifest with full evidence should be promotion-eligible: %#v", status)
+	}
+
+	// Declares provider-compatible but lacks LevelWorkflow. Coverage can be full, yet it
+	// must not be eligible because it fails CanPromote's hierarchy condition.
+	ineligible := eligible
+	ineligible.Maturity = "provider-compatible"
+	ineligible.Levels = []compat.Level{compat.LevelWire, compat.LevelSDK, compat.LevelState, compat.LevelError, compat.LevelContract}
+	ineligible.SDKVersions = []compat.SDKVersion{{Name: "lib", Version: "1.0.0"}}
+	if status := compatibilityStatus(ineligible); status.PromotionEligible {
+		t.Fatalf("provider-compatible without workflow level must not be promotion-eligible: %#v", status)
 	}
 }

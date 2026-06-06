@@ -107,7 +107,11 @@ func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
 		SDKCoverage:      score.SDKCoverage,
 		StateCoverage:    score.StateCoverage,
 		ErrorCoverage:    score.ErrorCoverage,
-		ProviderVersion:  manifest.ProviderVersion,
+		// Single source of truth for the published report: compute on the Go side
+		// whether the declared maturity satisfies CanPromote. The validator trusts
+		// this value and does not re-implement the scoring logic.
+		PromotionEligible: compat.CanPromote(manifest, score, manifest.Maturity),
+		ProviderVersion:   manifest.ProviderVersion,
 	}
 	for _, sdk := range manifest.SDKVersions {
 		status.SDKVersions = append(status.SDKVersions, sdk.Name+"@"+sdk.Version)
