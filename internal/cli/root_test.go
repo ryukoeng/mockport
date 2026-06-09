@@ -21,6 +21,9 @@ func TestRootCommandShowsHelp(t *testing.T) {
 	if !strings.Contains(got, "Secret-free service emulation") {
 		t.Fatalf("help output missing product description: %q", got)
 	}
+	if !strings.Contains(got, "healthcheck") {
+		t.Fatalf("help output missing healthcheck command: %q", got)
+	}
 }
 
 func TestVersionCommandPrintsVersion(t *testing.T) {
