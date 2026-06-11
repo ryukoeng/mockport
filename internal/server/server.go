@@ -12,12 +12,6 @@ import (
 	"github.com/albert-einshutoin/mockport/internal/report"
 )
 
-func NewHandler() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthHandler)
-	return mux
-}
-
 func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.Recorder) (http.Handler, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)

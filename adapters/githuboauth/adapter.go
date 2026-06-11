@@ -1,7 +1,6 @@
 package githuboauth
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -326,7 +325,7 @@ func writeAPIError(w http.ResponseWriter, status int, message string) {
 
 func parseOAuthForm(w http.ResponseWriter, req *http.Request) bool {
 	if err := req.ParseForm(); err != nil {
-		if httpx.IsRequestBodyTooLarge(err) || errors.Is(err, httpx.ErrRequestBodyTooLarge) {
+		if httpx.IsRequestBodyTooLarge(err) {
 			writeOAuthError(w, http.StatusRequestEntityTooLarge, "request_too_large", "Request body is too large.")
 			return false
 		}

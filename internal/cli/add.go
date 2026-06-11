@@ -31,9 +31,6 @@ func newAddCommand() *cobra.Command {
 				return fmt.Errorf("parse %s: %w", configPath, err)
 			}
 			config.ApplyDefaults(&cfg)
-			if cfg.Adapters == nil {
-				cfg.Adapters = map[string]config.AdapterConfig{}
-			}
 			for _, spec := range specs {
 				cfg.Adapters[spec.Name] = config.AdapterConfig{
 					Enabled:    true,

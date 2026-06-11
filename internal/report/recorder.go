@@ -81,9 +81,6 @@ func (r *Recorder) RecordRequestWithDetails(method, path string, status int, ada
 	defer r.mu.Unlock()
 	r.nextID++
 	now := r.now
-	if now == nil {
-		now = time.Now
-	}
 	r.requests = append(r.requests, Request{
 		ID:        r.nextID,
 		Timestamp: now().UTC().Format(time.RFC3339),

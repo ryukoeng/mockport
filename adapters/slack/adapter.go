@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -385,7 +384,7 @@ func writeSlackError(w http.ResponseWriter, status int, code string) {
 
 func parseSlackForm(w http.ResponseWriter, req *http.Request) bool {
 	if err := req.ParseForm(); err != nil {
-		if httpx.IsRequestBodyTooLarge(err) || errors.Is(err, httpx.ErrRequestBodyTooLarge) {
+		if httpx.IsRequestBodyTooLarge(err) {
 			writeSlackError(w, http.StatusRequestEntityTooLarge, "request_too_large")
 			return false
 		}
