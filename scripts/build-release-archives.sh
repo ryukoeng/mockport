@@ -42,7 +42,8 @@ build_one() {
   (
     cd "$ROOT_DIR"
     GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 "$GO_BIN" build \
-      -ldflags "-X github.com/albert-einshutoin/mockport/internal/cli.Version=${VERSION}" \
+      -trimpath \
+      -ldflags "-s -w -X github.com/albert-einshutoin/mockport/internal/cli.Version=${VERSION}" \
       -o "$binary" ./cmd/mockport
   )
   cp "$ROOT_DIR/README.md" "$work_dir/README.md"
