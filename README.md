@@ -31,6 +31,7 @@ Then verify the local API:
 curl http://localhost:43101/health
 curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 curl http://localhost:43101/_mockport/report
+mockport healthcheck
 ```
 
 CLI workflow from a built binary:
@@ -73,6 +74,7 @@ bash scripts/smoke-empty-dir.sh
 ```
 
 The smoke test builds the local Docker image, creates a temporary empty directory, runs `mockport init --adapter stripe`, starts Docker Compose, checks `/health`, posts a Stripe-like checkout request, and prints `mockport report`.
+Docker images now expose a built-in healthcheck using `mockport healthcheck` so container health is evaluated without shell tools.
 
 ## Docker
 

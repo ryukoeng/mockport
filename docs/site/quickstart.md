@@ -6,6 +6,7 @@
 mockport init --adapter stripe
 docker compose -f docker-compose.mockport.yml up
 curl http://localhost:43101/health
+mockport healthcheck
 ```
 
 For multiple adapters:
