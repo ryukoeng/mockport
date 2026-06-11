@@ -1,7 +1,15 @@
 "use strict";
 
+const fs = require("node:fs");
+const path = require("node:path");
 const OpenAI = require("openai");
 const { toFile } = require("openai/uploads");
+
+function openAISDKLabel() {
+  const packagePath = path.join(path.dirname(require.resolve("openai")), "package.json");
+  const packageData = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  return `openai@${packageData.version}`;
+}
 
 async function runOpenAISmoke(options) {
   const client = new OpenAI({
@@ -60,7 +68,7 @@ async function runOpenAISmoke(options) {
     provider: "openai",
     baseURL: options.baseURL,
     status: "sdk-ok",
-    sdk: "openai@6.39.1",
+    sdk: openAISDKLabel(),
     chatCompletion: chat.id,
     response: response.id,
     embedding: embedding.data[0].embedding.length,
