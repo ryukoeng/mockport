@@ -48,7 +48,15 @@ func (s *IdempotencyStore) Do(scope, key, fingerprint string, run func() (Idempo
 
 	recordKey := idempotencyRecordKey(scope, key)
 	s.mu.Lock()
-	s.initLocked()
+	if s.records == nil {
+		s.records = map[string]idempotencyRecord{}
+	}
+	if s.order == nil {
+		s.order = map[string][]string{}
+	}
+	if s.inFlight == nil {
+		s.inFlight = map[string]*idempotencyCall{}
+	}
 	if record, ok := s.records[recordKey]; ok {
 		replayed, response, err := replayRecord(scope, key, fingerprint, record)
 		s.mu.Unlock()
@@ -104,7 +112,15 @@ func (s *IdempotencyStore) Remember(scope, key, fingerprint string, response Ide
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.initLocked()
+	if s.records == nil {
+		s.records = map[string]idempotencyRecord{}
+	}
+	if s.order == nil {
+		s.order = map[string][]string{}
+	}
+	if s.inFlight == nil {
+		s.inFlight = map[string]*idempotencyCall{}
+	}
 	recordKey := idempotencyRecordKey(scope, key)
 	if record, ok := s.records[recordKey]; ok {
 		return replayRecord(scope, key, fingerprint, record)
@@ -166,18 +182,6 @@ func RequireFields(payload map[string]any, fields ...string) error {
 		return &ValidationError{MissingFields: missing}
 	}
 	return nil
-}
-
-func (s *IdempotencyStore) initLocked() {
-	if s.records == nil {
-		s.records = map[string]idempotencyRecord{}
-	}
-	if s.order == nil {
-		s.order = map[string][]string{}
-	}
-	if s.inFlight == nil {
-		s.inFlight = map[string]*idempotencyCall{}
-	}
 }
 
 func (s *IdempotencyStore) evictOldestLocked(scope string) {

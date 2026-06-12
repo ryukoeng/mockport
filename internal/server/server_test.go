@@ -6,11 +6,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
 )
 
 func TestHealthReturnsOK(t *testing.T) {
-	handler := NewHandler()
+	handler, err := NewConfiguredHandler(config.Config{}, adapter.NewRegistry(), report.NewRecorder())
+	if err != nil {
+		t.Fatalf("configure handler: %v", err)
+	}
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
 

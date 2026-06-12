@@ -171,7 +171,7 @@ func (rt *routes) createStatefulResource(w http.ResponseWriter, r *http.Request,
 	scope := "stripe:" + resourceType
 	fingerprint := requestFingerprint(r)
 
-	replayed, idempotentResponse, err := rt.idempotency.Do(scope, r.Header.Get("Idempotency-Key"), fingerprint, func() (state.IdempotentResponse, error) {
+	_, idempotentResponse, err := rt.idempotency.Do(scope, r.Header.Get("Idempotency-Key"), fingerprint, func() (state.IdempotentResponse, error) {
 		resource, err := rt.store.Create("stripe", resourceType, body)
 		if err != nil {
 			return state.IdempotentResponse{}, err
@@ -187,10 +187,6 @@ func (rt *routes) createStatefulResource(w http.ResponseWriter, r *http.Request,
 			return
 		}
 		rt.writeStripeError(w, http.StatusInternalServerError, "api_error", "mockport_state_error", err.Error())
-		return
-	}
-	if replayed {
-		rt.writeJSON(w, idempotentResponse.Status, idempotentResponse.Body)
 		return
 	}
 	rt.writeJSON(w, idempotentResponse.Status, idempotentResponse.Body)
