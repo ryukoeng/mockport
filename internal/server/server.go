@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/compat"
@@ -25,8 +26,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	var matrix []report.BehaviorMatrixEntry
 	var compatibility []report.CompatibilityStatus
 	var state []report.StateCoverageStatus
-	for warningIdx := range cfg.SafetyWarnings {
-		warning := cfg.SafetyWarnings[warningIdx]
+	for _, warning := range cfg.SafetyWarnings {
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
 	}
 
@@ -190,7 +190,7 @@ func stateCoverage(meta adapter.Metadata) (report.StateCoverageStatus, bool) {
 
 func classifyAdapter(path string, adapters []report.AdapterStatus) (string, string) {
 	for _, adapter := range adapters {
-		if adapter.BasePath != "" && (path == adapter.BasePath || len(path) > len(adapter.BasePath) && path[:len(adapter.BasePath)+1] == adapter.BasePath+"/") {
+		if adapter.BasePath != "" && (path == adapter.BasePath || strings.HasPrefix(path, adapter.BasePath+"/")) {
 			return adapter.Name, adapter.Scenario
 		}
 	}

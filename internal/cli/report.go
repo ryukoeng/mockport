@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -36,13 +35,11 @@ func newReportCommand() *cobra.Command {
 			case "text":
 				fmt.Fprint(cmd.OutOrStdout(), report.RenderText(snapshot))
 			case "json":
-				var buf bytes.Buffer
-				encoder := json.NewEncoder(&buf)
+				encoder := json.NewEncoder(cmd.OutOrStdout())
 				encoder.SetIndent("", "  ")
 				if err := encoder.Encode(snapshot); err != nil {
 					return fmt.Errorf("encode report: %w", err)
 				}
-				fmt.Fprint(cmd.OutOrStdout(), buf.String())
 			default:
 				return fmt.Errorf("unsupported report format %q", format)
 			}
