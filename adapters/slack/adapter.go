@@ -258,7 +258,7 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 		}
 		messages = append(messages, messageBody(resource.ID, resource.Data))
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "messages": messages})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "messages": messages})
 }
 
 func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
@@ -282,7 +282,7 @@ func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 	}
 	switch payload["type"] {
 	case "url_verification":
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"challenge": payload["challenge"]})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"challenge": payload["challenge"]})
 	case "event_callback":
 		if event, ok := payload["event"].(map[string]any); ok && event["type"] == "message" {
 			channel, _ := event["channel"].(string)
@@ -306,7 +306,7 @@ func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"ok": true})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"ok": true})
 	default:
 		writeSlackError(w, http.StatusOK, "unsupported_event")
 	}

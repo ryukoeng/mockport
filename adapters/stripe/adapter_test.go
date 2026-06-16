@@ -16,7 +16,7 @@ func TestCheckoutSessionSuccess(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	var body map[string]interface{}
+	var body map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
@@ -282,7 +282,7 @@ func TestWebhookSender(t *testing.T) {
 		if r.Header.Get("Stripe-Signature") == "" {
 			t.Error("missing Stripe-Signature header")
 		}
-		var body map[string]interface{}
+		var body map[string]any
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			t.Errorf("decode webhook body: %v", err)
 		}

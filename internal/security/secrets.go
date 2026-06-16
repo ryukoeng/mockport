@@ -63,12 +63,13 @@ func ScanPublicEnv(content string) []PublicEnvFinding {
 		}
 		key = strings.TrimSpace(key)
 		value = NormalizePublicSafetyValue(value)
+		lower := strings.ToLower(value)
 		switch {
 		case LooksLikeSecret(value):
 			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "real-looking provider secret"})
 		case LooksLikeExternalServiceURL(value):
 			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "production provider URL"})
-		case strings.Contains(strings.ToLower(value), "changeme") || strings.Contains(strings.ToLower(value), "replace_me"):
+		case strings.Contains(lower, "changeme") || strings.Contains(lower, "replace_me"):
 			findings = append(findings, PublicEnvFinding{Line: idx + 1, Key: key, Reason: "ambiguous placeholder"})
 		}
 	}

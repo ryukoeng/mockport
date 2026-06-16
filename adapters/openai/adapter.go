@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -90,7 +91,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
 	case req.Method == http.MethodPost && path == "/v1/chat/completions":
 		r.writeCompletion(w, req, "chat.completion")
 	case req.Method == http.MethodPost && path == "/v1/responses":
@@ -339,13 +340,13 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 	var payload map[string]any
 	decoder := json.NewDecoder(req.Body)
 	if err := decoder.Decode(&payload); err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return map[string]any{}, nil
 		}
 		return nil, err
 	}
 	var trailing json.RawMessage
-	if err := decoder.Decode(&trailing); err != io.EOF {
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return nil, fmt.Errorf("unexpected trailing JSON value")
 		}
@@ -407,10 +408,10 @@ func writeChatCompletionStream(w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.WriteHeader(http.StatusOK)
-	chunk := map[string]interface{}{
+	chunk := map[string]any{
 		"id":     "mockport_openai_response",
 		"object": "chat.completion.chunk",
-		"choices": []map[string]interface{}{{
+		"choices": []map[string]any{{
 			"index": 0,
 			"delta": map[string]string{
 				"content": "Mockport response",
