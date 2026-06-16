@@ -241,7 +241,7 @@
       "score": 100,
       "provider_version": "2025-10-29.clover",
       "sdk_versions": [
-        "stripe@22.2.0"
+        "stripe@22.2.1"
       ],
       "client_evidence": [],
       "endpoint_coverage": 100,

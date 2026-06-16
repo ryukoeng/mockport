@@ -57,7 +57,7 @@ async function runStripeSmoke(options) {
     provider: "stripe",
     baseURL: options.baseURL,
     status: "sdk-ok",
-    sdk: "stripe@22.2.0",
+    sdk: "stripe@22.2.1",
     checkoutSession: checkout.id,
     paymentIntent: paymentIntent.id,
     customer: customer.id,
