@@ -228,6 +228,13 @@ func (r *routes) deleteRichMenu(id string) bool {
 	return true
 }
 
+func (r *routes) resetSingletonState() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.webhookEndpoint = ""
+	r.defaultRichMenuID = ""
+}
+
 // setDefaultRichMenuChecked validates that the rich menu still exists with an
 // uploaded image and adopts it as the default within a single lock, closing the
 // check-then-set race against a concurrent delete. On success it returns
@@ -632,10 +639,11 @@ func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
 		writeLINEError(w, http.StatusForbidden, "line reset can only be triggered from loopback")
 		return
 	}
+	r.resetSingletonState()
 	resourceTypes := r.store.ResetAll("line")
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"reset":         true,
-		"adapter":       "line",
+		"reset":          true,
+		"adapter":        "line",
 		"resource_types": resourceTypes,
 	})
 }

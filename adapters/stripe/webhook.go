@@ -77,8 +77,8 @@ func (rt *routes) handleReset(w http.ResponseWriter, r *http.Request) {
 	resourceTypes := rt.store.ResetAll("stripe")
 	rt.idempotency.ResetAll()
 	rt.writeJSON(w, http.StatusOK, map[string]any{
-		"reset":         true,
-		"adapter":       "stripe",
+		"reset":          true,
+		"adapter":        "stripe",
 		"resource_types": resourceTypes,
 	})
 }

@@ -71,19 +71,19 @@ func (rt *routes) routes() []routeEntry {
 			}},
 		}
 	}
-		routes := []routeEntry{
-			{method: http.MethodPost, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writeCheckoutSession(w, r) }},
-			{method: http.MethodGet, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "checkout_session") }},
-			{method: http.MethodGet, path: "/v1/checkout/sessions/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
-				rt.writeResource(w, "checkout_session", strings.TrimPrefix(requestPath, "/v1/checkout/sessions/"), fallbackCheckoutSession)
-			}},
-			{method: http.MethodPost, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writePaymentIntent(w, r) }},
-			{method: http.MethodGet, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "payment_intent") }},
-			{method: http.MethodGet, path: "/v1/payment_intents/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
-				rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
-			}},
-			{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
-			{method: http.MethodPost, path: "/test/reset", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.handleReset(w, r) }},
+	routes := []routeEntry{
+		{method: http.MethodPost, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writeCheckoutSession(w, r) }},
+		{method: http.MethodGet, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "checkout_session") }},
+		{method: http.MethodGet, path: "/v1/checkout/sessions/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
+			rt.writeResource(w, "checkout_session", strings.TrimPrefix(requestPath, "/v1/checkout/sessions/"), fallbackCheckoutSession)
+		}},
+		{method: http.MethodPost, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writePaymentIntent(w, r) }},
+		{method: http.MethodGet, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "payment_intent") }},
+		{method: http.MethodGet, path: "/v1/payment_intents/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
+			rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
+		}},
+		{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
+		{method: http.MethodPost, path: "/test/reset", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.handleReset(w, r) }},
 	}
 	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)...)
 	routes = append(routes, resource("product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})...)

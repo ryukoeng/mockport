@@ -132,8 +132,8 @@ func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
 	}
 	resourceTypes := r.store.ResetAll("github-oauth")
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"reset":         true,
-		"adapter":       "github-oauth",
+		"reset":          true,
+		"adapter":        "github-oauth",
 		"resource_types": resourceTypes,
 	})
 }

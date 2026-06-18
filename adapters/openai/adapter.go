@@ -122,8 +122,8 @@ func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
 	}
 	resourceTypes := r.store.ResetAll("openai")
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"reset":         true,
-		"adapter":       "openai",
+		"reset":          true,
+		"adapter":        "openai",
 		"resource_types": resourceTypes,
 	})
 }

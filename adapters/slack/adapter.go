@@ -121,8 +121,8 @@ func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
 	}
 	resourceTypes := r.store.ResetAll("slack")
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"reset":         true,
-		"adapter":       "slack",
+		"reset":          true,
+		"adapter":        "slack",
 		"resource_types": resourceTypes,
 	})
 }
