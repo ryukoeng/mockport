@@ -255,11 +255,61 @@ func TestMetadata(t *testing.T) {
 	if meta.ProviderVersion != "2025-02-01" || len(meta.SDKVersions) != 1 {
 		t.Fatalf("compat metadata = %#v", meta)
 	}
-	if len(meta.Scenarios) < 5 || len(meta.Endpoints) < 8 {
+	if len(meta.Scenarios) < 5 || len(meta.Endpoints) < 9 {
 		t.Fatalf("metadata too small: %#v", meta)
 	}
 	if !meta.Reset || len(meta.StatefulResources) != 5 {
 		t.Fatalf("state metadata = %#v", meta)
+	}
+}
+
+func TestOpenAIResetClearsState(t *testing.T) {
+	mux := newOpenAIMux(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+
+	response := serveOpenAIRequest(mux, http.MethodPost, "/openai/v1/responses", `{"model":"gpt-mockport","input":"hello"}`)
+	if response.Code != http.StatusOK {
+		t.Fatalf("response create status = %d, body=%s", response.Code, response.Body.String())
+	}
+	var created map[string]any
+	if err := json.Unmarshal(response.Body.Bytes(), &created); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	responseID, _ := created["id"].(string)
+
+	lookup := serveOpenAIRequest(mux, http.MethodGet, "/openai/v1/responses/"+responseID, "")
+	if lookup.Code != http.StatusOK {
+		t.Fatalf("response lookup before reset status = %d, body=%s", lookup.Code, lookup.Body.String())
+	}
+
+	reset := httptest.NewRequest(http.MethodPost, "/openai/test/reset", nil)
+	reset.RemoteAddr = "127.0.0.1:12345"
+	resetRec := httptest.NewRecorder()
+	mux.ServeHTTP(resetRec, reset)
+	if resetRec.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", resetRec.Code, resetRec.Body.String())
+	}
+	var resetBody map[string]any
+	if err := json.Unmarshal(resetRec.Body.Bytes(), &resetBody); err != nil {
+		t.Fatalf("decode reset response: %v", err)
+	}
+	if resetBody["reset"] != true || resetBody["adapter"] != "openai" {
+		t.Fatalf("reset body = %#v", resetBody)
+	}
+
+	lookupAfter := serveOpenAIRequest(mux, http.MethodGet, "/openai/v1/responses/"+responseID, "")
+	if lookupAfter.Code != http.StatusNotFound {
+		t.Fatalf("response lookup after reset status = %d, body=%s", lookupAfter.Code, lookupAfter.Body.String())
+	}
+
+	remoteReset := httptest.NewRequest(http.MethodPost, "/openai/test/reset", nil)
+	remoteReset.RemoteAddr = "192.168.0.2:12345"
+	remoteResetRec := httptest.NewRecorder()
+	mux.ServeHTTP(remoteResetRec, remoteReset)
+	if remoteResetRec.Code != http.StatusForbidden {
+		t.Fatalf("remote reset status = %d, body=%s", remoteResetRec.Code, remoteResetRec.Body.String())
+	}
+	if !strings.Contains(remoteResetRec.Body.String(), "loopback") {
+		t.Fatalf("remote reset body = %s", remoteResetRec.Body.String())
 	}
 }
 

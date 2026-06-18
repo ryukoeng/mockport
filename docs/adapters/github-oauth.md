@@ -55,6 +55,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `GET` | `/github/user` | Returns a deterministic authenticated user profile. |
 | `GET` | `/github/user/emails` | Returns deterministic authenticated user emails. |
 | `GET` | `/github/user/orgs` | Returns deterministic authenticated user organizations. |
+| `POST` | `/github/test/reset` | Clears local OAuth and REST state for test isolation. |
 
 The default OAuth flow requires `client_id` on `/github/login/oauth/authorize`. Token exchange also requires `client_id`, and the value must match the authorization request that created the code.
 

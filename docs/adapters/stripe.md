@@ -84,6 +84,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `GET` | `/stripe/v1/refunds` | Lists local Refunds. |
 | `GET` | `/stripe/v1/refunds/{id}` | Retrieves a local Refund. |
 | `POST` | `/stripe/test/webhook/send` | Sends a fake signed webhook to the configured target URL. |
+| `POST` | `/stripe/test/reset` | Clears local state and idempotency records for test isolation. |
 
 ## Scenarios
 

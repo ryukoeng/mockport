@@ -598,12 +598,113 @@ func TestLineErrorScenarios(t *testing.T) {
 	}
 }
 
+func TestMetadata(t *testing.T) {
+	meta := New().Metadata()
+	if meta.Name != "line" || meta.Maturity != "workflow-compatible" {
+		t.Fatalf("metadata = %#v", meta)
+	}
+	if meta.ProviderVersion == "" || len(meta.Levels) < 4 || len(meta.Endpoints) < 20 {
+		t.Fatalf("compat metadata = %#v", meta)
+	}
+	if !meta.Reset || len(meta.StatefulResources) == 0 {
+		t.Fatalf("state metadata = %#v", meta)
+	}
+	found := false
+	for _, endpoint := range meta.Endpoints {
+		if endpoint.Path == "/line/test/reset" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("metadata missing /line/test/reset")
+	}
+}
+
+func TestLineResetClearsOAuthStateAndRequiresLoopback(t *testing.T) {
+	mux := newLineMux(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+
+	authReq := httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/authorize?client_id=mockport_line_channel&redirect_uri=http://localhost/callback&state=abc", nil)
+	authRec := httptest.NewRecorder()
+	mux.ServeHTTP(authRec, authReq)
+	if authRec.Code != http.StatusFound {
+		t.Fatalf("authorize status = %d, body=%s", authRec.Code, authRec.Body.String())
+	}
+	code := redirectCodeFromLocation(t, authRec.Header().Get("Location"))
+
+	form := url.Values{
+		"grant_type":  {"authorization_code"},
+		"code":        {code},
+		"client_id":   {"mockport_line_channel"},
+		"redirect_uri": {"http://localhost/callback"},
+	}
+	tokenReq := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(form.Encode()))
+	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	tokenRec := httptest.NewRecorder()
+	mux.ServeHTTP(tokenRec, tokenReq)
+	if tokenRec.Code != http.StatusOK {
+		t.Fatalf("token status = %d, body=%s", tokenRec.Code, tokenRec.Body.String())
+	}
+	var tokenBody map[string]any
+	if err := json.Unmarshal(tokenRec.Body.Bytes(), &tokenBody); err != nil {
+		t.Fatalf("decode token response: %v", err)
+	}
+	accessToken, _ := tokenBody["access_token"].(string)
+	if strings.TrimSpace(accessToken) == "" {
+		t.Fatalf("missing access token: %#v", tokenBody)
+	}
+
+	profileReq := httptest.NewRequest(http.MethodGet, "/line/v2/profile", nil)
+	profileReq.Header.Set("Authorization", "Bearer "+accessToken)
+	profileRec := httptest.NewRecorder()
+	mux.ServeHTTP(profileRec, profileReq)
+	if profileRec.Code != http.StatusOK {
+		t.Fatalf("profile before reset = %d, body=%s", profileRec.Code, profileRec.Body.String())
+	}
+
+	reset := serveLineResetRequest(mux, "127.0.0.1:12345")
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", reset.Code, reset.Body.String())
+	}
+	var resetBody map[string]any
+	if err := json.Unmarshal(reset.Body.Bytes(), &resetBody); err != nil {
+		t.Fatalf("decode reset response: %v", err)
+	}
+	if resetBody["reset"] != true || resetBody["adapter"] != "line" {
+		t.Fatalf("reset body = %#v", resetBody)
+	}
+
+	profileAfterReq := httptest.NewRequest(http.MethodGet, "/line/v2/profile", nil)
+	profileAfterReq.Header.Set("Authorization", "Bearer "+accessToken)
+	afterRec := httptest.NewRecorder()
+	mux.ServeHTTP(afterRec, profileAfterReq)
+	if afterRec.Code != http.StatusUnauthorized {
+		t.Fatalf("profile after reset status = %d, body=%s", afterRec.Code, afterRec.Body.String())
+	}
+
+	remoteReset := serveLineResetRequest(mux, "192.168.0.2:12345")
+	if remoteReset.Code != http.StatusForbidden {
+		t.Fatalf("remote reset status = %d, body=%s", remoteReset.Code, remoteReset.Body.String())
+	}
+	if !strings.Contains(remoteReset.Body.String(), "line reset can only be triggered from loopback") {
+		t.Fatalf("remote reset body = %s", remoteReset.Body.String())
+	}
+}
+
 func performLineRequest(t *testing.T, cfg adapter.Config, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	mux := newLineMux(t, cfg)
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
+	mux.ServeHTTP(rec, req)
+	return rec
+}
+
+func serveLineResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/line/test/reset", nil)
+	req.RemoteAddr = remoteAddr
+	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	return rec
 }

@@ -66,6 +66,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodGet, Path: "/github/user", SupportedScenarios: []string{"oauth_success", "expired_token", "scope_missing"}, Notes: "GitHub-like user profile"},
 			{Method: http.MethodGet, Path: "/github/user/emails", SupportedScenarios: []string{"oauth_success", "scope_missing"}, Notes: "GitHub-like user emails subset"},
 			{Method: http.MethodGet, Path: "/github/user/orgs", SupportedScenarios: []string{"oauth_success", "scope_missing"}, Notes: "GitHub-like user orgs subset"},
+			{Method: http.MethodPost, Path: "/github/test/reset", SupportedScenarios: []string{"oauth_success", "invalid_code", "expired_token", "scope_missing", "redirect_uri_mismatch"}, Notes: "Clears state for test isolation"},
 		},
 	}
 }
@@ -117,9 +118,24 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeEmails(w, req)
 	case req.Method == http.MethodGet && path == "/user/orgs":
 		r.writeOrgs(w, req)
+	case req.Method == http.MethodPost && path == "/test/reset":
+		r.handleReset(w, req)
 	default:
 		http.NotFound(w, req)
 	}
+}
+
+func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeAPIError(w, http.StatusForbidden, "github reset can only be triggered from loopback")
+		return
+	}
+	resourceTypes := r.store.ResetAll("github-oauth")
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"reset":         true,
+		"adapter":       "github-oauth",
+		"resource_types": resourceTypes,
+	})
 }
 
 func (r *routes) createCode(req *http.Request, clientID, redirectURI string) (string, error) {

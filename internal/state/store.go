@@ -147,6 +147,27 @@ func (s *Store) Reset(adapter, resourceType string) {
 	delete(s.counters, key)
 }
 
+func (s *Store) ResetAll(adapter string) []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	normalized := sanitize(adapter)
+	var resourceTypes []string
+	for key := range s.resources {
+		if key.adapter == normalized {
+			resourceTypes = append(resourceTypes, key.resourceType)
+			delete(s.resources, key)
+		}
+	}
+	for key := range s.counters {
+		if key.adapter == normalized {
+			delete(s.counters, key)
+		}
+	}
+	slices.Sort(resourceTypes)
+	return resourceTypes
+}
+
 func newScope(adapter, resourceType string) scope {
 	return scope{adapter: sanitize(adapter), resourceType: sanitize(resourceType)}
 }

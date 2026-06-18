@@ -147,6 +147,15 @@ func (s *IdempotencyStore) Lookup(scope, key, fingerprint string) (bool, Idempot
 	return replayRecord(scope, key, fingerprint, record)
 }
 
+func (s *IdempotencyStore) ResetAll() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.records = map[string]idempotencyRecord{}
+	s.order = map[string][]string{}
+	s.inFlight = map[string]*idempotencyCall{}
+}
+
 type IdempotencyConflictError struct {
 	Scope string
 	Key   string

@@ -180,6 +180,85 @@ func TestIdempotencyStoreCapsRecordsPerScope(t *testing.T) {
 	}
 }
 
+func TestIdempotencyStoreResetAllClearsRecords(t *testing.T) {
+	store := NewIdempotencyStore()
+	scope := "stripe:payment_intent"
+
+	if _, _, err := store.Remember(scope, "key-1", "mockport", IdempotentResponse{Status: http.StatusOK, Body: map[string]any{"id": "value"}}); err != nil {
+		t.Fatalf("remember request: %v", err)
+	}
+	replayed, _, err := store.Lookup(scope, "key-1", "mockport")
+	if err != nil {
+		t.Fatalf("lookup before reset: %v", err)
+	}
+	if !replayed {
+		t.Fatalf("lookup before reset replayed = false, want true")
+	}
+
+	store.ResetAll()
+
+	replayed, _, err = store.Lookup(scope, "key-1", "mockport")
+	if err != nil {
+		t.Fatalf("lookup after reset: %v", err)
+	}
+	if replayed {
+		t.Fatalf("lookup after reset replayed = true, want false")
+	}
+}
+
+func TestIdempotencyStoreResetAllPreservesInFlightCompletion(t *testing.T) {
+	store := NewIdempotencyStore()
+	scope := "stripe:checkout_session"
+	firstStarted := make(chan struct{})
+	release := make(chan struct{})
+	done := make(chan idempotencyResult, 1)
+	var callCount atomic.Int64
+
+	go func() {
+		replayed, got, err := store.Do(scope, "k-1", "client_reference_id=cart", func() (IdempotentResponse, error) {
+			callCount.Add(1)
+			close(firstStarted)
+			<-release
+			return IdempotentResponse{Status: http.StatusOK, Body: map[string]any{"id": "value"}}, nil
+		})
+		done <- idempotencyResult{replayed: replayed, response: got, err: err}
+	}()
+	<-firstStarted
+
+	store.ResetAll()
+
+	replayed, _, err := store.Lookup(scope, "k-1", "client_reference_id=cart")
+	if err != nil {
+		t.Fatalf("lookup during in-flight after reset: %v", err)
+	}
+	if replayed {
+		t.Fatalf("lookup during in-flight replayed = true, want false")
+	}
+	close(release)
+	first := <-done
+	if first.err != nil {
+		t.Fatalf("first request err = %v", first.err)
+	}
+	if first.response.Status != http.StatusOK {
+		t.Fatalf("first response = %#v", first.response)
+	}
+	store.ResetAll()
+
+	_, _, err = store.Lookup(scope, "k-1", "client_reference_id=cart")
+	if err != nil {
+		t.Fatalf("lookup after completion reset: %v", err)
+	}
+	if _, _, err := store.Do(scope, "k-1", "client_reference_id=cart", func() (IdempotentResponse, error) {
+		callCount.Add(1)
+		return IdempotentResponse{Status: http.StatusOK, Body: map[string]any{"id": "value"}}, nil
+	}); err != nil {
+		t.Fatalf("re-run after reset err = %v", err)
+	}
+	if got := callCount.Load(); got != 2 {
+		t.Fatalf("Do call count = %d, want %d", got, 2)
+	}
+}
+
 func TestIdempotencyStoreAllowsNewRequestAfterEvictionAndConflictsAgain(t *testing.T) {
 	store := NewIdempotencyStore()
 	scope := "stripe:checkout_session"

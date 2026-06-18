@@ -68,3 +68,17 @@ func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
 		"status_code": resp.StatusCode,
 	})
 }
+
+func (rt *routes) handleReset(w http.ResponseWriter, r *http.Request) {
+	if !security.IsLoopbackRemoteAddr(r.RemoteAddr) {
+		rt.writeStripeError(w, http.StatusForbidden, "invalid_request_error", "local_request_required", "state reset can only be triggered from loopback")
+		return
+	}
+	resourceTypes := rt.store.ResetAll("stripe")
+	rt.idempotency.ResetAll()
+	rt.writeJSON(w, http.StatusOK, map[string]any{
+		"reset":         true,
+		"adapter":       "stripe",
+		"resource_types": resourceTypes,
+	})
+}
