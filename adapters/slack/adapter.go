@@ -13,6 +13,7 @@ import (
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
+	"github.com/albert-einshutoin/mockport/internal/security"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -77,6 +78,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodGet, Path: "/slack/api/conversations.history", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Deterministic Slack-like channel history"},
 			{Method: http.MethodPost, Path: "/slack/api/conversations.history", SupportedScenarios: []string{"message_success", "auth_error", "channel_not_found"}, Notes: "Deterministic Slack-like channel history"},
 			{Method: http.MethodPost, Path: "/slack/events", SupportedScenarios: []string{"message_success", "auth_error"}, Notes: "Slack-like Events API URL verification and message callback subset"},
+			{Method: http.MethodPost, Path: "/slack/test/reset", SupportedScenarios: []string{"message_success", "auth_error", "rate_limited", "delivery_failed", "channel_not_found", "not_in_channel"}, Notes: "Clears state for test isolation"},
 		},
 	}
 }
@@ -105,9 +107,24 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeHistory(w, req)
 	case req.Method == http.MethodPost && path == "/events":
 		r.writeEvent(w, req)
+	case req.Method == http.MethodPost && path == "/test/reset":
+		r.handleReset(w, req)
 	default:
 		http.NotFound(w, req)
 	}
+}
+
+func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeSlackError(w, http.StatusForbidden, "local_request_required")
+		return
+	}
+	resourceTypes := r.store.ResetAll("slack")
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"reset":          true,
+		"adapter":        "slack",
+		"resource_types": resourceTypes,
+	})
 }
 
 func (r *routes) writeAuthTest(w http.ResponseWriter) {

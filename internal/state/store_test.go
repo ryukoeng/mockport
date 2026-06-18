@@ -77,6 +77,46 @@ func TestStoreResetClearsResourcesAndCounters(t *testing.T) {
 	}
 }
 
+func TestStoreResetAllClearsAllResourceTypesForAdapter(t *testing.T) {
+	store := NewStore()
+	if _, err := store.Create("openai", "chat_completion", map[string]any{"model": "gpt-mockport"}); err != nil {
+		t.Fatalf("create chat completion: %v", err)
+	}
+	if _, err := store.Create("openai", "response", map[string]any{"status": "completed"}); err != nil {
+		t.Fatalf("create response: %v", err)
+	}
+
+	removed := store.ResetAll("OPENAI")
+	resourceTypes := map[string]bool{}
+	for _, resourceType := range removed {
+		resourceTypes[resourceType] = true
+	}
+	if !resourceTypes["chat_completion"] || !resourceTypes["response"] {
+		t.Fatalf("removed resource types = %#v, want chat_completion and response", removed)
+	}
+	if got := len(store.List("openai", "chat_completion")); got != 0 {
+		t.Fatalf("openai chat completion list after reset all = %d, want 0", got)
+	}
+	if got := len(store.List("openai", "response")); got != 0 {
+		t.Fatalf("openai response list after reset all = %d, want 0", got)
+	}
+
+	chatCompletion, err := store.Create("openai", "chat_completion", map[string]any{"model": "gpt-mockport"})
+	if err != nil {
+		t.Fatalf("create chat completion after reset all: %v", err)
+	}
+	if chatCompletion.ID != "openai_chat_completion_000001" {
+		t.Fatalf("chat completion id after reset all = %q, want %q", chatCompletion.ID, "openai_chat_completion_000001")
+	}
+	response, err := store.Create("openai", "response", map[string]any{"status": "completed"})
+	if err != nil {
+		t.Fatalf("create response after reset all: %v", err)
+	}
+	if response.ID != "openai_response_000001" {
+		t.Fatalf("response id after reset all = %q, want %q", response.ID, "openai_response_000001")
+	}
+}
+
 func TestStoreTakeReturnsAndDeletesResource(t *testing.T) {
 	store := NewStore()
 	created, err := store.Create("github-oauth", "oauth_code", map[string]any{

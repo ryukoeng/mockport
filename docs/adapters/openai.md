@@ -59,6 +59,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `POST` | `/openai/v1/chat/completions` | Returns deterministic chat completion JSON or SSE chunks when streaming. |
 | `POST` | `/openai/v1/responses` | Creates a deterministic response object. |
 | `GET` | `/openai/v1/responses/{id}` | Retrieves a local response. |
+| `POST` | `/openai/test/reset` | Clears provider state and idempotency records for test isolation. |
 | `POST` | `/openai/v1/embeddings` | Creates deterministic embedding vectors. |
 | `POST` | `/openai/v1/files` | Creates a local file record for batch workflows. |
 | `POST` | `/openai/v1/batches` | Creates a local batch record. |

@@ -83,6 +83,7 @@ func (rt *routes) routes() []routeEntry {
 			rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
 		}},
 		{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
+		{method: http.MethodPost, path: "/test/reset", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.handleReset(w, r) }},
 	}
 	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)...)
 	routes = append(routes, resource("product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})...)
