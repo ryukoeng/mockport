@@ -23,11 +23,13 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/stripe"
 	}
+	meta := a.Metadata()
 	routes := &routes{
 		basePath:    strings.TrimRight(basePath, "/"),
 		cfg:         cfg,
 		store:       state.NewStore(),
 		idempotency: state.NewIdempotencyStore(),
+		resolver:    adapter.NewScenarioResolver(cfg, scenarioPaymentSuccess, meta),
 	}
 	mux.HandleFunc(routes.basePath+"/", routes.handle)
 	mux.HandleFunc("/v1/", routes.handleRoot)
