@@ -130,7 +130,8 @@ func printSafetyWarnings(cmd *cobra.Command, cfg config.Config) {
 	if len(cfg.SafetyWarnings) == 0 {
 		return
 	}
-	out := cmd.OutOrStdout()
+	// ISSUE #81: 起動時のセキュリティ警告は stderr に出力する。
+	out := cmd.ErrOrStderr()
 	fmt.Fprintln(out, "[MOCKPORT SECURITY WARNING]")
 	for _, warning := range cfg.SafetyWarnings {
 		fmt.Fprintf(out, "- %s: %s (%s)\n", warning.Field, warning.Message, warning.Category)
