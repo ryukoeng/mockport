@@ -28,7 +28,13 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/openai"
 	}
-	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg, store: state.NewStore()}
+	meta := a.Metadata()
+	r := &routes{
+		basePath: strings.TrimRight(basePath, "/"),
+		cfg:      cfg,
+		store:    state.NewStore(),
+		resolver: adapter.NewScenarioResolver(cfg, "chat_success", meta),
+	}
 	mux.HandleFunc(r.basePath+"/", r.handle)
 	return nil
 }
@@ -86,6 +92,7 @@ type routes struct {
 	basePath string
 	cfg      adapter.Config
 	store    *state.Store
+	resolver *adapter.ScenarioResolver
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
@@ -129,7 +136,12 @@ func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeCompletion(w http.ResponseWriter, req *http.Request, object string) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeError(w, http.StatusUnauthorized, "invalid_api_key", "Mockport simulated invalid API key")
 	case "rate_limited":
@@ -440,13 +452,6 @@ func writeChatCompletionStream(w http.ResponseWriter) {
 	_ = http.NewResponseController(w).Flush()
 	_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 	_ = http.NewResponseController(w).Flush()
-}
-
-func normalizeScenario(s string) string {
-	if s == "" {
-		return "chat_success"
-	}
-	return s
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
