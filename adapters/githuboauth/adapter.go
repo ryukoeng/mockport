@@ -22,7 +22,9 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/github"
 	}
-	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg, store: state.NewStore()}
+	meta := Adapter{}.Metadata()
+	resolver := adapter.NewScenarioResolver(cfg, "oauth_success", meta)
+	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg, store: state.NewStore(), resolver: resolver}
 	mux.HandleFunc(r.basePath+"/", r.handle)
 	return nil
 }
@@ -75,6 +77,7 @@ type routes struct {
 	basePath string
 	cfg      adapter.Config
 	store    *state.Store
+	resolver *adapter.ScenarioResolver
 }
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
@@ -157,7 +160,12 @@ func (r *routes) createCode(req *http.Request, clientID, redirectURI string) (st
 }
 
 func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeOAuthError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+		return
+	}
+	switch scenario {
 	case "invalid_code":
 		writeOAuthError(w, http.StatusBadRequest, "bad_verification_code", "The code passed is incorrect or expired.")
 	case "expired_token":
@@ -208,7 +216,12 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, "unknown_mockport_scenario: "+err.Error())
+		return
+	}
+	switch scenario {
 	case "expired_token":
 		writeAPIError(w, http.StatusUnauthorized, "Bad credentials")
 	case "scope_missing":
@@ -314,13 +327,6 @@ func redirectWithQuery(w http.ResponseWriter, req *http.Request, redirectURI str
 	}
 	parsed.RawQuery = query.Encode()
 	http.Redirect(w, req, parsed.String(), http.StatusFound)
-}
-
-func normalizeScenario(s string) string {
-	if s == "" {
-		return "oauth_success"
-	}
-	return s
 }
 
 func writeOAuthError(w http.ResponseWriter, status int, code, description string) {
