@@ -19,7 +19,15 @@ func Validate(cfg *Config) error {
 		return fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
 
+	// loader.go の2段デコードで事前に追加された warning（unknown_config_key 等、
+	// Validate 自身が生成しないカテゴリ）だけを退避しておく。Validate 管轄カテゴリは
+	// 再生成して上書きするため、2回呼んでも結果が安定する（冪等）。
 	var warnings []SafetyWarning
+	for _, w := range cfg.SafetyWarnings {
+		if !validateOwnedCategories[w.Category] {
+			warnings = append(warnings, w)
+		}
+	}
 	if warning, ok := serverHostWarning(cfg.Server.Host); ok {
 		warnings = append(warnings, warning)
 	}
@@ -80,9 +88,18 @@ func Validate(cfg *Config) error {
 			return fmt.Errorf("strict mode rejected unsafe config fields: %s", strings.Join(fields, ", "))
 		}
 	}
-	// loader.go の2段デコードで事前に追加された unknown_config_key 警告を保持しつつマージする
-	cfg.SafetyWarnings = append(cfg.SafetyWarnings, warnings...)
+	// 退避した loader 由来 warning + 今回生成した warning で上書きする。
+	cfg.SafetyWarnings = warnings
 	return nil
+}
+
+// validateOwnedCategories は Validate 自身が生成する SafetyWarning カテゴリの集合。
+// Validate を複数回呼んだときの重複を防ぐため、冒頭でこれらを除去してから付け直す。
+var validateOwnedCategories = map[string]bool{
+	"public_bind":         true,
+	"real_looking_secret": true,
+	"external_url":        true,
+	"unsupported_config":  true,
 }
 
 func validateBasePath(adapterName, basePath string, seen map[string]string) error {

@@ -116,6 +116,67 @@ func TestLoadFileUnknownKeyEmitsWarning(t *testing.T) {
 	}
 }
 
+// S1: Validate を同じ cfg に2回呼んでも警告が増殖しないこと（冪等性）を固定する。
+func TestValidateIsIdempotent(t *testing.T) {
+	cfg := Config{
+		Server: ServerConfig{Host: "0.0.0.0", Port: 43101},
+		Mode:   "ai-safe",
+		Scenarios: map[string]Scenario{
+			"payment_success": {Adapter: "stripe"},
+		},
+	}
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("first Validate returned error: %v", err)
+	}
+	first := append([]SafetyWarning(nil), cfg.SafetyWarnings...)
+
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("second Validate returned error: %v", err)
+	}
+	if len(cfg.SafetyWarnings) != len(first) {
+		t.Fatalf("Validate is not idempotent: first=%d second=%d warnings\nfirst=%+v\nsecond=%+v",
+			len(first), len(cfg.SafetyWarnings), first, cfg.SafetyWarnings)
+	}
+}
+
+// S1: loader が事前に積んだ unknown_config_key 警告は Validate を呼んでも保持され、
+// かつ2回呼んでも重複しないことを固定する。
+func TestValidatePreservesLoaderWarningsIdempotently(t *testing.T) {
+	cfg := Config{
+		Server: ServerConfig{Host: "127.0.0.1", Port: 43101},
+		Mode:   "ai-safe",
+		SafetyWarnings: []SafetyWarning{
+			{Field: "config", Category: "unknown_config_key", Message: "config contains unrecognized keys"},
+		},
+		Scenarios: map[string]Scenario{
+			"payment_success": {Adapter: "stripe"},
+		},
+	}
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("first Validate returned error: %v", err)
+	}
+	if err := Validate(&cfg); err != nil {
+		t.Fatalf("second Validate returned error: %v", err)
+	}
+
+	countUnknown := 0
+	countScenarios := 0
+	for _, w := range cfg.SafetyWarnings {
+		switch w.Category {
+		case "unknown_config_key":
+			countUnknown++
+		case "unsupported_config":
+			countScenarios++
+		}
+	}
+	if countUnknown != 1 {
+		t.Fatalf("expected exactly 1 unknown_config_key warning preserved, got %d: %+v", countUnknown, cfg.SafetyWarnings)
+	}
+	if countScenarios != 1 {
+		t.Fatalf("expected exactly 1 unsupported_config warning, got %d: %+v", countScenarios, cfg.SafetyWarnings)
+	}
+}
+
 func TestLoadFileKnownKeysNoUnknownWarning(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "mockport.yml")
