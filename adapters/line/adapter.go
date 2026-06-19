@@ -32,7 +32,12 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/line"
 	}
-	r := &routes{basePath: strings.TrimRight(basePath, "/"), cfg: cfg, store: state.NewStore()}
+	r := &routes{
+		basePath: strings.TrimRight(basePath, "/"),
+		cfg:      cfg,
+		store:    state.NewStore(),
+		resolver: adapter.NewScenarioResolver(cfg, "line_success", a.Metadata()),
+	}
 	mux.HandleFunc(r.basePath+"/", r.handle)
 	return nil
 }
@@ -186,6 +191,7 @@ type routes struct {
 	basePath string
 	cfg      adapter.Config
 	store    *state.Store
+	resolver *adapter.ScenarioResolver
 
 	// mu guards the singleton mutable state below. net/http dispatches
 	// concurrent requests to the same routes instance, so these fields must
@@ -289,13 +295,13 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v2/bot/message/") && strings.Contains(path, "/content"):
 		r.writeContentEndpoint(w, path)
 	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v2/bot/profile/"):
-		r.writeMessagingProfile(w, strings.TrimPrefix(path, "/v2/bot/profile/"))
+		r.writeMessagingProfile(w, req, strings.TrimPrefix(path, "/v2/bot/profile/"))
 	case req.Method == http.MethodPut && path == "/v2/bot/channel/webhook/endpoint":
 		r.writeSetWebhookEndpoint(w, req)
 	case req.Method == http.MethodGet && path == "/v2/bot/channel/webhook/endpoint":
 		r.writeGetWebhookEndpoint(w)
 	case req.Method == http.MethodPost && path == "/v2/bot/channel/webhook/test":
-		r.writeWebhookTest(w)
+		r.writeWebhookTest(w, req)
 	case req.Method == http.MethodPost && path == "/test/webhook/send":
 		r.sendWebhook(w, req)
 	case req.Method == http.MethodPost && path == "/test/reset":
@@ -343,7 +349,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	case req.Method == http.MethodPost && strings.HasPrefix(path, "/v2/bot/room/") && strings.HasSuffix(path, "/leave"):
 		writeEmptyJSON(w, http.StatusOK)
 	case req.Method == http.MethodGet && path == "/liff/v2/profile":
-		r.writeLIFFProfile(w)
+		r.writeLIFFProfile(w, req)
 	case req.Method == http.MethodGet && path == "/liff/v2/context":
 		r.writeLIFFContext(w)
 	case req.Method == http.MethodPost && path == "/v2/bot/richmenu":
@@ -403,7 +409,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writePayRequest(w, req)
 	case req.Method == http.MethodPost && strings.HasPrefix(path, "/v3/payments/") && strings.HasSuffix(path, "/confirm"):
 		id := strings.TrimSuffix(strings.TrimPrefix(path, "/v3/payments/"), "/confirm")
-		r.writePayConfirm(w, id)
+		r.writePayConfirm(w, req, id)
 	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v3/payments/requests/") && strings.HasSuffix(path, "/check"):
 		id := strings.TrimSuffix(strings.TrimPrefix(path, "/v3/payments/requests/"), "/check")
 		r.writePayCheck(w, id)
@@ -463,7 +469,11 @@ func (r *routes) writeValidateMessage(w http.ResponseWriter, req *http.Request) 
 }
 
 func (r *routes) writeMessage(w http.ResponseWriter, req *http.Request, includeSentMessages bool, status int) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid channel access token")
 	case "rate_limited":
@@ -508,8 +518,12 @@ func (r *routes) writeNarrowcastProgress(w http.ResponseWriter) {
 	})
 }
 
-func (r *routes) writeMessagingProfile(w http.ResponseWriter, userID string) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+func (r *routes) writeMessagingProfile(w http.ResponseWriter, req *http.Request, userID string) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid channel access token")
 		return
 	}
@@ -540,8 +554,12 @@ func (r *routes) writeGetWebhookEndpoint(w http.ResponseWriter) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"endpoint": endpoint, "active": true})
 }
 
-func (r *routes) writeWebhookTest(w http.ResponseWriter) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+func (r *routes) writeWebhookTest(w http.ResponseWriter, req *http.Request) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid channel access token")
 		return
 	}
@@ -679,7 +697,11 @@ func (r *routes) writeAuthorize(w http.ResponseWriter, req *http.Request) {
 		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri must be a loopback URL in Mockport")
 		return
 	}
-	if normalizeScenario(r.cfg.Scenario) == "invalid_request" {
+	scenario, ok := r.resolveScenarioOAuth(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "invalid_request" {
 		redirectWithQuery(w, req, redirectURI, map[string]string{
 			"error":             "invalid_request",
 			"error_description": "Mockport simulated invalid LINE Login request",
@@ -706,7 +728,11 @@ func (r *routes) writeAuthorize(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenarioOAuth(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "Mockport simulated invalid LINE Login client")
 	case "invalid_request":
@@ -765,7 +791,11 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeStatelessToken(w http.ResponseWriter, req *http.Request) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+	scenario, ok := r.resolveScenarioOAuth(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "Invalid 'client_credentials'.")
 		return
 	}
@@ -787,7 +817,11 @@ func (r *routes) writeStatelessToken(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeShortLivedToken(w http.ResponseWriter, req *http.Request) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+	scenario, ok := r.resolveScenarioOAuth(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeOAuthError(w, http.StatusBadRequest, "invalid_client", "invalid client_secret")
 		return
 	}
@@ -849,7 +883,11 @@ func (r *routes) writeVerifyOAuthToken(w http.ResponseWriter, req *http.Request)
 }
 
 func (r *routes) writeLoginProfile(w http.ResponseWriter, req *http.Request) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid access token")
 		return
 	}
@@ -862,8 +900,12 @@ func (r *routes) writeLoginProfile(w http.ResponseWriter, req *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, lineProfile(userID))
 }
 
-func (r *routes) writeLIFFProfile(w http.ResponseWriter) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+func (r *routes) writeLIFFProfile(w http.ResponseWriter, req *http.Request) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated LIFF access token error")
 		return
 	}
@@ -1162,7 +1204,11 @@ func (r *routes) findAlias(aliasID string) (state.Resource, bool) {
 }
 
 func (r *routes) writeNotificationToken(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid MINI App channel token")
 	case "invalid_request":
@@ -1190,7 +1236,11 @@ func (r *routes) writeNotificationToken(w http.ResponseWriter, req *http.Request
 }
 
 func (r *routes) writeServiceMessage(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated invalid MINI App channel token")
 	case "invalid_request":
@@ -1221,7 +1271,11 @@ func (r *routes) writeServiceMessage(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writePayRequest(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenarioPay(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writePayError(w, "1104", "Mockport simulated LINE Pay authorization error")
 	case "pay_failed":
@@ -1262,8 +1316,12 @@ func (r *routes) writePayRequest(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *routes) writePayConfirm(w http.ResponseWriter, id string) {
-	switch normalizeScenario(r.cfg.Scenario) {
+func (r *routes) writePayConfirm(w http.ResponseWriter, req *http.Request, id string) {
+	scenario, ok := r.resolveScenarioPay(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writePayError(w, "1104", "Mockport simulated LINE Pay authorization error")
 	case "pay_failed":
@@ -1293,11 +1351,15 @@ func (r *routes) writePayCheck(w http.ResponseWriter, id string) {
 }
 
 func (r *routes) writeMiniDappWalletSession(w http.ResponseWriter, req *http.Request) {
-	if normalizeScenario(r.cfg.Scenario) == "auth_error" {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	if scenario == "auth_error" {
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated Mini Dapp client authorization error")
 		return
 	}
-	if normalizeScenario(r.cfg.Scenario) == "invalid_request" {
+	if scenario == "invalid_request" {
 		writeLINEError(w, http.StatusBadRequest, "chainId is required")
 		return
 	}
@@ -1310,7 +1372,11 @@ func (r *routes) writeMiniDappWalletSession(w http.ResponseWriter, req *http.Req
 }
 
 func (r *routes) writeMiniDappPayment(w http.ResponseWriter, req *http.Request) {
-	switch normalizeScenario(r.cfg.Scenario) {
+	scenario, ok := r.resolveScenario(w, req)
+	if !ok {
+		return
+	}
+	switch scenario {
 	case "auth_error":
 		writeLINEError(w, http.StatusUnauthorized, "Mockport simulated Mini Dapp client authorization error")
 	case "pay_failed":
@@ -1445,6 +1511,37 @@ func writeLINEError(w http.ResponseWriter, status int, message string) {
 	httpx.WriteJSON(w, status, map[string]any{"message": message})
 }
 
+// resolveScenario はリクエストのヘッダまたは設定からシナリオを解決する。
+// 未知シナリオは LINE エラー形式で 400 を返し false を返す。
+func (r *routes) resolveScenario(w http.ResponseWriter, req *http.Request) (string, bool) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeLINEError(w, http.StatusBadRequest, "unknown_mockport_scenario: "+err.Error())
+		return "", false
+	}
+	return scenario, true
+}
+
+// resolveScenarioOAuth はシナリオを解決し、未知シナリオは OAuth エラー形式で 400 を返す。
+func (r *routes) resolveScenarioOAuth(w http.ResponseWriter, req *http.Request) (string, bool) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "unknown_mockport_scenario: "+err.Error())
+		return "", false
+	}
+	return scenario, true
+}
+
+// resolveScenarioPay はシナリオを解決し、未知シナリオは LINE Pay エラー形式を返す。
+func (r *routes) resolveScenarioPay(w http.ResponseWriter, req *http.Request) (string, bool) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writePayError(w, "2101", "unknown_mockport_scenario: "+err.Error())
+		return "", false
+	}
+	return scenario, true
+}
+
 func signWebhookPayload(secret string, payload []byte) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	_, _ = mac.Write(payload)
@@ -1524,14 +1621,6 @@ func bearerToken(r *http.Request) string {
 		return ""
 	}
 	return strings.TrimSpace(strings.TrimPrefix(value, "Bearer "))
-}
-
-func normalizeScenario(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return "line_success"
-	}
-	return value
 }
 
 func firstNonEmpty(values ...any) any {
