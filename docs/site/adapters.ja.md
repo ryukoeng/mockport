@@ -15,6 +15,37 @@ Mockport の adapter は scenario-driven です。現時点では、選択され
 
 対応範囲を判断するときは、[support matrix](support-matrix.ja.md) と compatibility report を確認してください。Mockport は外部 provider の内部実装や未公開仕様を再現するものではなく、ローカル統合テストで必要になる成功、失敗、認証エラー、rate limit、timeout、webhook/callback などの検証に集中しています。
 
+## シナリオの切り替え方
+
+シナリオは2通りの方法で切り替えられます。
+
+### 1. mockport.yml（設定ファイル）
+
+```yaml
+adapters:
+  stripe:
+    scenario: payment_failed
+```
+
+設定を変更するにはサーバーの再起動が必要です。
+
+### 2. X-Mockport-Scenario ヘッダ（リクエスト単位）
+
+リクエストに `X-Mockport-Scenario` ヘッダを付けることで、サーバーを再起動せずにリクエスト単位でシナリオを切り替えられます。
+
+```bash
+curl -X POST http://localhost:43101/stripe/v1/checkout/sessions \
+  -H "X-Mockport-Scenario: payment_failed" \
+  -H "Authorization: Bearer $STRIPE_KEY" \
+  -d "mode=payment&success_url=http://localhost/success&cancel_url=http://localhost/cancel"
+```
+
+解決順序: **ヘッダ > config の scenario > アダプタのデフォルト**
+
+- 未知のシナリオ名を指定すると 400 エラーが返ります（黙って成功系にフォールバックしません）
+- ヘッダによる切り替えはリクエスト単位なので並列テストでも干渉しません
+- 対象はアダプタの `Metadata().Scenarios` に登録された組み込みシナリオのみです
+
 詳細な adapter 仕様:
 
 - [Stripe adapter](../adapters/stripe.ja.md)

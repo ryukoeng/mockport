@@ -15,6 +15,37 @@ Adapters are scenario-driven today and are moving toward provider-compatible loc
 
 `timeout` scenarios return an immediate 504-style response shape. To test client-side timeout behavior, add `X-Mockport-Delay: <milliseconds>` (server-wide header, max 30000) to the request to inject realistic latency.
 
+## Switching scenarios
+
+Scenarios can be switched in two ways.
+
+### 1. mockport.yml (config file)
+
+```yaml
+adapters:
+  stripe:
+    scenario: payment_failed
+```
+
+Changing the config requires a server restart.
+
+### 2. X-Mockport-Scenario header (per-request)
+
+Add the `X-Mockport-Scenario` header to switch scenarios per request without restarting the server.
+
+```bash
+curl -X POST http://localhost:43101/stripe/v1/checkout/sessions \
+  -H "X-Mockport-Scenario: payment_failed" \
+  -H "Authorization: Bearer $STRIPE_KEY" \
+  -d "mode=payment&success_url=http://localhost/success&cancel_url=http://localhost/cancel"
+```
+
+Resolution order: **header > config scenario > adapter default**
+
+- An unknown scenario name returns a 400 error (no silent fallback to the success scenario)
+- Per-request switching does not interfere with parallel test runs
+- Only built-in scenarios registered in `Metadata().Scenarios` are accepted
+
 Detailed adapter specifications:
 
 - [Stripe adapter](../adapters/stripe.md)
