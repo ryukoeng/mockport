@@ -17,6 +17,19 @@ Current mainline adapters are workflow-compatible for selected local and CI inte
 - Real LINE Login UI, LIFF browser runtime, provider webhook redelivery, quota/rate-bucket enforcement, regional policy, or Dapp Portal behavior.
 - Undocumented provider behavior.
 
+## Unimplemented Configuration Blocks
+
+The `scenarios:` block in `mockport.yml` is parsed but **not implemented** — it is silently
+ignored at runtime. Mockport will emit a warning at startup (and in `--check` output and
+`/_mockport/report`) when this block is present.
+
+For response switching and error-case simulation, use:
+
+- Built-in scenarios via the adapter's `scenario:` field in `mockport.yml`
+- The `X-Mockport-Scenario` request header (see issue #80)
+
+See [scenario-policy.md](../scenario-policy.md) for future plans on user-defined scenarios.
+
 ## How To Evaluate Support
 
 Use:
