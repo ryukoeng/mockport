@@ -218,7 +218,9 @@ func (r *routes) writeToken(w http.ResponseWriter, req *http.Request) {
 func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
 	scenario, err := r.resolver.Resolve(req)
 	if err != nil {
-		writeAPIError(w, http.StatusBadRequest, "unknown_mockport_scenario: "+err.Error())
+		// 共通コード unknown_mockport_scenario は機械可読な error フィールドへ入れる
+		// （メッセージ連結ではなく構造化コードで判別可能にする）。
+		writeAPIErrorCode(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
 		return
 	}
 	switch scenario {
@@ -342,6 +344,18 @@ func writeAPIError(w http.ResponseWriter, status int, message string) {
 		Message:          message,
 		DocumentationURL: "https://docs.github.com/rest",
 		Status:           http.StatusText(status),
+	})
+}
+
+// writeAPIErrorCode は GitHub REST 形式のエラーに加えて、Mockport 固有の機械可読な
+// code を error フィールドへ載せる。message は人間向け説明にとどめ、コード判別は
+// error フィールドで行えるようにする。
+func writeAPIErrorCode(w http.ResponseWriter, status int, code, message string) {
+	httpx.WriteJSON(w, status, apiErrorResponse{
+		Message:          message,
+		DocumentationURL: "https://docs.github.com/rest",
+		Status:           http.StatusText(status),
+		Error:            code,
 	})
 }
 

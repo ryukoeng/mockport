@@ -1513,6 +1513,11 @@ func writeLINEError(w http.ResponseWriter, status int, message string) {
 
 // resolveScenario はリクエストのヘッダまたは設定からシナリオを解決する。
 // 未知シナリオは LINE エラー形式で 400 を返し false を返す。
+//
+// LINE Messaging API のエラー本文は {"message": ...} 形式で機械可読な専用コード
+// フィールドを持たない。実プロバイダの形式を壊さないため、共通コード
+// unknown_mockport_scenario は message 先頭に固定プレフィックスとして埋め込み、
+// 詳細を続ける（テストはプレフィックスの厳密一致で判別する）。
 func (r *routes) resolveScenario(w http.ResponseWriter, req *http.Request) (string, bool) {
 	scenario, err := r.resolver.Resolve(req)
 	if err != nil {
@@ -1523,16 +1528,23 @@ func (r *routes) resolveScenario(w http.ResponseWriter, req *http.Request) (stri
 }
 
 // resolveScenarioOAuth はシナリオを解決し、未知シナリオは OAuth エラー形式で 400 を返す。
+// OAuth エラー本文は {"error": ..., "error_description": ...} 形式で機械可読な error
+// コードフィールドを持つため、共通コード unknown_mockport_scenario をそこへ入れる。
 func (r *routes) resolveScenarioOAuth(w http.ResponseWriter, req *http.Request) (string, bool) {
 	scenario, err := r.resolver.Resolve(req)
 	if err != nil {
-		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "unknown_mockport_scenario: "+err.Error())
+		writeOAuthError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
 		return "", false
 	}
 	return scenario, true
 }
 
 // resolveScenarioPay はシナリオを解決し、未知シナリオは LINE Pay エラー形式を返す。
+//
+// LINE Pay の returnCode は数値文字列のプロバイダ固有コード体系であり、そこへ
+// unknown_mockport_scenario を入れると実プロバイダの契約を壊す。専用の機械可読
+// フィールドが他に無いため、共通コードは returnMessage 先頭に固定プレフィックスと
+// して埋め込む（returnCode は不正リクエストを示す 2101 を維持）。
 func (r *routes) resolveScenarioPay(w http.ResponseWriter, req *http.Request) (string, bool) {
 	scenario, err := r.resolver.Resolve(req)
 	if err != nil {
