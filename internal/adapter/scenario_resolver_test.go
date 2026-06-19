@@ -1,6 +1,7 @@
 package adapter_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -80,6 +81,9 @@ func TestScenarioResolver(t *testing.T) {
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("want error, got nil (scenario=%q)", got)
+				}
+				if !errors.Is(err, adapter.ErrUnknownScenario) {
+					t.Fatalf("want ErrUnknownScenario, got %v", err)
 				}
 				return
 			}
