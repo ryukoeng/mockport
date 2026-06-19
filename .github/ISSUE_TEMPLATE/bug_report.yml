@@ -14,6 +14,7 @@ body:
         - github-oauth
         - slack
         - line
+        - zoho-oauth
         - cli
         - docs
         - other

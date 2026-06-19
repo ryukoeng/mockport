@@ -14,7 +14,7 @@ Mockport の support は explicit かつ scenario-driven です。adapter ごと
 
 ## Adapter coverage
 
-Built-in adapter は `stripe`、`openai`、`github-oauth`、`slack`、`line` です。
+Built-in adapter は `stripe`、`openai`、`github-oauth`、`slack`、`line`、`zoho-oauth` です。
 
 SDK evidence は English support matrix と compatibility report を正とし、current SDK contract は `stripe@22.2.0` と `openai@6.42.0` です。
 

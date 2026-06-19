@@ -24,9 +24,14 @@ func TestExampleConfigsLoad(t *testing.T) {
 			adapters: []string{"slack"},
 		},
 		{
+			name:     "zoho-oauth",
+			path:     "../../examples/zoho-oauth/mockport.yml",
+			adapters: []string{"zoho-oauth"},
+		},
+		{
 			name:     "multi-adapter",
 			path:     "../../examples/multi-adapter/mockport.yml",
-			adapters: []string{"stripe", "openai", "github-oauth", "slack", "line"},
+			adapters: []string{"stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"},
 		},
 	}
 

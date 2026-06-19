@@ -34,6 +34,9 @@ const knownGaps = {
   line: [
     "No official LINE SDK contract yet, no real LIFF browser runtime, no provider-driven webhook redelivery, no monthly quota/rate bucket enforcement, no complete Messaging API schema validation, no regional policy enforcement, and Mini Dapp endpoints are local SDK helpers rather than a full Dapp Portal clone.",
   ],
+  "zoho-oauth": [
+    "No real Zoho login UI, MFA, data-center/org routing, token refresh, scope enforcement, or full user profile fields.",
+  ],
 };
 
 const adapters = (snapshot.compatibility || []).map((entry) => {

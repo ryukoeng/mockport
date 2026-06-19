@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/generate-compatibility-report.sh",
-  "generated_at": "2026-06-06",
+  "generated_at": "2026-06-19",
   "source": "_mockport/report",
   "release_labels": {
     "experimental": "Early adapter coverage for selected workflows. Expect gaps.",
@@ -290,6 +290,37 @@
       ],
       "known_gaps": [
         "No fraud, payment network, tax, disputes, Connect, or full Billing lifecycle."
+      ]
+    },
+    {
+      "name": "zoho-oauth",
+      "maturity": "workflow-compatible",
+      "promotion_eligible": true,
+      "measured_level": "workflow",
+      "score": 100,
+      "provider_version": "oauth-v2",
+      "sdk_versions": [],
+      "client_evidence": [
+        "oauth-client-contract"
+      ],
+      "endpoint_coverage": 100,
+      "scenario_coverage": 100,
+      "sdk_coverage": 100,
+      "state_coverage": 100,
+      "error_coverage": 100,
+      "stateful_resources": [
+        "oauth_code",
+        "oauth_token"
+      ],
+      "idempotency": false,
+      "reset": true,
+      "endpoints": [
+        "GET /zoho/oauth/v2/auth",
+        "POST /zoho/oauth/v2/token",
+        "GET /zoho/oauth/user/info"
+      ],
+      "known_gaps": [
+        "No real Zoho login UI, MFA, data-center/org routing, token refresh, scope enforcement, or full user profile fields."
       ]
     }
   ]

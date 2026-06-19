@@ -35,3 +35,8 @@ adapters:
     base_path: /line
     scenario: line_success
     fake_secret: mockport_line_channel_token
+  zoho-oauth:
+    enabled: true
+    base_path: /zoho
+    scenario: oauth_success
+    fake_secret: mockport_zoho_secret
