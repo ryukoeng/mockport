@@ -29,9 +29,9 @@ type WebhookConfig struct {
 }
 
 type Scenario struct {
-	Adapter  string                 `yaml:"adapter" json:"adapter"`
-	Response map[string]interface{} `yaml:"response" json:"response,omitempty"`
-	Webhook  map[string]interface{} `yaml:"webhook" json:"webhook,omitempty"`
+	Adapter  string         `yaml:"adapter" json:"adapter"`
+	Response map[string]any `yaml:"response" json:"response,omitempty"`
+	Webhook  map[string]any `yaml:"webhook" json:"webhook,omitempty"`
 }
 
 type SafetyWarning struct {

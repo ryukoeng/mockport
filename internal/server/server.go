@@ -3,13 +3,22 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
-	"sort"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/compat"
 	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
+)
+
+const (
+	delayHeader = "X-Mockport-Delay"
+	maxDelay    = 30 * time.Second
 )
 
 func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.Recorder) (http.Handler, error) {
@@ -25,16 +34,11 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	var matrix []report.BehaviorMatrixEntry
 	var compatibility []report.CompatibilityStatus
 	var state []report.StateCoverageStatus
-	for warningIdx := range cfg.SafetyWarnings {
-		warning := cfg.SafetyWarnings[warningIdx]
+	for _, warning := range cfg.SafetyWarnings {
 		rec.RecordSafetyWarning(warning.Field, warning.Category, warning.Message)
 	}
 
-	adapterNames := make([]string, 0, len(cfg.Adapters))
-	for name := range cfg.Adapters {
-		adapterNames = append(adapterNames, name)
-	}
-	sort.Strings(adapterNames)
+	adapterNames := slices.Sorted(maps.Keys(cfg.Adapters))
 
 	for _, name := range adapterNames {
 		adapterCfg := cfg.Adapters[name]
@@ -55,7 +59,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 			Enabled:      true,
 			Scenario:     adapterCfg.Scenario,
 			Maturity:     string(meta.Maturity),
-			Capabilities: append([]string(nil), meta.Capabilities...),
+			Capabilities: slices.Clone(meta.Capabilities),
 		})
 		coverage = append(coverage, scenarioCoverage(meta))
 		matrix = append(matrix, behaviorMatrix(meta)...)
@@ -87,7 +91,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		_ = json.NewEncoder(w).Encode(rec.Snapshot())
 	})
 
-	return recordMiddleware(mux, rec, adapterStatuses), nil
+	return recordMiddleware(delayMiddleware(mux), rec, adapterStatuses), nil
 }
 
 func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
@@ -113,9 +117,9 @@ func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
 	status.ClientEvidence = append(status.ClientEvidence, manifest.ClientEvidence...)
 	if manifest.ContractEvidence != nil {
 		status.ContractEvidence = &report.ContractEvidence{
-			Fixtures:     append([]string(nil), manifest.ContractEvidence.Fixtures...),
-			SDKContracts: append([]string(nil), manifest.ContractEvidence.SDKContracts...),
-			KnownGaps:    append([]string(nil), manifest.ContractEvidence.KnownGaps...),
+			Fixtures:     slices.Clone(manifest.ContractEvidence.Fixtures),
+			SDKContracts: slices.Clone(manifest.ContractEvidence.SDKContracts),
+			KnownGaps:    slices.Clone(manifest.ContractEvidence.KnownGaps),
 		}
 	}
 	for _, unsupported := range manifest.Unsupported {
@@ -126,12 +130,21 @@ func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
 
 type statusRecorder struct {
 	http.ResponseWriter
-	status int
+	status      int
+	wroteHeader bool
 }
 
 func (r *statusRecorder) WriteHeader(status int) {
+	r.wroteHeader = true
 	r.status = status
 	r.ResponseWriter.WriteHeader(status)
+}
+
+func (r *statusRecorder) Write(data []byte) (int, error) {
+	if !r.wroteHeader {
+		r.WriteHeader(http.StatusOK)
+	}
+	return r.ResponseWriter.Write(data)
 }
 
 func (r *statusRecorder) Unwrap() http.ResponseWriter {
@@ -143,6 +156,9 @@ func recordMiddleware(next http.Handler, rec *report.Recorder, adapters []report
 		sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(sr, r)
 		if r.URL.Path != "/_mockport/report" {
+			if !sr.wroteHeader {
+				return
+			}
 			adapterName, scenario := classifyAdapter(r.URL.Path, adapters)
 			reason := ""
 			if sr.status == http.StatusNotFound || sr.status == http.StatusMethodNotAllowed {
@@ -169,7 +185,7 @@ func behaviorMatrix(meta adapter.Metadata) []report.BehaviorMatrixEntry {
 			Maturity:           string(meta.Maturity),
 			Method:             endpoint.Method,
 			Path:               endpoint.Path,
-			SupportedScenarios: append([]string(nil), endpoint.SupportedScenarios...),
+			SupportedScenarios: slices.Clone(endpoint.SupportedScenarios),
 			Notes:              endpoint.Notes,
 		})
 	}
@@ -182,7 +198,7 @@ func stateCoverage(meta adapter.Metadata) (report.StateCoverageStatus, bool) {
 	}
 	return report.StateCoverageStatus{
 		Adapter:           meta.Name,
-		StatefulResources: append([]string(nil), meta.StatefulResources...),
+		StatefulResources: slices.Clone(meta.StatefulResources),
 		Idempotency:       meta.Idempotency,
 		Reset:             meta.Reset,
 	}, true
@@ -190,9 +206,33 @@ func stateCoverage(meta adapter.Metadata) (report.StateCoverageStatus, bool) {
 
 func classifyAdapter(path string, adapters []report.AdapterStatus) (string, string) {
 	for _, adapter := range adapters {
-		if adapter.BasePath != "" && (path == adapter.BasePath || len(path) > len(adapter.BasePath) && path[:len(adapter.BasePath)+1] == adapter.BasePath+"/") {
+		if adapter.BasePath != "" && (path == adapter.BasePath || strings.HasPrefix(path, adapter.BasePath+"/")) {
 			return adapter.Name, adapter.Scenario
 		}
 	}
 	return "", ""
+}
+
+func delayMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rawDelay := strings.TrimSpace(r.Header.Get(delayHeader))
+		if rawDelay == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		delayMs, err := strconv.ParseInt(rawDelay, 10, 64)
+		if err != nil || delayMs < 0 || delayMs > int64(maxDelay/time.Millisecond) {
+			http.Error(w, "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)", http.StatusBadRequest)
+			return
+		}
+
+		delay := time.Duration(delayMs) * time.Millisecond
+		select {
+		case <-time.After(delay):
+			next.ServeHTTP(w, r)
+		case <-r.Context().Done():
+			return
+		}
+	})
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/adapter/httpx"
+	"github.com/albert-einshutoin/mockport/internal/security"
 	"github.com/albert-einshutoin/mockport/internal/state"
 )
 
@@ -75,6 +77,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodPost, Path: "/openai/v1/files", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like file creation for batch workflows"},
 			{Method: http.MethodPost, Path: "/openai/v1/batches", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like batch creation"},
 			{Method: http.MethodGet, Path: "/openai/v1/batches/{id}", SupportedScenarios: []string{"chat_success"}, Notes: "OpenAI-like batch lookup"},
+			{Method: http.MethodPost, Path: "/openai/test/reset", SupportedScenarios: []string{"chat_success", "stream_success", "rate_limited", "context_length_exceeded", "auth_error"}, Notes: "Clears state for test isolation"},
 		},
 	}
 }
@@ -90,7 +93,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":
-		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
 	case req.Method == http.MethodPost && path == "/v1/chat/completions":
 		r.writeCompletion(w, req, "chat.completion")
 	case req.Method == http.MethodPost && path == "/v1/responses":
@@ -105,9 +108,24 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeBatch(w, req)
 	case req.Method == http.MethodGet && strings.HasPrefix(path, "/v1/batches/"):
 		r.writeBatchLookup(w, strings.TrimPrefix(path, "/v1/batches/"))
+	case req.Method == http.MethodPost && path == "/test/reset":
+		r.handleReset(w, req)
 	default:
 		http.NotFound(w, req)
 	}
+}
+
+func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeError(w, http.StatusForbidden, "local_request_required", "OpenAI state reset can only be triggered from loopback")
+		return
+	}
+	resourceTypes := r.store.ResetAll("openai")
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"reset":          true,
+		"adapter":        "openai",
+		"resource_types": resourceTypes,
+	})
 }
 
 func (r *routes) writeCompletion(w http.ResponseWriter, req *http.Request, object string) {
@@ -339,13 +357,13 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 	var payload map[string]any
 	decoder := json.NewDecoder(req.Body)
 	if err := decoder.Decode(&payload); err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return map[string]any{}, nil
 		}
 		return nil, err
 	}
 	var trailing json.RawMessage
-	if err := decoder.Decode(&trailing); err != io.EOF {
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return nil, fmt.Errorf("unexpected trailing JSON value")
 		}
@@ -407,10 +425,10 @@ func writeChatCompletionStream(w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.WriteHeader(http.StatusOK)
-	chunk := map[string]interface{}{
+	chunk := map[string]any{
 		"id":     "mockport_openai_response",
 		"object": "chat.completion.chunk",
-		"choices": []map[string]interface{}{{
+		"choices": []map[string]any{{
 			"index": 0,
 			"delta": map[string]string{
 				"content": "Mockport response",

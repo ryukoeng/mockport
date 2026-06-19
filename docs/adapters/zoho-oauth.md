@@ -53,6 +53,7 @@ These links are references for behavior shape only; Mockport remains a determini
 | `GET` | `{base}/oauth/v2/auth` | Issues a fake authorization code and immediately redirects (302) to `redirect_uri` with `code` and the echoed `state`. |
 | `POST` | `{base}/oauth/v2/token` | Exchanges a fake authorization code for an access token. |
 | `GET` | `{base}/oauth/user/info` | Returns deterministic user info; requires the `Zoho-oauthtoken` auth scheme. |
+| `POST` | `{base}/test/reset` | Clears local OAuth state for test isolation (loopback callers only). |
 
 Notes on behavior:
 

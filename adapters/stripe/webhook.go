@@ -30,11 +30,11 @@ func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
 	if normalizeScenario(rt.cfg.Scenario) == scenarioPaymentFailed {
 		eventType = "payment_intent.payment_failed"
 	}
-	payload, err := json.Marshal(map[string]interface{}{
+	payload, err := json.Marshal(map[string]any{
 		"id":   "evt_mockport",
 		"type": eventType,
-		"data": map[string]interface{}{
-			"object": map[string]interface{}{
+		"data": map[string]any{
+			"object": map[string]any{
 				"id":     "cs_test_mockport",
 				"object": "checkout.session",
 			},
@@ -61,10 +61,24 @@ func (rt *routes) sendWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	rt.writeJSON(w, http.StatusAccepted, map[string]interface{}{
+	rt.writeJSON(w, http.StatusAccepted, map[string]any{
 		"sent":        true,
 		"target_url":  rt.cfg.WebhookTargetURL,
 		"event_type":  eventType,
 		"status_code": resp.StatusCode,
+	})
+}
+
+func (rt *routes) handleReset(w http.ResponseWriter, r *http.Request) {
+	if !security.IsLoopbackRemoteAddr(r.RemoteAddr) {
+		rt.writeStripeError(w, http.StatusForbidden, "invalid_request_error", "local_request_required", "state reset can only be triggered from loopback")
+		return
+	}
+	resourceTypes := rt.store.ResetAll("stripe")
+	rt.idempotency.ResetAll()
+	rt.writeJSON(w, http.StatusOK, map[string]any{
+		"reset":          true,
+		"adapter":        "stripe",
+		"resource_types": resourceTypes,
 	})
 }

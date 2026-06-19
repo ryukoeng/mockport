@@ -12,6 +12,7 @@ The `stripe` adapter provides deterministic local behavior for selected Stripe-l
 - PaymentIntents create/list/retrieve.
 - Customers, Products, Prices, Subscriptions, Invoices, and Refunds create/list/retrieve.
 - Stripe-like error envelopes for auth, rate limit, payment failure, timeout, validation, and idempotency conflicts.
+- `timeout` is an immediate timeout response shape; use `X-Mockport-Delay` (milliseconds) to inject realistic latency.
 - Fake signed webhook delivery to a configured local target.
 
 ## Base Path
@@ -83,6 +84,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `GET` | `/stripe/v1/refunds` | Lists local Refunds. |
 | `GET` | `/stripe/v1/refunds/{id}` | Retrieves a local Refund. |
 | `POST` | `/stripe/test/webhook/send` | Sends a fake signed webhook to the configured target URL. |
+| `POST` | `/stripe/test/reset` | Clears local state and idempotency records for test isolation. |
 
 ## Scenarios
 
@@ -92,7 +94,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `payment_failed` | Returns Stripe-like card decline behavior for payment creation and webhook helper paths. |
 | `auth_error` | Returns authentication-style failures. |
 | `rate_limited` | Returns rate limit behavior. |
-| `timeout` | Returns deterministic timeout behavior without sleeping. |
+| `timeout` | Returns deterministic timeout behavior immediately (504 response shape). For real latency, add `X-Mockport-Delay: <ms>` (max 30000). |
 
 ## Current Gaps And Tasks
 

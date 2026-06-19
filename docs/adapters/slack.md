@@ -63,6 +63,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | `GET` | `/slack/api/conversations.history` | Returns deterministic channel history. |
 | `POST` | `/slack/api/conversations.history` | Returns deterministic channel history. |
 | `POST` | `/slack/events` | Handles URL verification and a message callback subset. |
+| `POST` | `/slack/test/reset` | Clears local state and idempotency records for test isolation. |
 
 ## Scenarios
 

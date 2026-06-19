@@ -16,7 +16,7 @@ func TestCheckoutSessionSuccess(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	var body map[string]interface{}
+	var body map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
@@ -282,7 +282,7 @@ func TestWebhookSender(t *testing.T) {
 		if r.Header.Get("Stripe-Signature") == "" {
 			t.Error("missing Stripe-Signature header")
 		}
-		var body map[string]interface{}
+		var body map[string]any
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			t.Errorf("decode webhook body: %v", err)
 		}
@@ -352,12 +352,75 @@ func TestMetadata(t *testing.T) {
 	if len(meta.Scenarios) != 5 {
 		t.Fatalf("scenario count = %d, want 5", len(meta.Scenarios))
 	}
-	if len(meta.Endpoints) != 25 {
-		t.Fatalf("endpoint count = %d, want 25", len(meta.Endpoints))
+	if len(meta.Endpoints) != 26 {
+		t.Fatalf("endpoint count = %d, want 26", len(meta.Endpoints))
 	}
 	if !meta.Idempotency || !meta.Reset || len(meta.StatefulResources) != 8 {
 		t.Fatalf("state metadata = %#v", meta)
 	}
+}
+
+func TestResetClearsStateAndRequiresLoopback(t *testing.T) {
+	mux := newStripeMux(t, adapter.Config{
+		BasePath:             "/stripe",
+		Scenario:             "payment_success",
+		WebhookSigningSecret: "",
+		WebhookTargetURL:     "http://127.0.0.1:3000/webhook",
+	})
+
+	created := createStripeResource(t, mux, "/stripe/v1/customers", `{"email":"user@example.test"}`)
+	customerID, _ := created["id"].(string)
+
+	list := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/customers", "", nil)
+	if list.Code != http.StatusOK {
+		t.Fatalf("customers list before reset status = %d, body=%s", list.Code, list.Body.String())
+	}
+	var before struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(list.Body.Bytes(), &before); err != nil {
+		t.Fatalf("decode customers list before reset: %v", err)
+	}
+	if len(before.Data) != 1 {
+		t.Fatalf("customers before reset = %#v", before.Data)
+	}
+
+	reset := serveStripeRequestWithRemote(mux, http.MethodPost, "/stripe/test/reset", "", nil, "127.0.0.1:12345")
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", reset.Code, reset.Body.String())
+	}
+	var resetBody map[string]any
+	if err := json.Unmarshal(reset.Body.Bytes(), &resetBody); err != nil {
+		t.Fatalf("decode reset response: %v", err)
+	}
+	if resetBody["reset"] != true || resetBody["adapter"] != "stripe" {
+		t.Fatalf("reset body = %#v", resetBody)
+	}
+
+	lookupAfter := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/customers/"+customerID, "", nil)
+	if lookupAfter.Code != http.StatusNotFound {
+		t.Fatalf("customer lookup after reset status = %d, body=%s", lookupAfter.Code, lookupAfter.Body.String())
+	}
+
+	listAfter := serveStripeRequest(mux, http.MethodGet, "/stripe/v1/customers", "", nil)
+	if listAfter.Code != http.StatusOK {
+		t.Fatalf("customers list after reset status = %d, body=%s", listAfter.Code, listAfter.Body.String())
+	}
+	var after struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(listAfter.Body.Bytes(), &after); err != nil {
+		t.Fatalf("decode customers list after reset: %v", err)
+	}
+	if len(after.Data) != 0 {
+		t.Fatalf("customers after reset should be empty: %#v", after.Data)
+	}
+
+	remoteReset := serveStripeRequestWithRemote(mux, http.MethodPost, "/stripe/test/reset", "", nil, "192.168.0.2:12345")
+	if remoteReset.Code != http.StatusForbidden {
+		t.Fatalf("remote reset status = %d, body=%s", remoteReset.Code, remoteReset.Body.String())
+	}
+	assertStripeErrorCode(t, remoteReset, "local_request_required")
 }
 
 func performStripeRequest(t *testing.T, cfg adapter.Config, method, path string) *httptest.ResponseRecorder {

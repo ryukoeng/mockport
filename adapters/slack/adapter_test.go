@@ -20,7 +20,7 @@ func TestAuthTest(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	var body map[string]interface{}
+	var body map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode auth.test: %v", err)
 	}
@@ -184,11 +184,77 @@ func TestMetadata(t *testing.T) {
 	if meta.Name != "slack" || meta.Maturity != "workflow-compatible" {
 		t.Fatalf("metadata = %#v", meta)
 	}
-	if meta.ProviderVersion != "2025-02-01" || len(meta.Levels) < 5 || len(meta.Endpoints) < 6 {
+	if meta.ProviderVersion != "2025-02-01" || len(meta.Levels) < 5 || len(meta.Endpoints) < 7 {
 		t.Fatalf("compat metadata = %#v", meta)
 	}
 	if !meta.Reset || len(meta.StatefulResources) != 4 {
 		t.Fatalf("state metadata = %#v", meta)
+	}
+	found := false
+	for _, endpoint := range meta.Endpoints {
+		if endpoint.Path == "/slack/test/reset" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("metadata missing /slack/test/reset")
+	}
+}
+
+func TestResetClearsStateAndRequiresLoopback(t *testing.T) {
+	mux := newSlackMux(t, adapter.Config{BasePath: "/slack", Scenario: "message_success"})
+
+	post := serveSlackRequest(mux, http.MethodPost, "/slack/api/chat.postMessage", "channel=C_MOCKPORT&text=hello")
+	if post.Code != http.StatusOK {
+		t.Fatalf("post status = %d, body=%s", post.Code, post.Body.String())
+	}
+	historyBefore := serveSlackRequest(mux, http.MethodGet, "/slack/api/conversations.history?channel=C_MOCKPORT", "")
+	if historyBefore.Code != http.StatusOK {
+		t.Fatalf("history before reset status = %d, body=%s", historyBefore.Code, historyBefore.Body.String())
+	}
+	var beforeBody struct {
+		Messages []map[string]any `json:"messages"`
+	}
+	if err := json.Unmarshal(historyBefore.Body.Bytes(), &beforeBody); err != nil {
+		t.Fatalf("decode history before reset: %v", err)
+	}
+	if len(beforeBody.Messages) != 1 {
+		t.Fatalf("messages before reset = %#v", beforeBody.Messages)
+	}
+
+	reset := serveSlackResetRequest(mux, "127.0.0.1:12345")
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", reset.Code, reset.Body.String())
+	}
+	var resetBody map[string]any
+	if err := json.Unmarshal(reset.Body.Bytes(), &resetBody); err != nil {
+		t.Fatalf("decode reset response: %v", err)
+	}
+	if resetBody["reset"] != true || resetBody["adapter"] != "slack" {
+		t.Fatalf("reset body = %#v", resetBody)
+	}
+
+	historyAfter := serveSlackRequest(mux, http.MethodGet, "/slack/api/conversations.history?channel=C_MOCKPORT", "")
+	if historyAfter.Code != http.StatusOK {
+		t.Fatalf("history after reset status = %d, body=%s", historyAfter.Code, historyAfter.Body.String())
+	}
+	var afterBody struct {
+		Messages []map[string]any `json:"messages"`
+	}
+	if err := json.Unmarshal(historyAfter.Body.Bytes(), &afterBody); err != nil {
+		t.Fatalf("decode history after reset: %v", err)
+	}
+	if len(afterBody.Messages) != 0 {
+		t.Fatalf("messages after reset should be empty: %#v", afterBody.Messages)
+	}
+
+	remoteReset := serveSlackResetRequestWithRemote(mux, "192.168.0.2:12345")
+	if remoteReset.Code != http.StatusForbidden {
+		t.Fatalf("remote reset status = %d, body=%s", remoteReset.Code, remoteReset.Body.String())
+	}
+	if !strings.Contains(remoteReset.Body.String(), "local_request_required") {
+		t.Fatalf("remote reset body = %s", remoteReset.Body.String())
 	}
 }
 
@@ -236,6 +302,18 @@ func slackSignature(secret, timestamp, body string) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	_, _ = mac.Write([]byte("v0:" + timestamp + ":" + body))
 	return "v0=" + hex.EncodeToString(mac.Sum(nil))
+}
+
+func serveSlackResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/slack/test/reset", nil)
+	req.RemoteAddr = remoteAddr
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	return rec
+}
+
+func serveSlackResetRequestWithRemote(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
+	return serveSlackResetRequest(mux, remoteAddr)
 }
 
 func assertSlackError(t *testing.T, rec *httptest.ResponseRecorder, want string) {

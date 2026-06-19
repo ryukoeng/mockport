@@ -1,0 +1,15 @@
+title = "Mockport Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[rules]]
+# This merges the allowlist below into Gitleaks' default generic-api-key rule.
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Allow fake Stripe-like keys used by redaction unit tests."
+condition = "AND"
+regexTarget = "line"
+paths = ['''internal/security/secrets_test\.go''']
+regexes = ['''sk_live_123456789''']

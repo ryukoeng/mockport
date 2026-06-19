@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -168,6 +169,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodGet, Path: "/line/v2/profile", SupportedScenarios: []string{"line_success", "auth_error"}, Notes: "LINE Login-like profile endpoint"},
 			{Method: http.MethodGet, Path: "/line/liff/v2/profile", SupportedScenarios: []string{"line_success", "auth_error"}, Notes: "LIFF profile helper for local app tests"},
 			{Method: http.MethodGet, Path: "/line/liff/v2/context", SupportedScenarios: []string{"line_success"}, Notes: "LIFF context helper for local app tests"},
+			{Method: http.MethodPost, Path: "/line/test/reset", SupportedScenarios: []string{"line_success", "auth_error", "rate_limited", "invalid_request", "pay_failed"}, Notes: "Clears state for test isolation"},
 			{Method: http.MethodPost, Path: "/line/message/v3/notifier/token", SupportedScenarios: []string{"line_success", "auth_error", "invalid_request"}, Notes: "LINE MINI App Service Message API-like notification token issue"},
 			{Method: http.MethodPost, Path: "/line/message/v3/notifier/send", SupportedScenarios: []string{"line_success", "auth_error", "invalid_request"}, Notes: "LINE MINI App Service Message API-like send"},
 			{Method: http.MethodPost, Path: "/line/v3/payments/request", SupportedScenarios: []string{"line_success", "auth_error", "pay_failed", "invalid_request"}, Notes: "LINE Pay v3-like payment request"},
@@ -224,6 +226,13 @@ func (r *routes) deleteRichMenu(id string) bool {
 		r.defaultRichMenuID = ""
 	}
 	return true
+}
+
+func (r *routes) resetSingletonState() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.webhookEndpoint = ""
+	r.defaultRichMenuID = ""
 }
 
 // setDefaultRichMenuChecked validates that the rich menu still exists with an
@@ -289,6 +298,8 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeWebhookTest(w)
 	case req.Method == http.MethodPost && path == "/test/webhook/send":
 		r.sendWebhook(w, req)
+	case req.Method == http.MethodPost && path == "/test/reset":
+		r.handleReset(w, req)
 	case req.Method == http.MethodGet && path == "/oauth2/v2.1/authorize":
 		r.writeAuthorize(w, req)
 	case req.Method == http.MethodPost && path == "/oauth2/v2.1/token":
@@ -620,6 +631,20 @@ func (r *routes) sendWebhook(w http.ResponseWriter, req *http.Request) {
 		"target_url":  r.cfg.WebhookTargetURL,
 		"event_count": len(events),
 		"status_code": resp.StatusCode,
+	})
+}
+
+func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeLINEError(w, http.StatusForbidden, "line reset can only be triggered from loopback")
+		return
+	}
+	r.resetSingletonState()
+	resourceTypes := r.store.ResetAll("line")
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"reset":          true,
+		"adapter":        "line",
+		"resource_types": resourceTypes,
 	})
 }
 
@@ -1342,13 +1367,13 @@ func decodePayload(req *http.Request) (map[string]any, error) {
 	var payload map[string]any
 	decoder := json.NewDecoder(req.Body)
 	if err := decoder.Decode(&payload); err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return map[string]any{}, nil
 		}
 		return nil, err
 	}
 	var trailing json.RawMessage
-	if err := decoder.Decode(&trailing); err != io.EOF {
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return nil, fmt.Errorf("unexpected trailing JSON value")
 		}

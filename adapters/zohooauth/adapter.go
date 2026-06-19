@@ -69,6 +69,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 			{Method: http.MethodGet, Path: "/zoho/oauth/v2/auth", SupportedScenarios: []string{"oauth_success"}, Notes: "Zoho OAuth-like authorize redirect (no login screen)"},
 			{Method: http.MethodPost, Path: "/zoho/oauth/v2/token", SupportedScenarios: []string{"oauth_success", "invalid_code"}, Notes: "Zoho OAuth-like token exchange"},
 			{Method: http.MethodGet, Path: "/zoho/oauth/user/info", SupportedScenarios: []string{"oauth_success", "invalid_token"}, Notes: "Zoho-like user info (Zoho-oauthtoken auth scheme)"},
+			{Method: http.MethodPost, Path: "/zoho/test/reset", SupportedScenarios: []string{"oauth_success", "invalid_code", "invalid_token"}, Notes: "Clears state for test isolation"},
 		},
 	}
 }
@@ -89,9 +90,26 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.token(w, req)
 	case req.Method == http.MethodGet && path == "/oauth/user/info":
 		r.userInfo(w, req)
+	case req.Method == http.MethodPost && path == "/test/reset":
+		r.handleReset(w, req)
 	default:
 		http.NotFound(w, req)
 	}
+}
+
+// handleReset clears adapter state for test isolation. It is restricted to
+// loopback callers, matching the other adapters' reset endpoints.
+func (r *routes) handleReset(w http.ResponseWriter, req *http.Request) {
+	if !security.IsLoopbackRemoteAddr(req.RemoteAddr) {
+		writeError(w, http.StatusForbidden, "loopback_required")
+		return
+	}
+	resourceTypes := r.store.ResetAll(adapterName)
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"reset":          true,
+		"adapter":        adapterName,
+		"resource_types": resourceTypes,
+	})
 }
 
 // authorize emulates GET /oauth/v2/auth: it never shows a login screen and

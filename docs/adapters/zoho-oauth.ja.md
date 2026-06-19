@@ -40,6 +40,7 @@ adapters:
 | `GET` | `{base}/oauth/v2/auth` | fake authorization code を発行し、`redirect_uri` へ 302 redirect（`code` 付与・`state` echo）。 |
 | `POST` | `{base}/oauth/v2/token` | authorization code を access token に交換。 |
 | `GET` | `{base}/oauth/user/info` | deterministic な user info を返す。`Zoho-oauthtoken` scheme が必須。 |
+| `POST` | `{base}/test/reset` | test isolation 用に local OAuth state を消去（loopback からのみ）。 |
 
 挙動の要点:
 

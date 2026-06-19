@@ -74,7 +74,7 @@ func TestUser(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	var body map[string]interface{}
+	var body map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode user: %v", err)
 	}
@@ -277,6 +277,94 @@ func TestMetadata(t *testing.T) {
 	if !meta.Reset || len(meta.StatefulResources) != 3 {
 		t.Fatalf("state metadata = %#v", meta)
 	}
+	found := false
+	for _, endpoint := range meta.Endpoints {
+		if endpoint.Path == "/github/test/reset" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("metadata missing /github/test/reset")
+	}
+}
+
+func TestResetClearsOAuthStateAndRequiresLoopback(t *testing.T) {
+	mux := newGitHubMux(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+
+	auth := serveGitHubRequest(
+		mux,
+		http.MethodGet,
+		"/github/login/oauth/authorize?client_id=mockport_github_client&redirect_uri=http://localhost/callback&state=s1",
+		"",
+		nil,
+	)
+	if auth.Code != http.StatusFound {
+		t.Fatalf("authorize status = %d, body=%s", auth.Code, auth.Body.String())
+	}
+	code := redirectCode(t, auth)
+
+	token := serveGitHubRequest(
+		mux,
+		http.MethodPost,
+		"/github/login/oauth/access_token",
+		"code="+code+"&redirect_uri=http://localhost/callback&client_id=mockport_github_client",
+		map[string]string{"Accept": "application/json"},
+	)
+	if token.Code != http.StatusOK {
+		t.Fatalf("token status = %d, body=%s", token.Code, token.Body.String())
+	}
+	var tokenBody map[string]any
+	if err := json.Unmarshal(token.Body.Bytes(), &tokenBody); err != nil {
+		t.Fatalf("decode token: %v", err)
+	}
+	accessToken, _ := tokenBody["access_token"].(string)
+	if strings.TrimSpace(accessToken) == "" {
+		t.Fatalf("missing access_token: %#v", tokenBody)
+	}
+
+	before := serveGitHubRequest(
+		mux,
+		http.MethodGet,
+		"/github/user",
+		"",
+		map[string]string{"Authorization": "Bearer " + accessToken},
+	)
+	if before.Code != http.StatusOK {
+		t.Fatalf("user status before reset = %d, body=%s", before.Code, before.Body.String())
+	}
+
+	reset := serveGitHubResetRequest(mux, "127.0.0.1:12345")
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", reset.Code, reset.Body.String())
+	}
+	var resetBody map[string]any
+	if err := json.Unmarshal(reset.Body.Bytes(), &resetBody); err != nil {
+		t.Fatalf("decode reset response: %v", err)
+	}
+	if resetBody["reset"] != true || resetBody["adapter"] != "github-oauth" {
+		t.Fatalf("reset body = %#v", resetBody)
+	}
+
+	after := serveGitHubRequest(
+		mux,
+		http.MethodGet,
+		"/github/user",
+		"",
+		map[string]string{"Authorization": "Bearer " + accessToken},
+	)
+	if after.Code != http.StatusUnauthorized {
+		t.Fatalf("user status after reset = %d, body=%s", after.Code, after.Body.String())
+	}
+	assertGitHubMessage(t, after, "Bad credentials")
+
+	remoteReset := serveGitHubResetRequest(mux, "192.168.0.2:12345")
+	if remoteReset.Code != http.StatusForbidden {
+		t.Fatalf("remote reset status = %d, body=%s", remoteReset.Code, remoteReset.Body.String())
+	}
+	if !strings.Contains(remoteReset.Body.String(), "loopback") {
+		t.Fatalf("remote reset body = %s", remoteReset.Body.String())
+	}
 }
 
 func performRequest(t *testing.T, cfg adapter.Config, method, path string) *httptest.ResponseRecorder {
@@ -302,6 +390,14 @@ func serveGitHubRequest(mux http.Handler, method, path, body string, headers map
 	for name, value := range headers {
 		req.Header.Set(name, value)
 	}
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	return rec
+}
+
+func serveGitHubResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/github/test/reset", nil)
+	req.RemoteAddr = remoteAddr
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	return rec

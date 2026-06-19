@@ -117,6 +117,7 @@ Supported Messaging API-like endpoint groups:
 | Send messages | Push/reply return `sentMessages`; multicast/broadcast return `{}`; narrowcast returns `202` and exposes a deterministic progress lookup. |
 | Validate messages | `POST /v2/bot/message/validate/{type}` accepts 1 to 5 message objects and returns LINE-style details for invalid payloads. |
 | Message content | Content, preview, and transcoding endpoints return deterministic local binary/status responses. No retention window is modeled. |
+| Test/state utility | `POST /line/test/reset` clears all LINE adapter state resources for test isolation. |
 | Webhook settings and delivery | Webhook endpoint `PUT`/`GET` stores a valid HTTPS URL in process memory; webhook test returns a deterministic success result; `/test/webhook/send` sends a signed LINE-like webhook to the configured local target. |
 | Bot/account info | Bot info, quota, quota consumption, delivery statistics, aggregation info/list, and follower ID lookups return deterministic data. |
 | Chats | Mark-as-read and loading animation endpoints acknowledge valid local calls. |

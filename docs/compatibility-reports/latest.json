@@ -42,7 +42,8 @@
         "POST /github/login/oauth/access_token",
         "GET /github/user",
         "GET /github/user/emails",
-        "GET /github/user/orgs"
+        "GET /github/user/orgs",
+        "POST /github/test/reset"
       ],
       "known_gaps": [
         "No real GitHub policy, repository permissions, SSO, org/enterprise enforcement, or app installation model."
@@ -143,6 +144,7 @@
         "GET /line/v2/profile",
         "GET /line/liff/v2/profile",
         "GET /line/liff/v2/context",
+        "POST /line/test/reset",
         "POST /line/message/v3/notifier/token",
         "POST /line/message/v3/notifier/send",
         "POST /line/v3/payments/request",
@@ -189,7 +191,8 @@
         "POST /openai/v1/embeddings",
         "POST /openai/v1/files",
         "POST /openai/v1/batches",
-        "GET /openai/v1/batches/{id}"
+        "GET /openai/v1/batches/{id}",
+        "POST /openai/test/reset"
       ],
       "known_gaps": [
         "No real model quality, tokenization parity, hosted tools, vector stores, or provider scheduling."
@@ -227,7 +230,8 @@
         "POST /slack/api/conversations.list",
         "GET /slack/api/conversations.history",
         "POST /slack/api/conversations.history",
-        "POST /slack/events"
+        "POST /slack/events",
+        "POST /slack/test/reset"
       ],
       "known_gaps": [
         "No real delivery, Events API completeness, Block Kit validation, files, app scopes, enterprise policy, or full workspace directory."
@@ -241,7 +245,7 @@
       "score": 100,
       "provider_version": "2025-10-29.clover",
       "sdk_versions": [
-        "stripe@22.2.0"
+        "stripe@22.2.1"
       ],
       "client_evidence": [],
       "endpoint_coverage": 100,
@@ -286,7 +290,8 @@
         "POST /stripe/v1/refunds",
         "GET /stripe/v1/refunds",
         "GET /stripe/v1/refunds/{id}",
-        "POST /stripe/test/webhook/send"
+        "POST /stripe/test/webhook/send",
+        "POST /stripe/test/reset"
       ],
       "known_gaps": [
         "No fraud, payment network, tax, disputes, Connect, or full Billing lifecycle."
@@ -317,7 +322,8 @@
       "endpoints": [
         "GET /zoho/oauth/v2/auth",
         "POST /zoho/oauth/v2/token",
-        "GET /zoho/oauth/user/info"
+        "GET /zoho/oauth/user/info",
+        "POST /zoho/test/reset"
       ],
       "known_gaps": [
         "No real Zoho login UI, MFA, data-center/org routing, token refresh, scope enforcement, or full user profile fields."

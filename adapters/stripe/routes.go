@@ -58,7 +58,7 @@ func (r routeEntry) matches(method, path string) bool {
 }
 
 func (rt *routes) routes() []routeEntry {
-	resource := func(resourceType, path string, fallback func(string) map[string]interface{}, body map[string]interface{}, required []string) []routeEntry {
+	resource := func(resourceType, path string, fallback func(string) map[string]any, body map[string]any, required []string) []routeEntry {
 		return []routeEntry{
 			{method: http.MethodPost, path: path, handle: func(w http.ResponseWriter, r *http.Request, _ string) {
 				rt.writeGenericResource(w, r, resourceType, body, required)
@@ -83,13 +83,14 @@ func (rt *routes) routes() []routeEntry {
 			rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
 		}},
 		{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
+		{method: http.MethodPost, path: "/test/reset", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.handleReset(w, r) }},
 	}
-	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]interface{}{"object": "customer"}, nil)...)
-	routes = append(routes, resource("product", "/v1/products", nil, map[string]interface{}{"object": "product", "active": true}, []string{"name"})...)
-	routes = append(routes, resource("price", "/v1/prices", nil, map[string]interface{}{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})...)
-	routes = append(routes, resource("subscription", "/v1/subscriptions", nil, map[string]interface{}{"object": "subscription", "status": "active"}, []string{"customer"})...)
-	routes = append(routes, resource("invoice", "/v1/invoices", nil, map[string]interface{}{"object": "invoice", "status": "draft"}, []string{"customer"})...)
-	routes = append(routes, resource("refund", "/v1/refunds", nil, map[string]interface{}{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})...)
+	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)...)
+	routes = append(routes, resource("product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})...)
+	routes = append(routes, resource("price", "/v1/prices", nil, map[string]any{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})...)
+	routes = append(routes, resource("subscription", "/v1/subscriptions", nil, map[string]any{"object": "subscription", "status": "active"}, []string{"customer"})...)
+	routes = append(routes, resource("invoice", "/v1/invoices", nil, map[string]any{"object": "invoice", "status": "draft"}, []string{"customer"})...)
+	routes = append(routes, resource("refund", "/v1/refunds", nil, map[string]any{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})...)
 	return routes
 }
 
@@ -150,7 +151,7 @@ func (rt *routes) writePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rt *routes) writeGenericResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]interface{}, required []string) {
+func (rt *routes) writeGenericResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]any, required []string) {
 	fields := formFields(r)
 	if !rt.validateFormFields(w, fields) {
 		return
@@ -167,7 +168,7 @@ func (rt *routes) writeGenericResource(w http.ResponseWriter, r *http.Request, r
 	rt.createStatefulResource(w, r, resourceType, body)
 }
 
-func (rt *routes) createStatefulResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]interface{}) {
+func (rt *routes) createStatefulResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]any) {
 	scope := "stripe:" + resourceType
 	fingerprint := requestFingerprint(r)
 
@@ -192,7 +193,7 @@ func (rt *routes) createStatefulResource(w http.ResponseWriter, r *http.Request,
 	rt.writeJSON(w, idempotentResponse.Status, idempotentResponse.Body)
 }
 
-func (rt *routes) writeResource(w http.ResponseWriter, resourceType, id string, fallback func(string) map[string]interface{}) {
+func (rt *routes) writeResource(w http.ResponseWriter, resourceType, id string, fallback func(string) map[string]any) {
 	if resource, ok := rt.store.Get("stripe", resourceType, id); ok {
 		body := resource.Data
 		body["id"] = resource.ID
@@ -207,7 +208,7 @@ func (rt *routes) writeResource(w http.ResponseWriter, resourceType, id string, 
 }
 
 func (rt *routes) writeList(w http.ResponseWriter, resourceType string) {
-	var data []map[string]interface{}
+	var data []map[string]any
 	for _, resource := range rt.store.List("stripe", resourceType) {
 		body := resource.Data
 		body["id"] = resource.ID
@@ -216,16 +217,16 @@ func (rt *routes) writeList(w http.ResponseWriter, resourceType string) {
 	rt.writeJSON(w, http.StatusOK, listResponse{Object: "list", Data: data})
 }
 
-func fallbackCheckoutSession(id string) map[string]interface{} {
-	return map[string]interface{}{
+func fallbackCheckoutSession(id string) map[string]any {
+	return map[string]any{
 		"id":             id,
 		"object":         "checkout.session",
 		"payment_status": "paid",
 	}
 }
 
-func fallbackPaymentIntent(id string) map[string]interface{} {
-	return map[string]interface{}{
+func fallbackPaymentIntent(id string) map[string]any {
+	return map[string]any{
 		"id":     id,
 		"object": "payment_intent",
 		"status": "succeeded",
@@ -304,7 +305,7 @@ func (rt *routes) writeStripeError(w http.ResponseWriter, status int, typ, code,
 	rt.writeJSON(w, status, errorBody{Error: stripeError{Type: typ, Code: code, Message: message}})
 }
 
-func (rt *routes) writeJSON(w http.ResponseWriter, status int, body interface{}) {
+func (rt *routes) writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Request-Id", "req_mockport")
 	w.Header().Set("Stripe-Version", "2025-10-29.clover")
@@ -330,7 +331,7 @@ func missingFields(fields formValues, required ...string) []string {
 	return missing
 }
 
-func parseFormValue(value string) interface{} {
+func parseFormValue(value string) any {
 	if parsed, err := strconv.Atoi(value); err == nil {
 		return parsed
 	}

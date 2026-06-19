@@ -3,7 +3,7 @@ package state
 import (
 	"fmt"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -98,7 +98,7 @@ func (s *Store) List(adapter, resourceType string) []Resource {
 	for id := range entries {
 		ids = append(ids, id)
 	}
-	sort.Strings(ids)
+	slices.Sort(ids)
 	out := make([]Resource, 0, len(ids))
 	for _, id := range ids {
 		out = append(out, cloneResource(entries[id]))
@@ -145,6 +145,27 @@ func (s *Store) Reset(adapter, resourceType string) {
 	key := newScope(adapter, resourceType)
 	delete(s.resources, key)
 	delete(s.counters, key)
+}
+
+func (s *Store) ResetAll(adapter string) []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	normalized := sanitize(adapter)
+	var resourceTypes []string
+	for key := range s.resources {
+		if key.adapter == normalized {
+			resourceTypes = append(resourceTypes, key.resourceType)
+			delete(s.resources, key)
+		}
+	}
+	for key := range s.counters {
+		if key.adapter == normalized {
+			delete(s.counters, key)
+		}
+	}
+	slices.Sort(resourceTypes)
+	return resourceTypes
 }
 
 func newScope(adapter, resourceType string) scope {
@@ -211,7 +232,7 @@ func evictOldestLocked(resources map[string]Resource, max int) {
 	for id := range resources {
 		ids = append(ids, id)
 	}
-	sort.Strings(ids)
+	slices.Sort(ids)
 	for len(resources) > max {
 		delete(resources, ids[0])
 		ids = ids[1:]

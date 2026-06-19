@@ -221,9 +221,49 @@ func TestMetadata(t *testing.T) {
 	if meta.Name != adapterName || meta.Maturity != adapter.MaturityWorkflowCompatible {
 		t.Fatalf("metadata = %#v", meta)
 	}
-	if !meta.Reset || len(meta.StatefulResources) != 2 || len(meta.Endpoints) != 3 {
+	if !meta.Reset || len(meta.StatefulResources) != 2 || len(meta.Endpoints) != 4 {
 		t.Fatalf("metadata surface = %#v", meta)
 	}
+}
+
+func TestResetClearsStateAndRequiresLoopback(t *testing.T) {
+	mux := newZohoMux(t, adapter.Config{BasePath: "/zoho"})
+	token := issueToken(t, mux, "")
+
+	before := serve(mux, http.MethodGet, "/zoho/oauth/user/info", "", map[string]string{"Authorization": authScheme + token})
+	if before.Code != http.StatusOK {
+		t.Fatalf("user before reset = %d", before.Code)
+	}
+
+	reset := serveZohoReset(mux, "127.0.0.1:12345")
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset status = %d, body=%s", reset.Code, reset.Body.String())
+	}
+	body := decode(t, reset)
+	if body["reset"] != true || body["adapter"] != "zoho-oauth" {
+		t.Fatalf("reset body = %#v", body)
+	}
+
+	after := serve(mux, http.MethodGet, "/zoho/oauth/user/info", "", map[string]string{"Authorization": authScheme + token})
+	if after.Code != http.StatusUnauthorized {
+		t.Fatalf("user after reset = %d, want 401", after.Code)
+	}
+
+	remote := serveZohoReset(mux, "192.168.0.2:12345")
+	if remote.Code != http.StatusForbidden {
+		t.Fatalf("remote reset = %d, want 403", remote.Code)
+	}
+	if !strings.Contains(remote.Body.String(), "loopback") {
+		t.Fatalf("remote reset body = %s", remote.Body.String())
+	}
+}
+
+func serveZohoReset(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/zoho/test/reset", nil)
+	req.RemoteAddr = remoteAddr
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	return rec
 }
 
 // --- helpers ---
