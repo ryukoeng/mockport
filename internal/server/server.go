@@ -154,16 +154,21 @@ func (r *statusRecorder) Unwrap() http.ResponseWriter {
 func recordMiddleware(next http.Handler, rec *report.Recorder, adapters []report.AdapterStatus) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sr := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		// 解決済みシナリオを受け取るためのホルダを context に差し込む。
+		// アダプタの ScenarioResolver.Resolve が成功した場合のみ値が書き込まれる。
+		r = adapter.WithScenarioCapture(r)
 		next.ServeHTTP(sr, r)
 		if r.URL.Path != "/_mockport/report" {
 			if !sr.wroteHeader {
 				return
 			}
 			adapterName, scenario := classifyAdapter(r.URL.Path, adapters)
-			// X-Mockport-Scenario ヘッダが存在する場合はそちらを記録する。
-			// アダプタ側での検証が済んでいるため、値をそのまま使う。
-			if headerScenario := strings.TrimSpace(r.Header.Get(adapter.ScenarioHeader)); headerScenario != "" {
-				scenario = headerScenario
+			// アダプタ側で検証され実際に採用されたシナリオのみをレポートへ記録する。
+			// 未知シナリオで 400 になったリクエストでは値が書き込まれないため、
+			// 不正なヘッダ値（例: totally_unknown）がレポートに混入しない。
+			// 値が無い場合は classifyAdapter が返す config/デフォルトのシナリオを使う。
+			if resolved, ok := adapter.ResolvedScenarioFromContext(r.Context()); ok {
+				scenario = resolved
 			}
 			reason := ""
 			if sr.status == http.StatusNotFound || sr.status == http.StatusMethodNotAllowed {

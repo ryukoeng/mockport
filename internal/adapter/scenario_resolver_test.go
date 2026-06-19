@@ -96,3 +96,51 @@ func TestScenarioResolver(t *testing.T) {
 		})
 	}
 }
+
+// TestResolveStoresResolvedScenarioInContext は Resolve 成功時に検証済みシナリオが
+// context へ記録され、ResolvedScenarioFromContext で取得できることを固定する。
+func TestResolveStoresResolvedScenarioInContext(t *testing.T) {
+	meta := adapter.Metadata{
+		Name:      "stripe",
+		Scenarios: []adapter.Scenario{{Name: "payment_success", Supported: true}, {Name: "payment_failed", Supported: true}},
+	}
+	resolver := adapter.NewScenarioResolver(adapter.Config{Scenario: "payment_success"}, "payment_success", meta)
+
+	req := adapter.WithScenarioCapture(httptest.NewRequest(http.MethodGet, "/", nil))
+	req.Header.Set(adapter.ScenarioHeader, "payment_failed")
+
+	got, err := resolver.Resolve(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "payment_failed" {
+		t.Fatalf("resolve = %q, want payment_failed", got)
+	}
+	stored, ok := adapter.ResolvedScenarioFromContext(req.Context())
+	if !ok {
+		t.Fatal("ResolvedScenarioFromContext ok = false, want true")
+	}
+	if stored != "payment_failed" {
+		t.Fatalf("stored scenario = %q, want payment_failed", stored)
+	}
+}
+
+// TestResolveDoesNotStoreUnknownScenario は未知シナリオで Resolve が失敗した場合、
+// context に何も書き込まれないこと（不正値が混入しないこと）を固定する。
+func TestResolveDoesNotStoreUnknownScenario(t *testing.T) {
+	meta := adapter.Metadata{
+		Name:      "stripe",
+		Scenarios: []adapter.Scenario{{Name: "payment_success", Supported: true}},
+	}
+	resolver := adapter.NewScenarioResolver(adapter.Config{Scenario: "payment_success"}, "payment_success", meta)
+
+	req := adapter.WithScenarioCapture(httptest.NewRequest(http.MethodGet, "/", nil))
+	req.Header.Set(adapter.ScenarioHeader, "totally_unknown")
+
+	if _, err := resolver.Resolve(req); !errors.Is(err, adapter.ErrUnknownScenario) {
+		t.Fatalf("err = %v, want ErrUnknownScenario", err)
+	}
+	if stored, ok := adapter.ResolvedScenarioFromContext(req.Context()); ok {
+		t.Fatalf("stored scenario = %q, must not be set on unknown scenario", stored)
+	}
+}
