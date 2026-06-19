@@ -53,15 +53,35 @@ func Validate(cfg *Config) error {
 		}
 	}
 
-	if cfg.Mode == "strict" && len(warnings) > 0 {
-		fields := make([]string, 0, len(warnings))
-		for _, warning := range warnings {
-			fields = append(fields, warning.Field)
-		}
-		slices.Sort(fields)
-		return fmt.Errorf("strict mode rejected unsafe config fields: %s", strings.Join(fields, ", "))
+	// scenarios: ブロックが設定されていても未実装のため警告のみ（エラーにしない）
+	if len(cfg.Scenarios) > 0 {
+		warnings = append(warnings, SafetyWarning{
+			Field:    "scenarios",
+			Category: "unsupported_config",
+			Message:  "the scenarios block is not implemented yet and is ignored; see docs/scenario-policy.md",
+		})
 	}
-	cfg.SafetyWarnings = warnings
+
+	// strict モードは秘密情報・外部URL・公開バインドなどのセキュリティ系警告のみ起動拒否する。
+	// unsupported_config / unknown_config_key はユーザビリティ警告であり strict 対象外。
+	if cfg.Mode == "strict" {
+		var strictWarnings []SafetyWarning
+		for _, w := range warnings {
+			if w.Category != "unsupported_config" && w.Category != "unknown_config_key" {
+				strictWarnings = append(strictWarnings, w)
+			}
+		}
+		if len(strictWarnings) > 0 {
+			fields := make([]string, 0, len(strictWarnings))
+			for _, w := range strictWarnings {
+				fields = append(fields, w.Field)
+			}
+			slices.Sort(fields)
+			return fmt.Errorf("strict mode rejected unsafe config fields: %s", strings.Join(fields, ", "))
+		}
+	}
+	// loader.go の2段デコードで事前に追加された unknown_config_key 警告を保持しつつマージする
+	cfg.SafetyWarnings = append(cfg.SafetyWarnings, warnings...)
 	return nil
 }
 
