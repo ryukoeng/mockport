@@ -71,3 +71,26 @@ func TestZohoOAuthUnknownScenarioReturns400(t *testing.T) {
 		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
 	}
 }
+
+// TestZohoUserInfoUnknownScenarioReturns400 は userInfo 経路の未知シナリオが
+// 400 + 機械可読な error=unknown_mockport_scenario を返すことを固定する（S3）。
+// userInfo は token 経路（Zoho の業務エラーは 200）と異なり、Mockport レベルの
+// 設定エラーとして真の 400 を返すのが妥当であり、その挙動をここで固定する。
+func TestZohoUserInfoUnknownScenarioReturns400(t *testing.T) {
+	mux := newZohoMuxForScenario(t, adapter.Config{BasePath: "/zoho", Scenario: "oauth_success"})
+	req := httptest.NewRequest(http.MethodGet, "/zoho/oauth/user/info", nil)
+	req.Header.Set("Authorization", "Zoho-oauthtoken sometoken")
+	req.Header.Set("X-Mockport-Scenario", "totally_fake")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("want 400, got %d", rec.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if errStr, _ := body["error"].(string); errStr != "unknown_mockport_scenario" {
+		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
+	}
+}
