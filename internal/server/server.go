@@ -160,6 +160,11 @@ func recordMiddleware(next http.Handler, rec *report.Recorder, adapters []report
 				return
 			}
 			adapterName, scenario := classifyAdapter(r.URL.Path, adapters)
+			// X-Mockport-Scenario ヘッダが存在する場合はそちらを記録する。
+			// アダプタ側での検証が済んでいるため、値をそのまま使う。
+			if headerScenario := strings.TrimSpace(r.Header.Get(adapter.ScenarioHeader)); headerScenario != "" {
+				scenario = headerScenario
+			}
 			reason := ""
 			if sr.status == http.StatusNotFound || sr.status == http.StatusMethodNotAllowed {
 				reason = "unsupported_endpoint"
