@@ -9,6 +9,7 @@
 | `github-oauth` | `/github` | `workflow-compatible` | authorize redirect, token exchange, user profile, user emails, user orgs |
 | `slack` | `/slack` | `workflow-compatible` | auth test, conversations list/history, message post/update/delete, Events API URL verification/message callback subset |
 | `line` | `/line` | `workflow-compatible` | Messaging API send/content/signed webhook/rich menu/channel token workflows, LINE Login OAuth/profile, LIFF helpers, MINI App service messages, LINE Pay request/confirm, Mini Dapp wallet/payment helpers |
+| `zoho-oauth` | `/zoho` | `workflow-compatible` | authorize redirect with state echo, access token exchange, user info via the `Zoho-oauthtoken` scheme |
 
 Adapters are scenario-driven today and are moving toward provider-compatible local APIs for selected workflows. Use the [support matrix](support-matrix.md) and report behavior matrix to confirm supported paths.
 
@@ -21,3 +22,4 @@ Detailed adapter specifications:
 - [GitHub OAuth adapter](../adapters/github-oauth.md)
 - [Slack adapter](../adapters/slack.md)
 - [LINE adapter](../adapters/line.md)
+- [Zoho OAuth adapter](../adapters/zoho-oauth.md)

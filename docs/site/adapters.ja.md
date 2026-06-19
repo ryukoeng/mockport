@@ -11,6 +11,7 @@ Mockport の adapter は scenario-driven です。現時点では、選択され
 | `github-oauth` | `/github` | `workflow-compatible` | authorize redirect, token exchange, user profile, user emails, user orgs |
 | `slack` | `/slack` | `workflow-compatible` | auth test, conversations list/history, message post/update/delete, Events API URL verification/message callback subset |
 | `line` | `/line` | `workflow-compatible` | Messaging API send/content/signed webhook/rich menu/channel token workflows, LINE Login OAuth/profile, LIFF helpers, MINI App service messages, LINE Pay request/confirm, Mini Dapp wallet/payment helpers |
+| `zoho-oauth` | `/zoho` | `workflow-compatible` | authorize redirect（state echo）, access token exchange, user info（`Zoho-oauthtoken` scheme） |
 
 対応範囲を判断するときは、[support matrix](support-matrix.ja.md) と compatibility report を確認してください。Mockport は外部 provider の内部実装や未公開仕様を再現するものではなく、ローカル統合テストで必要になる成功、失敗、認証エラー、rate limit、timeout、webhook/callback などの検証に集中しています。
 
@@ -21,3 +22,4 @@ Mockport の adapter は scenario-driven です。現時点では、選択され
 - [GitHub OAuth adapter](../adapters/github-oauth.ja.md)
 - [Slack adapter](../adapters/slack.ja.md)
 - [LINE adapter](../adapters/line.ja.md)
+- [Zoho OAuth adapter](../adapters/zoho-oauth.ja.md)

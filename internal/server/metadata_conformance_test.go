@@ -8,11 +8,12 @@ import (
 	"github.com/albert-einshutoin/mockport/adapters/openai"
 	"github.com/albert-einshutoin/mockport/adapters/slack"
 	"github.com/albert-einshutoin/mockport/adapters/stripe"
+	"github.com/albert-einshutoin/mockport/adapters/zohooauth"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 )
 
 func TestBuiltInAdapterMetadataConformance(t *testing.T) {
-	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New(), line.New()} {
+	for _, adapterImpl := range []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New(), line.New(), zohooauth.New()} {
 		t.Run(adapterImpl.Name(), func(t *testing.T) {
 			meta := adapterImpl.Metadata()
 			if err := adapter.ValidateMetadata(meta); err != nil {

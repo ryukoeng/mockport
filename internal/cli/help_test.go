@@ -93,7 +93,7 @@ func TestHelpServiceRejectsUnsupportedService(t *testing.T) {
 	if !strings.Contains(err.Error(), `unsupported service "unknown"`) {
 		t.Fatalf("error = %q, want unsupported service", err.Error())
 	}
-	if !strings.Contains(err.Error(), "github-oauth, line, openai, slack, stripe") {
+	if !strings.Contains(err.Error(), "github-oauth, line, openai, slack, stripe, zoho-oauth") {
 		t.Fatalf("error missing supported services: %q", err.Error())
 	}
 }

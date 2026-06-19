@@ -164,6 +164,20 @@ func adapterSpecFor(name string) (adapterSpec, bool) {
 				"LINE_PAY_CHANNEL_SECRET":  "mockport_line_pay_secret",
 			},
 		}, true
+	case "zoho-oauth":
+		return adapterSpec{
+			Name:       "zoho-oauth",
+			BasePath:   "/zoho",
+			Scenario:   "oauth_success",
+			FakeSecret: "mockport_zoho_secret",
+			Env: map[string]string{
+				"ZOHO_AUTH_BASE_URL":       "http://localhost:43101/zoho",
+				"ZOHO_OAUTH_CLIENT_ID":     "mockport_zoho_client",
+				"ZOHO_OAUTH_CLIENT_SECRET": "mockport_zoho_secret",
+				"ZOHO_USER_EMAIL":          "mockport@example.test",
+				"ZOHO_USER_NAME":           "Mockport User",
+			},
+		}, true
 	default:
 		return adapterSpec{}, false
 	}

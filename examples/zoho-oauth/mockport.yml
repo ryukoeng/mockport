@@ -1,0 +1,14 @@
+version: "0.1"
+
+server:
+  host: 127.0.0.1
+  port: 43101
+
+mode: ai-safe
+
+adapters:
+  zoho-oauth:
+    enabled: true
+    base_path: /zoho
+    scenario: oauth_success
+    fake_secret: mockport_zoho_secret
