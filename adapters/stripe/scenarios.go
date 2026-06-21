@@ -7,4 +7,3 @@ const (
 	scenarioRateLimited    = "rate_limited"
 	scenarioTimeout        = "timeout"
 )
-

@@ -245,6 +245,15 @@ func (r *routes) writeUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeEmails(w http.ResponseWriter, req *http.Request) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeAPIErrorCode(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+		return
+	}
+	if scenario == "scope_missing" {
+		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
+		return
+	}
 	resource, ok := r.tokenResource(req)
 	if !ok {
 		writeAPIError(w, http.StatusUnauthorized, "Bad credentials")
@@ -258,6 +267,15 @@ func (r *routes) writeEmails(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeOrgs(w http.ResponseWriter, req *http.Request) {
+	scenario, err := r.resolver.Resolve(req)
+	if err != nil {
+		writeAPIErrorCode(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+		return
+	}
+	if scenario == "scope_missing" {
+		writeAPIError(w, http.StatusForbidden, "Resource not accessible by token")
+		return
+	}
 	resource, ok := r.tokenResource(req)
 	if !ok {
 		writeAPIError(w, http.StatusUnauthorized, "Bad credentials")
