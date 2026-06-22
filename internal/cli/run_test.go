@@ -175,6 +175,93 @@ adapters:
 	}
 }
 
+// S1: --host オーバーライド経路で Validate が2回呼ばれても警告が重複しないことを固定する。
+func TestRunCheckHostOverrideDoesNotDuplicateWarnings(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "with-scenarios.yml")
+	if err := os.WriteFile(configPath, []byte(`version: "0.1"
+server:
+  host: 127.0.0.1
+  port: 43101
+mode: ai-safe
+adapters:
+  stripe:
+    enabled: true
+    base_path: /stripe
+scenarios:
+  payment_success:
+    adapter: stripe
+`), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("run --check --host: %v", err)
+	}
+	got := out.String()
+	if n := strings.Count(got, "unsupported_config"); n != 1 {
+		t.Fatalf("expected unsupported_config warning exactly once, got %d:\n%s", n, got)
+	}
+	if n := strings.Count(got, "public_bind"); n != 1 {
+		t.Fatalf("expected public_bind warning exactly once, got %d:\n%s", n, got)
+	}
+}
+
+// S2: safety warnings は stderr に出力され、--check サマリは stdout に出ることを固定する。
+func TestRunCheckEmitsSafetyWarningsToStderr(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "with-scenarios.yml")
+	if err := os.WriteFile(configPath, []byte(`version: "0.1"
+server:
+  host: 127.0.0.1
+  port: 43101
+mode: ai-safe
+adapters:
+  stripe:
+    enabled: true
+    base_path: /stripe
+scenarios:
+  payment_success:
+    adapter: stripe
+`), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cmd := NewRootCommand()
+	var stdout, stderr bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetErr(&stderr)
+	cmd.SetArgs([]string{"run", "--config", configPath, "--check"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("run --check: %v", err)
+	}
+
+	errText := stderr.String()
+	outText := stdout.String()
+
+	for _, want := range []string{"MOCKPORT SECURITY WARNING", "scenarios", "unsupported_config"} {
+		if !strings.Contains(errText, want) {
+			t.Fatalf("stderr missing %q:\nstderr=%s", want, errText)
+		}
+		if strings.Contains(outText, want) {
+			t.Fatalf("stdout should not contain safety warning %q:\nstdout=%s", want, outText)
+		}
+	}
+	if !strings.Contains(outText, "Config check passed") {
+		t.Fatalf("stdout missing Config check passed:\nstdout=%s", outText)
+	}
+	if strings.Contains(errText, "Config check passed") {
+		t.Fatalf("Config check passed should not go to stderr:\nstderr=%s", errText)
+	}
+}
+
 func TestServeHTTPShutsDownWhenContextIsCanceled(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

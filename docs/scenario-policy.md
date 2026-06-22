@@ -22,6 +22,8 @@ User-defined scenarios are local project behavior. They may be useful for app-sp
 
 Until a full user-defined scenario system exists, adapters should prefer explicit built-in scenarios over partial custom behavior. If a user-defined scenario is later promoted, it must receive a built-in scenario name, tests, docs, and sanitized fixture evidence.
 
+> **Current status:** The `scenarios:` block in `mockport.yml` is parsed but not yet implemented at runtime. Mockport emits a warning when this block is present. See [limitations](site/limitations.md#unimplemented-configuration-blocks) for details.
+
 ## Compatibility Boundary
 
 Compatibility scoring must distinguish:

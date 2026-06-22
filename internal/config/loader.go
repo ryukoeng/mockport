@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -13,9 +14,23 @@ func LoadFile(path string) (Config, error) {
 		return Config{}, fmt.Errorf("load config %s: %w", path, err)
 	}
 
+	// 1段目: 通常デコード（現行どおり。失敗したら今までどおりエラー）
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, fmt.Errorf("parse config %s: %w", path, err)
+	}
+
+	// 2段目: KnownFields(true) で再デコードを試み、失敗したら
+	// SafetyWarning{Category: "unknown_config_key"} を追加（エラーにしない）
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+	var strictCfg Config
+	if err := decoder.Decode(&strictCfg); err != nil {
+		cfg.SafetyWarnings = append(cfg.SafetyWarnings, SafetyWarning{
+			Field:    "config",
+			Category: "unknown_config_key",
+			Message:  fmt.Sprintf("config contains unrecognized keys (typo?): %v", err),
+		})
 	}
 
 	ApplyDefaults(&cfg)
