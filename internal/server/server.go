@@ -116,11 +116,8 @@ func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
 	}
 	status.ClientEvidence = append(status.ClientEvidence, manifest.ClientEvidence...)
 	if manifest.ContractEvidence != nil {
-		status.ContractEvidence = &report.ContractEvidence{
-			Fixtures:     slices.Clone(manifest.ContractEvidence.Fixtures),
-			SDKContracts: slices.Clone(manifest.ContractEvidence.SDKContracts),
-			KnownGaps:    slices.Clone(manifest.ContractEvidence.KnownGaps),
-		}
+		evidence := manifest.ContractEvidence.Clone()
+		status.ContractEvidence = &evidence
 	}
 	for _, unsupported := range manifest.Unsupported {
 		status.UnsupportedEndpoints = append(status.UnsupportedEndpoints, unsupported.ID)

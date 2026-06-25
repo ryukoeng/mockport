@@ -66,17 +66,17 @@ func TestCanPromoteRequiresContractEvidenceForProviderCompatible(t *testing.T) {
 	}
 	score := CalculateScore(manifest)
 
-	if CanPromote(manifest, score, "provider-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed without contract level")
 	}
 	manifest.Levels = append(manifest.Levels, LevelContract)
 	score = CalculateScore(manifest)
-	if CanPromote(manifest, score, "provider-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed with a bare contract level")
 	}
 	manifest.ContractEvidence = testContractEvidence()
 	score = CalculateScore(manifest)
-	if !CanPromote(manifest, score, "provider-compatible") {
+	if !CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatalf("provider-compatible promotion failed with contract evidence: %#v", score)
 	}
 }
@@ -156,14 +156,14 @@ func TestCanPromoteWorkflowRequiresStateAndErrorEvidence(t *testing.T) {
 	}
 
 	score := CalculateScore(manifest)
-	if CanPromote(manifest, score, "workflow-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityWorkflowCompatible) {
 		t.Fatal("workflow-compatible promotion passed without state/error evidence")
 	}
 
 	manifest.StateEvidence = &StateEvidence{StatefulResources: []string{"payment_intent"}, Idempotency: true}
 	manifest.Scenarios = append(manifest.Scenarios, Scenario{Name: "payment_failed", BuiltIn: true, Supported: true})
 	score = CalculateScore(manifest)
-	if !CanPromote(manifest, score, "workflow-compatible") {
+	if !CanPromote(manifest, score, adapter.MaturityWorkflowCompatible) {
 		t.Fatalf("workflow-compatible promotion failed with concrete evidence: %#v", score)
 	}
 }
@@ -273,7 +273,7 @@ func TestNonBuiltInScenariosDoNotInflateCoverage(t *testing.T) {
 	if score.StateCoverage != 0 {
 		t.Fatalf("state coverage = %d from non-built-in scenario state level, want 0", score.StateCoverage)
 	}
-	if CanPromote(manifest, score, "workflow-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityWorkflowCompatible) {
 		t.Fatal("workflow-compatible promotion passed using only non-built-in scenarios")
 	}
 
@@ -315,7 +315,7 @@ func TestCanPromoteProviderCompatibleRequiresConcreteEvidence(t *testing.T) {
 	if score.ErrorCoverage != 0 {
 		t.Fatalf("precondition: error coverage = %d, want 0", score.ErrorCoverage)
 	}
-	if CanPromote(manifest, score, "provider-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed without error evidence")
 	}
 
@@ -325,7 +325,7 @@ func TestCanPromoteProviderCompatibleRequiresConcreteEvidence(t *testing.T) {
 	full.Scenarios = append(append([]Scenario(nil), manifest.Scenarios...), Scenario{Name: "payment_failed", BuiltIn: true, Supported: true})
 	full.ContractEvidence = testContractEvidence()
 	score = CalculateScore(full)
-	if !CanPromote(full, score, "provider-compatible") {
+	if !CanPromote(full, score, adapter.MaturityProviderCompatible) {
 		t.Fatalf("provider-compatible promotion failed with full concrete evidence: %#v", score)
 	}
 
@@ -334,7 +334,7 @@ func TestCanPromoteProviderCompatibleRequiresConcreteEvidence(t *testing.T) {
 	noWorkflow := full
 	noWorkflow.Levels = []Level{LevelWire, LevelSDK, LevelState, LevelError, LevelContract}
 	score = CalculateScore(noWorkflow)
-	if CanPromote(noWorkflow, score, "provider-compatible") {
+	if CanPromote(noWorkflow, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed without workflow level")
 	}
 }
@@ -374,7 +374,7 @@ func TestCanPromoteProviderCompatibleRequiresContractArtifactsFromMetadata(t *te
 	if score.Total < 80 {
 		t.Fatalf("precondition: total = %d, want >= 80", score.Total)
 	}
-	if CanPromote(manifest, score, "provider-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed without contract artifacts")
 	}
 
@@ -385,14 +385,14 @@ func TestCanPromoteProviderCompatibleRequiresContractArtifactsFromMetadata(t *te
 	}
 	manifest = FromMetadata(meta)
 	score = CalculateScore(manifest)
-	if !CanPromote(manifest, score, "provider-compatible") {
+	if !CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatalf("provider-compatible promotion failed with contract artifacts: %#v", score)
 	}
 
 	meta.ContractEvidence.SDKContracts = []string{" "}
 	manifest = FromMetadata(meta)
 	score = CalculateScore(manifest)
-	if CanPromote(manifest, score, "provider-compatible") {
+	if CanPromote(manifest, score, adapter.MaturityProviderCompatible) {
 		t.Fatal("provider-compatible promotion passed with empty SDK contract evidence")
 	}
 }

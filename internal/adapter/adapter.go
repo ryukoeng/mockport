@@ -3,6 +3,7 @@ package adapter
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 )
 
@@ -47,11 +48,21 @@ type SDKVersion struct {
 }
 
 // ContractEvidence records the release artifacts that support a contract-level
-// provider-compatible claim.
+// provider-compatible claim. It is shared by the compat and report packages;
+// the json tags define the public report schema.
 type ContractEvidence struct {
-	Fixtures     []string
-	SDKContracts []string
-	KnownGaps    []string
+	Fixtures     []string `json:"fixtures,omitempty"`
+	SDKContracts []string `json:"sdk_contracts,omitempty"`
+	KnownGaps    []string `json:"known_gaps,omitempty"`
+}
+
+// Clone returns a deep copy.
+func (c ContractEvidence) Clone() ContractEvidence {
+	return ContractEvidence{
+		Fixtures:     slices.Clone(c.Fixtures),
+		SDKContracts: slices.Clone(c.SDKContracts),
+		KnownGaps:    slices.Clone(c.KnownGaps),
+	}
 }
 
 // Scenario describes a built-in deterministic behavior mode for an adapter.
