@@ -168,7 +168,7 @@ func TestStateCoverageSkipsStatelessAdapterMetadata(t *testing.T) {
 func TestCompatibilityStatusReportsPromotionEligibility(t *testing.T) {
 	eligible := compat.Manifest{
 		Adapter:         "demo",
-		Maturity:        "workflow-compatible",
+		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "1",
 		Levels:          []compat.Level{compat.LevelWire, compat.LevelWorkflow, compat.LevelState, compat.LevelError},
 		Endpoints:       []compat.Endpoint{{ID: "one", Supported: true}},
@@ -185,7 +185,7 @@ func TestCompatibilityStatusReportsPromotionEligibility(t *testing.T) {
 	// Declares provider-compatible but lacks LevelWorkflow. Coverage can be full, yet it
 	// must not be eligible because it fails CanPromote's hierarchy condition.
 	ineligible := eligible
-	ineligible.Maturity = "provider-compatible"
+	ineligible.Maturity = adapter.MaturityProviderCompatible
 	ineligible.Levels = []compat.Level{compat.LevelWire, compat.LevelSDK, compat.LevelState, compat.LevelError, compat.LevelContract}
 	ineligible.SDKVersions = []compat.SDKVersion{{Name: "lib", Version: "1.0.0"}}
 	ineligible.ContractEvidence = &compat.ContractEvidence{

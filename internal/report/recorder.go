@@ -171,11 +171,8 @@ func cloneCompatibility(in []CompatibilityStatus) []CompatibilityStatus {
 		out[i].SDKVersions = slices.Clone(out[i].SDKVersions)
 		out[i].ClientEvidence = slices.Clone(out[i].ClientEvidence)
 		if out[i].ContractEvidence != nil {
-			out[i].ContractEvidence = &ContractEvidence{
-				Fixtures:     slices.Clone(out[i].ContractEvidence.Fixtures),
-				SDKContracts: slices.Clone(out[i].ContractEvidence.SDKContracts),
-				KnownGaps:    slices.Clone(out[i].ContractEvidence.KnownGaps),
-			}
+			evidence := out[i].ContractEvidence.Clone()
+			out[i].ContractEvidence = &evidence
 		}
 		out[i].UnsupportedEndpoints = slices.Clone(out[i].UnsupportedEndpoints)
 	}

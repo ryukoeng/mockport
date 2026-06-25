@@ -8,7 +8,11 @@ import (
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 )
 
-func TestManifestValidation(t *testing.T) {
+func TestManifestMaturityUsesAdapterType(t *testing.T) {
+	var _ adapter.Maturity = Manifest{}.Maturity
+}
+
+func TestManifestValidationAcceptsCompleteManifest(t *testing.T) {
 	manifest := Manifest{
 		Adapter:         "stripe",
 		ProviderVersion: "2026-05-26",

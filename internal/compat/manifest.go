@@ -36,7 +36,7 @@ type SDKVersion struct {
 type Manifest struct {
 	Adapter          string                `json:"adapter"`
 	ProviderVersion  string                `json:"provider_version"`
-	Maturity         string                `json:"maturity,omitempty"`
+	Maturity         adapter.Maturity      `json:"maturity,omitempty"`
 	SDKVersions      []SDKVersion          `json:"sdk_versions,omitempty"`
 	ClientEvidence   []string              `json:"client_evidence,omitempty"`
 	Levels           []Level               `json:"levels,omitempty"`
@@ -64,17 +64,12 @@ func (s *StateEvidence) HasEvidence() bool {
 	return len(s.StatefulResources) > 0 || s.Idempotency || s.Reset
 }
 
-// ContractEvidence captures the concrete release artifacts required for a
-// contract-level provider-compatible claim. It must include fixture coverage,
-// SDK/client contract evidence, and known-gap publication evidence.
-type ContractEvidence struct {
-	Fixtures     []string `json:"fixtures,omitempty"`
-	SDKContracts []string `json:"sdk_contracts,omitempty"`
-	KnownGaps    []string `json:"known_gaps,omitempty"`
-}
+// ContractEvidence is an alias of the canonical adapter type. The json tags
+// live on the adapter definition.
+type ContractEvidence = adapter.ContractEvidence
 
-// HasEvidence reports whether every contract-evidence dimension is present.
-func (c *ContractEvidence) HasEvidence() bool {
+// hasContractEvidence reports whether every contract-evidence dimension is present.
+func hasContractEvidence(c *ContractEvidence) bool {
 	if c == nil {
 		return false
 	}
@@ -83,7 +78,7 @@ func (c *ContractEvidence) HasEvidence() bool {
 		hasStringEvidence(c.KnownGaps)
 }
 
-func (c *ContractEvidence) hasAnyEvidence() bool {
+func contractEvidenceHasAny(c *ContractEvidence) bool {
 	if c == nil {
 		return false
 	}
@@ -168,7 +163,7 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 	manifest := Manifest{
 		Adapter:         meta.Name,
 		ProviderVersion: providerVersion,
-		Maturity:        string(meta.Maturity),
+		Maturity:        meta.Maturity,
 		Levels:          metadataLevels(meta.Levels),
 	}
 	for _, sdk := range meta.SDKVersions {
@@ -202,18 +197,19 @@ func FromMetadata(meta adapter.Metadata) Manifest {
 			Reset:             meta.Reset,
 		}
 	}
-	if evidence := contractEvidenceFromMetadata(meta.ContractEvidence); evidence.hasAnyEvidence() {
+	if evidence := contractEvidenceFromMetadata(meta.ContractEvidence); contractEvidenceHasAny(evidence) {
 		manifest.ContractEvidence = evidence
 	}
 	return manifest
 }
 
 func contractEvidenceFromMetadata(evidence adapter.ContractEvidence) *ContractEvidence {
-	return &ContractEvidence{
-		Fixtures:     compactEvidence(evidence.Fixtures),
-		SDKContracts: compactEvidence(evidence.SDKContracts),
-		KnownGaps:    compactEvidence(evidence.KnownGaps),
-	}
+	clone := evidence.Clone()
+	out := clone
+	out.Fixtures = compactEvidence(clone.Fixtures)
+	out.SDKContracts = compactEvidence(clone.SDKContracts)
+	out.KnownGaps = compactEvidence(clone.KnownGaps)
+	return &out
 }
 
 func compactEvidence(values []string) []string {

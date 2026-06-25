@@ -3,6 +3,8 @@ package compat
 import (
 	"slices"
 	"strings"
+
+	"github.com/albert-einshutoin/mockport/internal/adapter"
 )
 
 type Score struct {
@@ -142,22 +144,22 @@ func meetsWorkflowCompatible(manifest Manifest, score Score) bool {
 		hasLevel(manifest.Levels, LevelError) && score.ErrorCoverage == 100
 }
 
-func CanPromote(manifest Manifest, score Score, target string) bool {
+func CanPromote(manifest Manifest, score Score, target adapter.Maturity) bool {
 	switch target {
-	case "experimental":
+	case adapter.MaturityExperimental:
 		return true
-	case "sdk-compatible":
+	case adapter.MaturitySDKCompatible:
 		return meetsSDKCompatible(manifest, score) && score.Total >= 40
-	case "workflow-compatible":
+	case adapter.MaturityWorkflowCompatible:
 		return meetsWorkflowCompatible(manifest, score) && score.Total >= 60
-	case "provider-compatible":
+	case adapter.MaturityProviderCompatible:
 		// Top maturity: subsumes the lower (sdk / workflow) evidence bars and also
 		// requires concrete contract evidence and total>=80, so promotion cannot skip
 		// the hierarchy or self-promote through a bare contract-level declaration.
 		return meetsSDKCompatible(manifest, score) &&
 			meetsWorkflowCompatible(manifest, score) &&
 			hasLevel(manifest.Levels, LevelContract) &&
-			manifest.ContractEvidence.HasEvidence() &&
+			hasContractEvidence(manifest.ContractEvidence) &&
 			score.Total >= 80
 	default:
 		return false
