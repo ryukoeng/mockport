@@ -26,10 +26,18 @@ scripts/build-release-archives.sh 0.1.0-alpha "$tmpdir"
 scripts/verify-release-artifacts.sh 0.1.0-alpha "$tmpdir"
 ```
 
-4. Create an annotated tag and let GitHub Actions publish release archives and GHCR images.
-5. Download the GitHub Release artifacts and run `scripts/verify-release-artifacts.sh`.
-6. Pull the GHCR image and run Docker smoke from the published image.
-7. Record release URL, image tag, digest, known limitations, and verification evidence in `docs/releases/`.
+4. Sync the public preview image tag everywhere it appears before tagging. On each release, update `0.1.0-alpha` (or the new semver) consistently in:
+   - `README.md` and `README.ja.md` (30-second quickstart `docker run` and distribution mentions)
+   - `docs/site/quickstart.md` (Option A install)
+   - `docs/site/distribution.md` and `docs/site/distribution.ja.md`
+   - `packaging/npm/bin/mockport.js` (`MOCKPORT_IMAGE` default)
+   - generated `docker-compose.mockport.yml` template in `internal/cli/init.go` (pinned preview image)
+   - `scripts/verify-release-artifacts.sh` usage examples when the documented tag changes
+
+5. Create an annotated tag and let GitHub Actions publish release archives and GHCR images.
+6. Download the GitHub Release artifacts and run `scripts/verify-release-artifacts.sh`.
+7. Pull the GHCR image and run Docker smoke from the published image.
+8. Record release URL, image tag, digest, known limitations, and verification evidence in `docs/releases/`.
 
 ## Issue Triage
 
