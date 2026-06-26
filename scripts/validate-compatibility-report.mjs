@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 // to true is caught (a provenance guard: reject impossible combinations rather
 // than fully re-implement CanPromote).
 
-const REQUIRED_ADAPTERS = ["stripe", "openai", "github-oauth", "slack", "line"];
+const REQUIRED_ADAPTERS = ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"];
 
 const MATURITY_RANK = {
   experimental: 0,
@@ -146,8 +146,8 @@ function validateAdapter(adapter, manifests) {
 // validateReport throws on the first violation it finds.
 export function validateReport(report, options = {}) {
   const manifests = options.manifests ?? loadManifests(options.manifestDir);
-  if (!Array.isArray(report.adapters) || report.adapters.length < 5) {
-    throw new Error("compatibility report must include at least five adapters");
+  if (!Array.isArray(report.adapters) || report.adapters.length < REQUIRED_ADAPTERS.length) {
+    throw new Error(`compatibility report must include at least ${REQUIRED_ADAPTERS.length} adapters`);
   }
   for (const name of REQUIRED_ADAPTERS) {
     if (!report.adapters.some((adapter) => adapter.name === name)) {

@@ -30,9 +30,9 @@ function contractEvidence(overrides = {}) {
 }
 
 // Replace the first adapter with the one under test; the rest are passing
-// adapters so the required set of five is satisfied.
+// adapters so the required published set is satisfied.
 function reportWith(adapter) {
-  const names = ["stripe", "openai", "github-oauth", "slack", "line"];
+  const names = ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"];
   const adapters = names.map((name, i) =>
     i === 0 ? { ...adapter, name } : baseAdapter({ name })
   );
@@ -41,7 +41,7 @@ function reportWith(adapter) {
 
 function defaultManifests(maturity = "workflow-compatible") {
   return Object.fromEntries(
-    ["stripe", "openai", "github-oauth", "slack", "line"].map((name) => [
+    ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"].map((name) => [
       name,
       { adapter: name, maturity },
     ]),
@@ -121,7 +121,7 @@ test("rejects an adapter missing known gaps", () => {
 
 test("rejects a report missing a required adapter", () => {
   const report = { adapters: [baseAdapter({ name: "stripe" }), baseAdapter({ name: "openai" })] };
-  assert.throws(() => validateReport(report, { manifests: defaultManifests() }), /at least five adapters|missing adapter/);
+  assert.throws(() => validateReport(report, { manifests: defaultManifests() }), /at least 6 adapters|missing adapter/);
 });
 
 test("rejects report maturity that does not match the checked-in manifest", () => {
@@ -150,12 +150,11 @@ test("rejects maturity increase when promotion_eligible is false", () => {
   );
 });
 
-test("skips manifest consistency for adapters outside the published manifest set", () => {
-  const report = {
-    adapters: [
-      ...["stripe", "openai", "github-oauth", "slack", "line"].map((name) => baseAdapter({ name })),
-      baseAdapter({ name: "zoho-oauth" }),
-    ],
-  };
-  assert.doesNotThrow(() => validateWith(report));
+test("rejects a published adapter without a checked-in manifest", () => {
+  const manifests = defaultManifests();
+  delete manifests["zoho-oauth"];
+  assert.throws(
+    () => validateReport(reportWith(baseAdapter()), { manifests }),
+    /missing checked-in manifest for adapter: zoho-oauth/,
+  );
 });

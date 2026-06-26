@@ -22,9 +22,9 @@ func Adapters() []adapter.Adapter {
 	}
 }
 
-// ManifestAdapters returns built-in adapters that require a checked-in
-// compatibility manifest under compat/manifests/. Zoho OAuth is CLI-only until
-// it joins the published compatibility report set.
+// ManifestAdapters returns every built-in adapter whose compatibility claims are
+// published in the support matrix. Keeping this set aligned with Adapters()
+// prevents a public adapter from bypassing the checked-in manifest gate.
 func ManifestAdapters() []adapter.Adapter {
 	return []adapter.Adapter{
 		stripe.New(),
@@ -32,5 +32,6 @@ func ManifestAdapters() []adapter.Adapter {
 		githuboauth.New(),
 		slack.New(),
 		line.New(),
+		zohooauth.New(),
 	}
 }

@@ -21,7 +21,7 @@ func TestAdaptersReturnsUniqueNames(t *testing.T) {
 }
 
 func TestManifestAdaptersAreRequiredSubset(t *testing.T) {
-	required := []string{"stripe", "openai", "github-oauth", "slack", "line"}
+	required := []string{"stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"}
 	manifestAdapters := ManifestAdapters()
 	if len(manifestAdapters) != len(required) {
 		t.Fatalf("len(ManifestAdapters()) = %d, want %d", len(manifestAdapters), len(required))

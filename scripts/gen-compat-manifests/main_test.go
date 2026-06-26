@@ -10,12 +10,12 @@ import (
 	"github.com/albert-einshutoin/mockport/internal/compat"
 )
 
-func TestWriteManifestsCreatesFiveFiles(t *testing.T) {
+func TestWriteManifestsCreatesRequiredFiles(t *testing.T) {
 	outDir := t.TempDir()
 	if err := compat.WriteManifestFiles(outDir, builtins.ManifestAdapters()); err != nil {
 		t.Fatalf("WriteManifestFiles: %v", err)
 	}
-	want := []string{"stripe.json", "openai.json", "github-oauth.json", "slack.json", "line.json"}
+	want := []string{"stripe.json", "openai.json", "github-oauth.json", "slack.json", "line.json", "zoho-oauth.json"}
 	for _, name := range want {
 		path := filepath.Join(outDir, name)
 		if _, err := os.Stat(path); err != nil {
@@ -41,7 +41,7 @@ func TestWriteManifestsIsDeterministic(t *testing.T) {
 	if err := compat.WriteManifestFiles(dir2, adapters); err != nil {
 		t.Fatalf("WriteManifestFiles dir2: %v", err)
 	}
-	names := []string{"stripe.json", "openai.json", "github-oauth.json", "slack.json", "line.json"}
+	names := []string{"stripe.json", "openai.json", "github-oauth.json", "slack.json", "line.json", "zoho-oauth.json"}
 	for _, name := range names {
 		a, err := os.ReadFile(filepath.Join(dir1, name))
 		if err != nil {

@@ -1,0 +1,67 @@
+{
+  "adapter": "zoho-oauth",
+  "provider_version": "oauth-v2",
+  "maturity": "workflow-compatible",
+  "client_evidence": [
+    "oauth-client-contract"
+  ],
+  "levels": [
+    "wire",
+    "client",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "get_zoho_oauth_v2_auth",
+      "method": "GET",
+      "path": "/zoho/oauth/v2/auth",
+      "supported": true
+    },
+    {
+      "id": "post_zoho_oauth_v2_token",
+      "method": "POST",
+      "path": "/zoho/oauth/v2/token",
+      "supported": true
+    },
+    {
+      "id": "get_zoho_oauth_user_info",
+      "method": "GET",
+      "path": "/zoho/oauth/user/info",
+      "supported": true
+    },
+    {
+      "id": "post_zoho_test_reset",
+      "method": "POST",
+      "path": "/zoho/test/reset",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "oauth_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "invalid_code",
+      "built_in": true,
+      "supported": true,
+      "category": "error"
+    },
+    {
+      "name": "invalid_token",
+      "built_in": true,
+      "supported": true,
+      "category": "error"
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "oauth_code",
+      "oauth_token"
+    ],
+    "reset": true
+  }
+}

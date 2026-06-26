@@ -16,8 +16,27 @@ if ((${#manifests[@]} == 0)); then
   exit 1
 fi
 
+generated=("$OUT_DIR"/*.json)
+if ((${#generated[@]} == 0)); then
+  echo "no generated manifests under $OUT_DIR" >&2
+  exit 1
+fi
+
+for f in "${generated[@]}"; do
+  checked_in="compat/manifests/$(basename "$f")"
+  if [[ ! -f "$checked_in" ]]; then
+    echo "missing checked-in manifest: $checked_in" >&2
+    exit 1
+  fi
+done
+
 for f in "${manifests[@]}"; do
-  diff -u "$f" "$OUT_DIR/$(basename "$f")" || {
+  generated_file="$OUT_DIR/$(basename "$f")"
+  if [[ ! -f "$generated_file" ]]; then
+    echo "stale checked-in manifest with no generated counterpart: $f" >&2
+    exit 1
+  fi
+  diff -u "$f" "$generated_file" || {
     echo "manifest drift: $f — run 'go run ./scripts/gen-compat-manifests' and commit" >&2
     exit 1
   }
