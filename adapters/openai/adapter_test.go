@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestModels(t *testing.T) {
@@ -321,34 +322,18 @@ func performRequest(t *testing.T, cfg adapter.Config, method, path string) *http
 
 func newOpenAIMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func serveOpenAIRequest(mux http.Handler, method, path, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	header := http.Header{}
 	if body != "" {
-		req.Header.Set("Content-Type", "application/json")
+		header.Set("Content-Type", "application/json")
 	}
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.Serve(mux, method, path, strings.NewReader(body), header)
 }
 
 func assertErrorCode(t *testing.T, rec *httptest.ResponseRecorder, want string) {
 	t.Helper()
-	var body struct {
-		Error struct {
-			Code string `json:"code"`
-		} `json:"error"`
-	}
-	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-		t.Fatalf("decode error response: %v", err)
-	}
-	if body.Error.Code != want {
-		t.Fatalf("error code = %q, want %q", body.Error.Code, want)
-	}
+	adaptertest.AssertJSONField(t, rec, "error.code", want)
 }

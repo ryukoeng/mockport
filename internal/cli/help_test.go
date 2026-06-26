@@ -1,17 +1,12 @@
 package cli
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 )
 
 func TestHelpServiceShowsAdapterImplementationAndSpec(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"help", "stripe"})
+	cmd, out := newTestCommand(t, "help", "stripe")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute service help: %v", err)
@@ -40,11 +35,7 @@ func TestHelpServiceShowsAdapterImplementationAndSpec(t *testing.T) {
 func TestHelpServiceSupportsEveryBuiltInService(t *testing.T) {
 	for _, service := range supportedServiceNames() {
 		t.Run(service, func(t *testing.T) {
-			cmd := NewRootCommand()
-			var out bytes.Buffer
-			cmd.SetOut(&out)
-			cmd.SetErr(&out)
-			cmd.SetArgs([]string{"help", service})
+			cmd, out := newTestCommand(t, "help", service)
 
 			if err := cmd.Execute(); err != nil {
 				t.Fatalf("execute service help: %v", err)
@@ -57,11 +48,7 @@ func TestHelpServiceSupportsEveryBuiltInService(t *testing.T) {
 }
 
 func TestHelpCommandStillShowsCommandHelp(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"help", "add"})
+	cmd, out := newTestCommand(t, "help", "add")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute command help: %v", err)
@@ -80,11 +67,7 @@ func TestHelpCommandStillShowsCommandHelp(t *testing.T) {
 }
 
 func TestHelpServiceRejectsUnsupportedService(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"help", "unknown"})
+	cmd, _ := newTestCommand(t, "help", "unknown")
 
 	err := cmd.Execute()
 	if err == nil {

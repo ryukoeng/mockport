@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestMessagingPushAndProfile(t *testing.T) {
@@ -485,24 +486,12 @@ func TestLoginTokenConsumesAuthorizationCodeConcurrently(t *testing.T) {
 }
 
 func exchangeLineTokenConcurrently(mux http.Handler, body string, attempts int) []int {
-	var wg sync.WaitGroup
-	start := make(chan struct{})
-	statuses := make([]int, attempts)
-	for i := range attempts {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			<-start
-			rec := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(body))
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			mux.ServeHTTP(rec, req)
-			statuses[i] = rec.Code
-		}(i)
-	}
-	close(start)
-	wg.Wait()
-	return statuses
+	header := http.Header{}
+	header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return adaptertest.ConcurrentStatusCodes(attempts, func() int {
+		rec := adaptertest.Serve(mux, http.MethodPost, "/line/oauth2/v2.1/token", strings.NewReader(body), header)
+		return rec.Code
+	})
 }
 
 func TestLoginAuthorizeRejectsExternalRedirectURI(t *testing.T) {
@@ -760,11 +749,7 @@ func performLineRequest(t *testing.T, cfg adapter.Config, method, path, body str
 }
 
 func serveLineResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodPost, "/line/test/reset", nil)
-	req.RemoteAddr = remoteAddr
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.ServeWithRemote(mux, http.MethodPost, "/line/test/reset", nil, nil, remoteAddr)
 }
 
 // TestConcurrentSingletonStateNoRace hammers the endpoints that mutate the
@@ -919,11 +904,7 @@ func createRichMenuWithImage(t *testing.T, mux *http.ServeMux) string {
 
 func newLineMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register line adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func redirectCodeFromLocation(t *testing.T, location string) string {

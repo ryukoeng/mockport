@@ -13,11 +13,7 @@ import (
 )
 
 func TestRunCommandRejectsMissingConfig(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", "missing.yml"})
+	cmd, _ := newTestCommand(t, "run", "--config", "missing.yml")
 
 	err := cmd.Execute()
 	if err == nil {
@@ -47,11 +43,7 @@ adapters:
 		t.Fatalf("write unsafe config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--check"})
+	cmd, out := newTestCommand(t, "run", "--config", configPath, "--check")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("run --check: %v", err)
@@ -93,11 +85,7 @@ adapters:
 		t.Fatalf("write unsafe config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--check"})
+	cmd, _ := newTestCommand(t, "run", "--config", configPath, "--check")
 
 	err := cmd.Execute()
 	if err == nil {
@@ -127,11 +115,7 @@ adapters:
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+	cmd, out := newTestCommand(t, "run", "--config", configPath, "--host", "0.0.0.0", "--check")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("run --check --host: %v", err)
@@ -160,11 +144,7 @@ adapters:
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+	cmd, _ := newTestCommand(t, "run", "--config", configPath, "--host", "0.0.0.0", "--check")
 
 	err := cmd.Execute()
 	if err == nil {
@@ -195,11 +175,7 @@ scenarios:
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--host", "0.0.0.0", "--check"})
+	cmd, out := newTestCommand(t, "run", "--config", configPath, "--host", "0.0.0.0", "--check")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("run --check --host: %v", err)

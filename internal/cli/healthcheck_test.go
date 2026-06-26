@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -22,11 +21,7 @@ func TestHealthcheckCommandChecksConfiguredHealthURL(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, false)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, out := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck: %v", err)
@@ -43,11 +38,7 @@ func TestHealthcheckCommandRejectsBadResponse(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, false)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, _ := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	err := cmd.Execute()
 	if err == nil {
@@ -64,11 +55,7 @@ func TestHealthcheckCommandSupportsExplicitURL(t *testing.T) {
 	})
 	defer server.Close()
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--url", server.URL + "/health"})
+	cmd, out := newTestCommand(t, "healthcheck", "--url", server.URL+"/health")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck --url: %v", err)
 	}
@@ -92,11 +79,7 @@ func TestHealthcheckCommandNormalizesPublicBindHost(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, true)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, out := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck with 0.0.0.0 host: %v", err)

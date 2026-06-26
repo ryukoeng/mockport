@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestAuthorizeRedirectsWithCodeAndEchoesState(t *testing.T) {
@@ -114,22 +114,12 @@ func TestTokenExchangedExactlyOnceUnderConcurrency(t *testing.T) {
 	form := tokenForm(code)
 
 	const attempts = 50
-	var wg sync.WaitGroup
-	start := make(chan struct{})
-	results := make([]map[string]any, attempts)
-	for i := range attempts {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			<-start
-			rec := serve(mux, http.MethodPost, "/zoho/oauth/v2/token", form, formHeaders())
-			var body map[string]any
-			_ = json.Unmarshal(rec.Body.Bytes(), &body)
-			results[i] = body
-		}(i)
-	}
-	close(start)
-	wg.Wait()
+	results := adaptertest.ConcurrentResults(attempts, func() map[string]any {
+		rec := serve(mux, http.MethodPost, "/zoho/oauth/v2/token", form, formHeaders())
+		var body map[string]any
+		_ = json.Unmarshal(rec.Body.Bytes(), &body)
+		return body
+	})
 
 	success := 0
 	for _, body := range results {
@@ -270,21 +260,15 @@ func serveZohoReset(mux http.Handler, remoteAddr string) *httptest.ResponseRecor
 
 func newZohoMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func serve(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	header := http.Header{}
 	for name, value := range headers {
-		req.Header.Set(name, value)
+		header.Set(name, value)
 	}
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.Serve(mux, method, path, strings.NewReader(body), header)
 }
 
 func formHeaders() map[string]string {

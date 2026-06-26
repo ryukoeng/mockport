@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestAuthTest(t *testing.T) {
@@ -266,21 +267,15 @@ func performRequest(t *testing.T, cfg adapter.Config, method, path string) *http
 
 func newSlackMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func serveSlackRequest(mux http.Handler, method, path, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	header := http.Header{}
 	if body != "" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.Serve(mux, method, path, strings.NewReader(body), header)
 }
 
 func serveSlackSignedRequest(mux http.Handler, method, path, body, secret string) *httptest.ResponseRecorder {
@@ -305,11 +300,7 @@ func slackSignature(secret, timestamp, body string) string {
 }
 
 func serveSlackResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodPost, "/slack/test/reset", nil)
-	req.RemoteAddr = remoteAddr
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.ServeWithRemote(mux, http.MethodPost, "/slack/test/reset", nil, nil, remoteAddr)
 }
 
 func serveSlackResetRequestWithRemote(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {

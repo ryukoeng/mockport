@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,11 +32,7 @@ func TestRunCheckPrintsScenariosUnsupportedWarning(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--check"})
+	cmd, out := newTestCommand(t, "run", "--config", configPath, "--check")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("run --check: %v", err)
@@ -80,11 +75,7 @@ scenarios:
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"run", "--config", configPath, "--check"})
+	cmd, out := newTestCommand(t, "run", "--config", configPath, "--check")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("strict mode must not reject scenarios warning, got: %v", err)

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,11 +10,7 @@ import (
 func TestInitGeneratesStripeFiles(t *testing.T) {
 	dir := chdirTemp(t)
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"init", "--adapter", "stripe"})
+	cmd, out := newTestCommand(t, "init", "--adapter", "stripe")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute init: %v", err)
 	}
@@ -72,11 +67,7 @@ func TestInitGeneratesStripeFiles(t *testing.T) {
 func TestInitGeneratesMultipleAdapters(t *testing.T) {
 	dir := chdirTemp(t)
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--adapter", "openai", "--adapter", "line"})
+	cmd, _ := newTestCommand(t, "init", "--adapter", "stripe", "--adapter", "openai", "--adapter", "line")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute init: %v", err)
 	}
@@ -112,11 +103,7 @@ func TestInitDoesNotOverwriteExistingFiles(t *testing.T) {
 		t.Fatalf("write existing config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"init", "--adapter", "stripe"})
+	cmd, _ := newTestCommand(t, "init", "--adapter", "stripe")
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("init returned nil error for existing file")
@@ -138,11 +125,7 @@ func TestInitForceOverwritesExistingFiles(t *testing.T) {
 		t.Fatalf("write existing config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"init", "--adapter", "stripe", "--force"})
+	cmd, _ := newTestCommand(t, "init", "--adapter", "stripe", "--force")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute init --force: %v", err)
 	}
