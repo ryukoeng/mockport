@@ -30,17 +30,31 @@ function contractEvidence(overrides = {}) {
 }
 
 // Replace the first adapter with the one under test; the rest are passing
-// adapters so the required set of five is satisfied.
+// adapters so the required published set is satisfied.
 function reportWith(adapter) {
-  const names = ["stripe", "openai", "github-oauth", "slack", "line"];
+  const names = ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"];
   const adapters = names.map((name, i) =>
     i === 0 ? { ...adapter, name } : baseAdapter({ name })
   );
   return { adapters };
 }
 
+function defaultManifests(maturity = "workflow-compatible") {
+  return Object.fromEntries(
+    ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"].map((name) => [
+      name,
+      { adapter: name, maturity },
+    ]),
+  );
+}
+
+function validateWith(report, manifestOverrides = {}) {
+  const manifests = { ...defaultManifests(), ...manifestOverrides };
+  validateReport(report, { manifests });
+}
+
 test("accepts a report where every adapter is promotion-eligible and consistent", () => {
-  assert.doesNotThrow(() => validateReport(reportWith(baseAdapter())));
+  assert.doesNotThrow(() => validateWith(reportWith(baseAdapter())));
 });
 
 test("accepts provider-compatible with complete contract evidence", () => {
@@ -49,7 +63,9 @@ test("accepts provider-compatible with complete contract evidence", () => {
     measured_level: "contract",
     contract_evidence: contractEvidence(),
   });
-  assert.doesNotThrow(() => validateReport(reportWith(adapter)));
+  assert.doesNotThrow(() =>
+    validateWith(reportWith(adapter), { stripe: { adapter: "stripe", maturity: "provider-compatible" } }),
+  );
 });
 
 test("rejects an adapter that is not promotion-eligible", () => {
@@ -58,24 +74,24 @@ test("rejects an adapter that is not promotion-eligible", () => {
     measured_level: "contract",
     promotion_eligible: false,
   });
-  assert.throws(() => validateReport(reportWith(adapter)), /does not meet CanPromote/);
+  assert.throws(() => validateWith(reportWith(adapter)), /does not meet CanPromote/);
 });
 
 test("rejects an adapter missing the promotion_eligible field", () => {
   const adapter = baseAdapter();
   delete adapter.promotion_eligible;
-  assert.throws(() => validateReport(reportWith(adapter)), /does not meet CanPromote/);
+  assert.throws(() => validateWith(reportWith(adapter)), /does not meet CanPromote/);
 });
 
 // Provenance guard: even with promotion_eligible=true, contradictory combinations are rejected.
 test("rejects promotion_eligible=true that contradicts the maturity score floor", () => {
   const adapter = baseAdapter({ maturity: "provider-compatible", measured_level: "contract", score: 0 });
-  assert.throws(() => validateReport(reportWith(adapter)), /score 0 < 80/);
+  assert.throws(() => validateWith(reportWith(adapter)), /score 0 < 80/);
 });
 
 test("rejects promotion_eligible=true with an impossible measured_level", () => {
   const adapter = baseAdapter({ maturity: "provider-compatible", measured_level: "wire", score: 100 });
-  assert.throws(() => validateReport(reportWith(adapter)), /measured_level is "wire"/);
+  assert.throws(() => validateWith(reportWith(adapter)), /measured_level is "wire"/);
 });
 
 test("rejects provider-compatible without complete contract evidence", () => {
@@ -83,27 +99,62 @@ test("rejects provider-compatible without complete contract evidence", () => {
     maturity: "provider-compatible",
     measured_level: "contract",
   });
-  assert.throws(() => validateReport(reportWith(adapter)), /contract_evidence is incomplete/);
+  assert.throws(() => validateWith(reportWith(adapter)), /contract_evidence is incomplete/);
 
   const partial = baseAdapter({
     maturity: "provider-compatible",
     measured_level: "contract",
     contract_evidence: contractEvidence({ sdk_contracts: [" "] }),
   });
-  assert.throws(() => validateReport(reportWith(partial)), /contract_evidence is incomplete/);
+  assert.throws(() => validateWith(reportWith(partial)), /contract_evidence is incomplete/);
 });
 
 test("rejects workflow-compatible whose state coverage is not 100", () => {
   const adapter = baseAdapter({ state_coverage: 0 });
-  assert.throws(() => validateReport(reportWith(adapter)), /state_coverage is 0/);
+  assert.throws(() => validateWith(reportWith(adapter)), /state_coverage is 0/);
 });
 
 test("rejects an adapter missing known gaps", () => {
   const adapter = baseAdapter({ known_gaps: [] });
-  assert.throws(() => validateReport(reportWith(adapter)), /must publish known gaps/);
+  assert.throws(() => validateWith(reportWith(adapter)), /must publish known gaps/);
 });
 
 test("rejects a report missing a required adapter", () => {
   const report = { adapters: [baseAdapter({ name: "stripe" }), baseAdapter({ name: "openai" })] };
-  assert.throws(() => validateReport(report), /at least five adapters|missing adapter/);
+  assert.throws(() => validateReport(report, { manifests: defaultManifests() }), /at least 6 adapters|missing adapter/);
+});
+
+test("rejects report maturity that does not match the checked-in manifest", () => {
+  const adapter = baseAdapter({
+    maturity: "provider-compatible",
+    measured_level: "contract",
+    score: 100,
+    contract_evidence: contractEvidence(),
+  });
+  assert.throws(
+    () => validateWith(reportWith(adapter), { stripe: { adapter: "stripe", maturity: "workflow-compatible" } }),
+    /maturity .* does not match manifest maturity/,
+  );
+});
+
+test("rejects maturity increase when promotion_eligible is false", () => {
+  const adapter = baseAdapter({
+    maturity: "provider-compatible",
+    measured_level: "contract",
+    score: 100,
+    promotion_eligible: false,
+  });
+  assert.throws(
+    () => validateWith(reportWith(adapter), { stripe: { adapter: "stripe", maturity: "workflow-compatible" } }),
+    /does not meet CanPromote|maturity .* exceeds manifest maturity/,
+  );
+});
+
+test("rejects a published adapter without a checked-in manifest", () => {
+  const manifests = defaultManifests();
+  delete manifests["zoho-oauth"];
+  assert.throws(
+    () => validateReport(reportWith(baseAdapter()), { manifests }),
+    /missing checked-in manifest for adapter: zoho-oauth/,
+  );
 });

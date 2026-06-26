@@ -1,0 +1,217 @@
+{
+  "adapter": "stripe",
+  "provider_version": "2025-10-29.clover",
+  "maturity": "workflow-compatible",
+  "sdk_versions": [
+    {
+      "name": "stripe",
+      "version": "22.2.1"
+    }
+  ],
+  "levels": [
+    "wire",
+    "sdk",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "post_stripe_v1_checkout_sessions",
+      "method": "POST",
+      "path": "/stripe/v1/checkout/sessions",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_checkout_sessions",
+      "method": "GET",
+      "path": "/stripe/v1/checkout/sessions",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_checkout_sessions__id",
+      "method": "GET",
+      "path": "/stripe/v1/checkout/sessions/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_payment_intents",
+      "method": "POST",
+      "path": "/stripe/v1/payment_intents",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_payment_intents",
+      "method": "GET",
+      "path": "/stripe/v1/payment_intents",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_payment_intents__id",
+      "method": "GET",
+      "path": "/stripe/v1/payment_intents/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_customers",
+      "method": "POST",
+      "path": "/stripe/v1/customers",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_customers",
+      "method": "GET",
+      "path": "/stripe/v1/customers",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_customers__id",
+      "method": "GET",
+      "path": "/stripe/v1/customers/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_products",
+      "method": "POST",
+      "path": "/stripe/v1/products",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_products",
+      "method": "GET",
+      "path": "/stripe/v1/products",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_products__id",
+      "method": "GET",
+      "path": "/stripe/v1/products/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_prices",
+      "method": "POST",
+      "path": "/stripe/v1/prices",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_prices",
+      "method": "GET",
+      "path": "/stripe/v1/prices",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_prices__id",
+      "method": "GET",
+      "path": "/stripe/v1/prices/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_subscriptions",
+      "method": "POST",
+      "path": "/stripe/v1/subscriptions",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_subscriptions",
+      "method": "GET",
+      "path": "/stripe/v1/subscriptions",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_subscriptions__id",
+      "method": "GET",
+      "path": "/stripe/v1/subscriptions/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_invoices",
+      "method": "POST",
+      "path": "/stripe/v1/invoices",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_invoices",
+      "method": "GET",
+      "path": "/stripe/v1/invoices",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_invoices__id",
+      "method": "GET",
+      "path": "/stripe/v1/invoices/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_v1_refunds",
+      "method": "POST",
+      "path": "/stripe/v1/refunds",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_refunds",
+      "method": "GET",
+      "path": "/stripe/v1/refunds",
+      "supported": true
+    },
+    {
+      "id": "get_stripe_v1_refunds__id",
+      "method": "GET",
+      "path": "/stripe/v1/refunds/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_test_webhook_send",
+      "method": "POST",
+      "path": "/stripe/test/webhook/send",
+      "supported": true
+    },
+    {
+      "id": "post_stripe_test_reset",
+      "method": "POST",
+      "path": "/stripe/test/reset",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "payment_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "payment_failed",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "auth_error",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "rate_limited",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "timeout",
+      "built_in": true,
+      "supported": true
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "checkout_session",
+      "payment_intent",
+      "customer",
+      "product",
+      "price",
+      "subscription",
+      "invoice",
+      "refund"
+    ],
+    "idempotency": true,
+    "reset": true
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "adapter": "openai",
+  "provider_version": "2025-02-01",
+  "maturity": "workflow-compatible",
+  "sdk_versions": [
+    {
+      "name": "openai",
+      "version": "6.42.0"
+    }
+  ],
+  "levels": [
+    "wire",
+    "sdk",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "get_openai_v1_models",
+      "method": "GET",
+      "path": "/openai/v1/models",
+      "supported": true
+    },
+    {
+      "id": "post_openai_v1_chat_completions",
+      "method": "POST",
+      "path": "/openai/v1/chat/completions",
+      "supported": true
+    },
+    {
+      "id": "post_openai_v1_responses",
+      "method": "POST",
+      "path": "/openai/v1/responses",
+      "supported": true
+    },
+    {
+      "id": "get_openai_v1_responses__id",
+      "method": "GET",
+      "path": "/openai/v1/responses/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_openai_v1_embeddings",
+      "method": "POST",
+      "path": "/openai/v1/embeddings",
+      "supported": true
+    },
+    {
+      "id": "post_openai_v1_files",
+      "method": "POST",
+      "path": "/openai/v1/files",
+      "supported": true
+    },
+    {
+      "id": "post_openai_v1_batches",
+      "method": "POST",
+      "path": "/openai/v1/batches",
+      "supported": true
+    },
+    {
+      "id": "get_openai_v1_batches__id",
+      "method": "GET",
+      "path": "/openai/v1/batches/{id}",
+      "supported": true
+    },
+    {
+      "id": "post_openai_test_reset",
+      "method": "POST",
+      "path": "/openai/test/reset",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "chat_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "stream_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "rate_limited",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "context_length_exceeded",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "auth_error",
+      "built_in": true,
+      "supported": true
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "chat_completion",
+      "response",
+      "embedding",
+      "file",
+      "batch"
+    ],
+    "reset": true
+  }
+}

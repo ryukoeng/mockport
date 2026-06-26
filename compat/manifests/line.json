@@ -1,0 +1,510 @@
+{
+  "adapter": "line",
+  "provider_version": "Messaging API v2 / Login v2.1 / Pay v3 / MINI App service messages / Mini Dapp SDK",
+  "maturity": "workflow-compatible",
+  "levels": [
+    "wire",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "post_line_v2_bot_message_push",
+      "method": "POST",
+      "path": "/line/v2/bot/message/push",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_message_reply",
+      "method": "POST",
+      "path": "/line/v2/bot/message/reply",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_message_multicast",
+      "method": "POST",
+      "path": "/line/v2/bot/message/multicast",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_message_broadcast",
+      "method": "POST",
+      "path": "/line/v2/bot/message/broadcast",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_message_narrowcast",
+      "method": "POST",
+      "path": "/line/v2/bot/message/narrowcast",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_progress_narrowcast",
+      "method": "GET",
+      "path": "/line/v2/bot/message/progress/narrowcast",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_message_validate__type",
+      "method": "POST",
+      "path": "/line/v2/bot/message/validate/{type}",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_chat_markasread",
+      "method": "POST",
+      "path": "/line/v2/bot/chat/markAsRead",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_chat_loading_start",
+      "method": "POST",
+      "path": "/line/v2/bot/chat/loading/start",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message__messageid__content",
+      "method": "GET",
+      "path": "/line/v2/bot/message/{messageId}/content",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message__messageid__content_transcoding",
+      "method": "GET",
+      "path": "/line/v2/bot/message/{messageId}/content/transcoding",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message__messageid__content_preview",
+      "method": "GET",
+      "path": "/line/v2/bot/message/{messageId}/content/preview",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_profile__userid",
+      "method": "GET",
+      "path": "/line/v2/bot/profile/{userId}",
+      "supported": true
+    },
+    {
+      "id": "put_line_v2_bot_channel_webhook_endpoint",
+      "method": "PUT",
+      "path": "/line/v2/bot/channel/webhook/endpoint",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_channel_webhook_endpoint",
+      "method": "GET",
+      "path": "/line/v2/bot/channel/webhook/endpoint",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_channel_webhook_test",
+      "method": "POST",
+      "path": "/line/v2/bot/channel/webhook/test",
+      "supported": true
+    },
+    {
+      "id": "post_line_test_webhook_send",
+      "method": "POST",
+      "path": "/line/test/webhook/send",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_info",
+      "method": "GET",
+      "path": "/line/v2/bot/info",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_quota",
+      "method": "GET",
+      "path": "/line/v2/bot/message/quota",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_quota_consumption",
+      "method": "GET",
+      "path": "/line/v2/bot/message/quota/consumption",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_delivery__type",
+      "method": "GET",
+      "path": "/line/v2/bot/message/delivery/{type}",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_aggregation_info",
+      "method": "GET",
+      "path": "/line/v2/bot/message/aggregation/info",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_message_aggregation_list",
+      "method": "GET",
+      "path": "/line/v2/bot/message/aggregation/list",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_followers_ids",
+      "method": "GET",
+      "path": "/line/v2/bot/followers/ids",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_group__groupid__summary",
+      "method": "GET",
+      "path": "/line/v2/bot/group/{groupId}/summary",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_group__groupid__members_ids",
+      "method": "GET",
+      "path": "/line/v2/bot/group/{groupId}/members/ids",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_group__groupid__member__userid",
+      "method": "GET",
+      "path": "/line/v2/bot/group/{groupId}/member/{userId}",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_group__groupid__leave",
+      "method": "POST",
+      "path": "/line/v2/bot/group/{groupId}/leave",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_room__roomid__members_ids",
+      "method": "GET",
+      "path": "/line/v2/bot/room/{roomId}/members/ids",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_room__roomid__member__userid",
+      "method": "GET",
+      "path": "/line/v2/bot/room/{roomId}/member/{userId}",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_room__roomid__leave",
+      "method": "POST",
+      "path": "/line/v2/bot/room/{roomId}/leave",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_validate",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/validate",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu_list",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/list",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu__richmenuid",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/{richMenuId}",
+      "supported": true
+    },
+    {
+      "id": "delete_line_v2_bot_richmenu__richmenuid",
+      "method": "DELETE",
+      "path": "/line/v2/bot/richmenu/{richMenuId}",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu__richmenuid__content",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/{richMenuId}/content",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu__richmenuid__content",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/{richMenuId}/content",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_alias",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/alias",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu_alias_list",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/alias/list",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu_alias__aliasid",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/alias/{aliasId}",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_alias__aliasid",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/alias/{aliasId}",
+      "supported": true
+    },
+    {
+      "id": "delete_line_v2_bot_richmenu_alias__aliasid",
+      "method": "DELETE",
+      "path": "/line/v2/bot/richmenu/alias/{aliasId}",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_richmenu_progress_batch",
+      "method": "GET",
+      "path": "/line/v2/bot/richmenu/progress/batch",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_bulk_link",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/bulk/link",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_bulk_unlink",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/bulk/unlink",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_batch",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/batch",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_richmenu_validate_batch",
+      "method": "POST",
+      "path": "/line/v2/bot/richmenu/validate/batch",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_user_all_richmenu__richmenuid",
+      "method": "POST",
+      "path": "/line/v2/bot/user/all/richmenu/{richMenuId}",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_user_all_richmenu",
+      "method": "GET",
+      "path": "/line/v2/bot/user/all/richmenu",
+      "supported": true
+    },
+    {
+      "id": "delete_line_v2_bot_user_all_richmenu",
+      "method": "DELETE",
+      "path": "/line/v2/bot/user/all/richmenu",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_user__userid__richmenu__richmenuid",
+      "method": "POST",
+      "path": "/line/v2/bot/user/{userId}/richmenu/{richMenuId}",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_bot_user__userid__richmenu",
+      "method": "GET",
+      "path": "/line/v2/bot/user/{userId}/richmenu",
+      "supported": true
+    },
+    {
+      "id": "delete_line_v2_bot_user__userid__richmenu",
+      "method": "DELETE",
+      "path": "/line/v2/bot/user/{userId}/richmenu",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_bot_user__userid__linktoken",
+      "method": "POST",
+      "path": "/line/v2/bot/user/{userId}/linkToken",
+      "supported": true
+    },
+    {
+      "id": "get_line_oauth2_v2_1_authorize",
+      "method": "GET",
+      "path": "/line/oauth2/v2.1/authorize",
+      "supported": true
+    },
+    {
+      "id": "post_line_oauth2_v2_1_token",
+      "method": "POST",
+      "path": "/line/oauth2/v2.1/token",
+      "supported": true
+    },
+    {
+      "id": "get_line_oauth2_v2_1_verify",
+      "method": "GET",
+      "path": "/line/oauth2/v2.1/verify",
+      "supported": true
+    },
+    {
+      "id": "get_line_oauth2_v2_1_tokens_kid",
+      "method": "GET",
+      "path": "/line/oauth2/v2.1/tokens/kid",
+      "supported": true
+    },
+    {
+      "id": "post_line_oauth2_v2_1_revoke",
+      "method": "POST",
+      "path": "/line/oauth2/v2.1/revoke",
+      "supported": true
+    },
+    {
+      "id": "post_line_oauth2_v3_token",
+      "method": "POST",
+      "path": "/line/oauth2/v3/token",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_oauth_accesstoken",
+      "method": "POST",
+      "path": "/line/v2/oauth/accessToken",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_oauth_verify",
+      "method": "POST",
+      "path": "/line/v2/oauth/verify",
+      "supported": true
+    },
+    {
+      "id": "post_line_v2_oauth_revoke",
+      "method": "POST",
+      "path": "/line/v2/oauth/revoke",
+      "supported": true
+    },
+    {
+      "id": "get_line_v2_profile",
+      "method": "GET",
+      "path": "/line/v2/profile",
+      "supported": true
+    },
+    {
+      "id": "get_line_liff_v2_profile",
+      "method": "GET",
+      "path": "/line/liff/v2/profile",
+      "supported": true
+    },
+    {
+      "id": "get_line_liff_v2_context",
+      "method": "GET",
+      "path": "/line/liff/v2/context",
+      "supported": true
+    },
+    {
+      "id": "post_line_test_reset",
+      "method": "POST",
+      "path": "/line/test/reset",
+      "supported": true
+    },
+    {
+      "id": "post_line_message_v3_notifier_token",
+      "method": "POST",
+      "path": "/line/message/v3/notifier/token",
+      "supported": true
+    },
+    {
+      "id": "post_line_message_v3_notifier_send",
+      "method": "POST",
+      "path": "/line/message/v3/notifier/send",
+      "supported": true
+    },
+    {
+      "id": "post_line_v3_payments_request",
+      "method": "POST",
+      "path": "/line/v3/payments/request",
+      "supported": true
+    },
+    {
+      "id": "post_line_v3_payments__transactionid__confirm",
+      "method": "POST",
+      "path": "/line/v3/payments/{transactionId}/confirm",
+      "supported": true
+    },
+    {
+      "id": "get_line_v3_payments_requests__transactionid__check",
+      "method": "GET",
+      "path": "/line/v3/payments/requests/{transactionId}/check",
+      "supported": true
+    },
+    {
+      "id": "post_line_mini_dapp_v1_wallet_sessions",
+      "method": "POST",
+      "path": "/line/mini-dapp/v1/wallet/sessions",
+      "supported": true
+    },
+    {
+      "id": "post_line_mini_dapp_v1_payments",
+      "method": "POST",
+      "path": "/line/mini-dapp/v1/payments",
+      "supported": true
+    },
+    {
+      "id": "get_line_mini_dapp_v1_payments__id",
+      "method": "GET",
+      "path": "/line/mini-dapp/v1/payments/{id}",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "line_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "auth_error",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "rate_limited",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "invalid_request",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "pay_failed",
+      "built_in": true,
+      "supported": true
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "message",
+      "oauth_code",
+      "oauth_token",
+      "rich_menu",
+      "rich_menu_alias",
+      "user_rich_menu",
+      "notification_token",
+      "line_pay_payment",
+      "mini_dapp_payment"
+    ],
+    "reset": true
+  }
+}

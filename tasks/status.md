@@ -48,7 +48,7 @@
 | Phase 23 | Roadmap and docs alignment | pending | Roadmap, README, docs, changelog, and compatibility report explain the same current state |
 | Phase 24 | GitHub Actions execution recovery | pending | CI and compatibility workflows create observable GitHub Actions runs or the blocker is documented |
 | Phase 25 | SDK contract all-provider harness | pending | `run-sdk-contracts.sh all` runs every provider-specific contract, not a placeholder |
-| Phase 26 | Provider-compatible manifest promotion | pending | Versioned manifests and release checks gate maturity promotion automatically |
+| Phase 26 | Provider-compatible manifest promotion | done | Versioned manifests and release checks gate manifest drift and maturity claims |
 | Phase 27 | Stripe provider-compatible track | pending | Stripe selected workflows have contract-level evidence or explicit blockers |
 | Phase 28 | OpenAI provider-compatible track | pending | OpenAI selected workflows have contract-level evidence or explicit blockers |
 | Phase 29 | GitHub OAuth and Slack client evidence | pending | GitHub OAuth and Slack client/SDK evidence is strong enough for honest scoring |
@@ -365,10 +365,10 @@
 
 | ID | Task | Status | Test First |
 | --- | --- | --- | --- |
-| P26-T01 | Add manifest schema checker | pending | Checker fails before `compat/manifests/*.json` exists |
-| P26-T02 | Create adapter manifests | pending | Stripe, OpenAI, GitHub OAuth, and Slack manifests validate with known gaps |
-| P26-T03 | Merge manifest evidence into reports | pending | Generated report includes runtime score plus manifest evidence |
-| P26-T04 | Enforce provider-compatible promotion gate | pending | Release check rejects provider-compatible maturity without contract-level evidence |
+| P26-T01 | Add manifest generator and drift check | done | `scripts/gen-compat-manifests` and `scripts/check-compat-manifests.sh` gate checked-in manifests |
+| P26-T02 | Create adapter manifests | done | Stripe, OpenAI, GitHub OAuth, Slack, and LINE manifests committed under `compat/manifests/` |
+| P26-T03 | Connect promotion gate to manifests | done | Report validator requires report maturity to match checked-in manifest maturity |
+| P26-T04 | Wire release and CI checks | done | `check-compatibility-release.sh` and CI run manifest drift checks |
 
 ## Phase 27 Tasks
 
