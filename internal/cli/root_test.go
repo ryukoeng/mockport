@@ -1,17 +1,12 @@
 package cli
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 )
 
 func TestRootCommandShowsHelp(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"--help"})
+	cmd, out := newTestCommand(t, "--help")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute help: %v", err)
@@ -27,11 +22,7 @@ func TestRootCommandShowsHelp(t *testing.T) {
 }
 
 func TestVersionCommandPrintsVersion(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"version"})
+	cmd, out := newTestCommand(t, "version")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute version: %v", err)

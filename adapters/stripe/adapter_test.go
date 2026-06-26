@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestCheckoutSessionSuccess(t *testing.T) {
@@ -122,38 +122,26 @@ func TestCheckoutSessionCreateRetrieveListAndIdempotency(t *testing.T) {
 func TestCheckoutSessionIdempotencyIsAtomicUnderConcurrentRequests(t *testing.T) {
 	mux := newStripeMux(t, adapter.Config{BasePath: "/stripe", Scenario: "payment_success"})
 	const requests = 64
-	start := make(chan struct{})
-	bodies := make(chan map[string]any, requests)
-	var wg sync.WaitGroup
 
-	for range requests {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			<-start
-
-			rec := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/checkout/sessions", "client_reference_id=cart_race", map[string]string{"Idempotency-Key": "cart-race"})
-			if rec.Code != http.StatusOK {
-				t.Errorf("status = %d, want %d, body=%s", rec.Code, http.StatusOK, rec.Body.String())
-				return
-			}
-			var body map[string]any
-			if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-				t.Errorf("decode response: %v", err)
-				return
-			}
-			bodies <- body
-		}()
-	}
-	close(start)
-	wg.Wait()
-	close(bodies)
+	bodies := adaptertest.ConcurrentResults(requests, func() map[string]any {
+		rec := serveStripeRequest(mux, http.MethodPost, "/stripe/v1/checkout/sessions", "client_reference_id=cart_race", map[string]string{"Idempotency-Key": "cart-race"})
+		if rec.Code != http.StatusOK {
+			t.Errorf("status = %d, want %d, body=%s", rec.Code, http.StatusOK, rec.Body.String())
+			return nil
+		}
+		var body map[string]any
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Errorf("decode response: %v", err)
+			return nil
+		}
+		return body
+	})
 	if t.Failed() {
 		return
 	}
 
 	ids := map[string]int{}
-	for body := range bodies {
+	for _, body := range bodies {
 		id, ok := body["id"].(string)
 		if !ok || id == "" {
 			t.Fatalf("response without id: %#v", body)
@@ -431,11 +419,7 @@ func performStripeRequest(t *testing.T, cfg adapter.Config, method, path string)
 
 func newStripeMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func createStripeResource(t *testing.T, mux http.Handler, path, body string) map[string]any {
@@ -459,27 +443,17 @@ func serveStripeRequest(mux http.Handler, method, path, body string, headers map
 }
 
 func serveStripeRequestWithRemote(mux http.Handler, method, path, body string, headers map[string]string, remoteAddr string) *httptest.ResponseRecorder {
-	reader := strings.NewReader(body)
-	req := httptest.NewRequest(method, path, reader)
-	req.RemoteAddr = remoteAddr
+	header := http.Header{}
 	if body != "" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 	for name, value := range headers {
-		req.Header.Set(name, value)
+		header.Set(name, value)
 	}
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.ServeWithRemote(mux, method, path, strings.NewReader(body), header, remoteAddr)
 }
 
 func assertStripeErrorCode(t *testing.T, rec *httptest.ResponseRecorder, want string) {
 	t.Helper()
-	var body errorBody
-	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-		t.Fatalf("decode error body: %v", err)
-	}
-	if body.Error.Code != want {
-		t.Fatalf("error code = %q, want %q", body.Error.Code, want)
-	}
+	adaptertest.AssertJSONField(t, rec, "error.code", want)
 }

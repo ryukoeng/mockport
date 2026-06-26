@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,11 +14,7 @@ func TestAddAdaptersUpdatesConfig(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"add", "openai", "github-oauth", "slack", "line", "--config", configPath})
+	cmd, _ := newTestCommand(t, "add", "openai", "github-oauth", "slack", "line", "--config", configPath)
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute add: %v", err)
 	}
