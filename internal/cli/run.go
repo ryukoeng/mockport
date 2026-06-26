@@ -32,6 +32,7 @@ func newRunCommand() *cobra.Command {
 		Use:   "run",
 		Short: "Run Mockport server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			cfg, err := config.LoadFile(configPath)
 			if err != nil {
 				return err

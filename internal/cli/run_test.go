@@ -15,7 +15,7 @@ import (
 )
 
 func TestRunCommandRejectsMissingConfig(t *testing.T) {
-	cmd, _ := newTestCommand(t, "run", "--config", "missing.yml")
+	cmd, out := newTestCommand(t, "run", "--config", "missing.yml")
 
 	err := cmd.Execute()
 	if err == nil {
@@ -24,6 +24,9 @@ func TestRunCommandRejectsMissingConfig(t *testing.T) {
 	errText := err.Error()
 	if !strings.Contains(errText, "load config") {
 		t.Fatalf("error = %q, want load config", errText)
+	}
+	if strings.Contains(out.String(), "Usage:") {
+		t.Fatalf("runtime error should not print usage:\n%s", out.String())
 	}
 }
 

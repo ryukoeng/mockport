@@ -16,6 +16,7 @@ func newHelpCommand(root *cobra.Command) *cobra.Command {
 		Use:   "help [command|service]",
 		Short: "Help about any command or built-in service",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			if len(args) == 0 {
 				root.SetOut(cmd.OutOrStdout())
 				root.SetErr(cmd.ErrOrStderr())

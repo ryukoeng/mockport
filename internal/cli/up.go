@@ -30,6 +30,7 @@ func newUpCommand() *cobra.Command {
 		Use:   "up",
 		Short: "Run generated Docker Compose",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			const composeFile = "docker-compose.mockport.yml"
 			if !fileExists(composeFile) {
 				return fmt.Errorf("%s not found; run `mockport init` first", composeFile)

@@ -40,6 +40,7 @@ func newInitCommand() *cobra.Command {
 		Use:   "init",
 		Short: "Generate Mockport local files",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			specs, err := specsFor(adapterNames)
 			if err != nil {
 				return err
