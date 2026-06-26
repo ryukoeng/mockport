@@ -30,8 +30,7 @@ In another terminal:
 ```bash
 curl http://localhost:43101/health
 curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
-mockport report --url http://localhost:43101/_mockport/report
-mockport healthcheck
+curl http://localhost:43101/_mockport/report
 ```
 
 ### From source
@@ -68,7 +67,7 @@ $ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 {"id":"stripe_checkout_session_000001","object":"checkout.session","payment_status":"paid"}
 ```
 
-Request and safety report (opening section):
+With the CLI installed, the same request and safety report renders as:
 
 ```bash
 $ mockport report --url http://localhost:43101/_mockport/report

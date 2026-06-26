@@ -30,8 +30,7 @@ docker run --rm -p 127.0.0.1:43101:43101 \
 ```bash
 curl http://localhost:43101/health
 curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
-mockport report --url http://localhost:43101/_mockport/report
-mockport healthcheck
+curl http://localhost:43101/_mockport/report
 ```
 
 ### ソースから
@@ -68,7 +67,7 @@ $ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions
 {"id":"stripe_checkout_session_000001","object":"checkout.session","payment_status":"paid"}
 ```
 
-リクエストと安全性レポート（先頭部分）:
+CLI がインストール済みの場合、同じリクエストと安全性レポートを整形表示できます。
 
 ```bash
 $ mockport report --url http://localhost:43101/_mockport/report
