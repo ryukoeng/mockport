@@ -23,7 +23,7 @@ has_adapter() {
   return 1
 }
 
-# Discover built-in adapter names from `builtinAdapters()` registration using POSIX tools
+# Discover built-in adapter names from the shared builtins registry using POSIX tools
 # (CI runner environments do not guarantee GNU ripgrep availability).
 while IFS= read -r package_name; do
   adapter_file="adapters/${package_name}/adapter.go"
@@ -46,7 +46,7 @@ while IFS= read -r package_name; do
   if ! has_adapter "$adapter_name"; then
     ADAPTERS+=("$adapter_name")
   fi
-done < <(grep -oE '[A-Za-z_][A-Za-z0-9_]*\.New\(\)' internal/cli/builtin.go | sed 's/\.New()$//' | sort -u)
+done < <(grep -oE '[A-Za-z_][A-Za-z0-9_]*\.New\(\)' internal/builtins/builtins.go | sed 's/\.New()$//' | sort -u)
 
 if [[ ${#ADAPTERS[@]} -eq 0 ]]; then
   echo "failed to resolve built-in adapters" >&2

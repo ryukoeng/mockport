@@ -24,7 +24,7 @@ function requireText(path, content, text) {
 }
 
 function parseBuiltinAdapterNames() {
-  const builtinPath = "internal/cli/builtin.go";
+  const builtinPath = "internal/builtins/builtins.go";
   const builtin = read(builtinPath);
   const imports = new Map();
   for (const match of builtin.matchAll(/"github\.com\/albert-einshutoin\/mockport\/adapters\/([^"]+)"/g)) {
