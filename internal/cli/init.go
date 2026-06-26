@@ -44,8 +44,12 @@ func newInitCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			configContent, err := generatedConfig(specs)
+			if err != nil {
+				return err
+			}
 			files := map[string]string{
-				"mockport.yml":                generatedConfig(specs),
+				"mockport.yml":                configContent,
 				".env.mockport":               generatedEnv(specs),
 				"docker-compose.mockport.yml": defaultCompose,
 			}
@@ -183,7 +187,7 @@ func adapterSpecFor(name string) (adapterSpec, bool) {
 	}
 }
 
-func generatedConfig(specs []adapterSpec) string {
+func generatedConfig(specs []adapterSpec) (string, error) {
 	cfg := config.Config{
 		Version:  "0.1",
 		Server:   config.ServerConfig{Host: "127.0.0.1", Port: 43101},
@@ -201,9 +205,9 @@ func generatedConfig(specs []adapterSpec) string {
 	}
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("marshal generated config: %w", err)
 	}
-	return string(data)
+	return string(data), nil
 }
 
 func generatedEnv(specs []adapterSpec) string {

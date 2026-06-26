@@ -44,7 +44,8 @@ func TestHealthcheckCommandRejectsBadResponse(t *testing.T) {
 	if err == nil {
 		t.Fatal("healthcheck succeeded for non-ok status payload")
 	}
-	if !strings.Contains(err.Error(), "healthcheck status value") {
+	errText := err.Error()
+	if !strings.Contains(errText, "healthcheck status value") {
 		t.Fatalf("error=%v", err)
 	}
 }

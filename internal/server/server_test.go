@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,6 +35,26 @@ func TestHealthReturnsOK(t *testing.T) {
 	}
 	if body["status"] != "ok" {
 		t.Fatalf("status body = %q, want ok", body["status"])
+	}
+}
+
+func TestNewConfiguredHandlerUnregisteredAdapterReturnsErrAdapterNotRegistered(t *testing.T) {
+	cfg := config.Config{
+		Adapters: map[string]config.AdapterConfig{
+			"missing": {Enabled: true, BasePath: "/missing"},
+		},
+	}
+
+	_, err := NewConfiguredHandler(cfg, adapter.NewRegistry(), report.NewRecorder())
+	if err == nil {
+		t.Fatal("NewConfiguredHandler returned nil error for unregistered adapter")
+	}
+	if !errors.Is(err, ErrAdapterNotRegistered) {
+		t.Fatalf("error = %v, want ErrAdapterNotRegistered", err)
+	}
+	errText := err.Error()
+	if !strings.Contains(errText, "missing") {
+		t.Fatalf("error = %q, want adapter name in message", errText)
 	}
 }
 

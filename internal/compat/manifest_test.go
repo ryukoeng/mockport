@@ -42,7 +42,11 @@ func TestManifestValidationRejectsDuplicateEndpointIDs(t *testing.T) {
 	}
 
 	err := manifest.Validate()
-	if err == nil || !strings.Contains(err.Error(), "duplicate endpoint id") {
+	if err == nil {
+		t.Fatalf("Validate() error = %v, want duplicate endpoint id", err)
+	}
+	errText := err.Error()
+	if !strings.Contains(errText, "duplicate endpoint id") {
 		t.Fatalf("Validate() error = %v, want duplicate endpoint id", err)
 	}
 }
@@ -55,7 +59,11 @@ func TestManifestValidationRejectsInvalidLevels(t *testing.T) {
 	}
 
 	err := manifest.Validate()
-	if err == nil || !strings.Contains(err.Error(), "invalid compatibility level") {
+	if err == nil {
+		t.Fatalf("Validate() error = %v, want invalid compatibility level", err)
+	}
+	errText := err.Error()
+	if !strings.Contains(errText, "invalid compatibility level") {
 		t.Fatalf("Validate() error = %v, want invalid compatibility level", err)
 	}
 }

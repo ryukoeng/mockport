@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"errors"
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -91,8 +91,9 @@ func TestUpCommandSuggestsInitWhenComposeFileMissing(t *testing.T) {
 	if err == nil {
 		t.Fatal("execute up returned nil, want error")
 	}
-	if !strings.Contains(err.Error(), "docker-compose.mockport.yml") || !strings.Contains(err.Error(), "mockport init") {
-		t.Fatalf("error = %q, want compose file and mockport init guidance", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "docker-compose.mockport.yml") || !strings.Contains(errText, "mockport init") {
+		t.Fatalf("error = %q, want compose file and mockport init guidance", errText)
 	}
 }
 
@@ -100,7 +101,7 @@ func TestUpCommandExplainsMissingDocker(t *testing.T) {
 	mockDocker(t,
 		func(path string) bool { return path == "docker-compose.mockport.yml" },
 		func(ctx context.Context, name string, args ...string) error {
-			return errors.New("exec: \"docker\": executable file not found in $PATH")
+			return &exec.Error{Name: "docker", Err: exec.ErrNotFound}
 		},
 	)
 
@@ -109,7 +110,8 @@ func TestUpCommandExplainsMissingDocker(t *testing.T) {
 	if err == nil {
 		t.Fatal("execute up returned nil, want error")
 	}
-	if !strings.Contains(strings.ToLower(err.Error()), "docker is required") || !strings.Contains(err.Error(), "docker compose") {
-		t.Fatalf("error = %q, want Docker guidance", err.Error())
+	errText := err.Error()
+	if !strings.Contains(strings.ToLower(errText), "docker is required") || !strings.Contains(errText, "docker compose") {
+		t.Fatalf("error = %q, want Docker guidance", errText)
 	}
 }

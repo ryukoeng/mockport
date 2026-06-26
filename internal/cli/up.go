@@ -2,10 +2,10 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -42,7 +42,8 @@ func newUpCommand() *cobra.Command {
 				composeArgs = append(composeArgs, "--build")
 			}
 			if err := runCommand(cmd.Context(), "docker", composeArgs...); err != nil {
-				if strings.Contains(err.Error(), "executable file not found") || strings.Contains(err.Error(), "not found in $PATH") {
+				var execErr *exec.Error
+				if errors.As(err, &execErr) && errors.Is(execErr.Err, exec.ErrNotFound) {
 					return fmt.Errorf("docker is required to run `mockport up`; install Docker and ensure `docker compose` is available: %w", err)
 				}
 				return err

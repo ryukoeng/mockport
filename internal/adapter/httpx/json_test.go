@@ -29,7 +29,11 @@ func TestWriteJSONReturnsEncodeError(t *testing.T) {
 	writer := &failingResponseWriter{}
 
 	err := WriteJSON(writer, http.StatusAccepted, map[string]string{"ok": "true"})
-	if err == nil || !strings.Contains(err.Error(), "encode json response") {
+	if err == nil {
+		t.Fatalf("WriteJSON() error = %v, want encode json response", err)
+	}
+	errText := err.Error()
+	if !strings.Contains(errText, "encode json response") {
 		t.Fatalf("WriteJSON() error = %v, want encode json response", err)
 	}
 	if writer.Header().Get("Content-Type") != "application/json" {
