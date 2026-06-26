@@ -26,6 +26,7 @@ func newHealthcheckCommand() *cobra.Command {
 		Use:   "healthcheck",
 		Short: "Check Mockport health endpoint",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			resolvedURL, err := resolveHealthcheckURL(configPath, healthURL)
 			if err != nil {
 				return err

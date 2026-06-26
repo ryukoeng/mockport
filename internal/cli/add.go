@@ -15,6 +15,7 @@ func newAddCommand() *cobra.Command {
 		Use:   "add [adapter...]",
 		Short: "Add adapter config to mockport.yml",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			if len(args) == 0 {
 				return fmt.Errorf("at least one adapter is required")
 			}

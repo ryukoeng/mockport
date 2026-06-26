@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"net/http"
@@ -20,6 +21,9 @@ const (
 	delayHeader = "X-Mockport-Delay"
 	maxDelay    = 30 * time.Second
 )
+
+// ErrAdapterNotRegistered marks enabled adapters missing from the registry.
+var ErrAdapterNotRegistered = errors.New("adapter is enabled but not registered")
 
 func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.Recorder) (http.Handler, error) {
 	mux := http.NewServeMux()
@@ -47,7 +51,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		}
 		registered, ok := reg.Get(name)
 		if !ok {
-			return nil, fmt.Errorf("adapter %s is enabled but not registered", name)
+			return nil, fmt.Errorf("adapter %s: %w", name, ErrAdapterNotRegistered)
 		}
 		meta := registered.Metadata()
 		if err := adapter.ValidateMetadata(meta); err != nil {

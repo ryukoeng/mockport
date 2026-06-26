@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -33,6 +32,7 @@ func newRunCommand() *cobra.Command {
 		Use:   "run",
 		Short: "Run Mockport server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			cfg, err := config.LoadFile(configPath)
 			if err != nil {
 				return err
@@ -120,7 +120,7 @@ func formatListenError(addr string, err error) error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(err.Error(), "address already in use") {
+	if errors.Is(err, syscall.EADDRINUSE) {
 		return fmt.Errorf("listen on %s: address already in use; choose another port or stop the existing process: %w", addr, err)
 	}
 	return fmt.Errorf("listen on %s: %w", addr, err)

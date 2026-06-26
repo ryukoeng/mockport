@@ -96,8 +96,9 @@ func TestValidateRejectsInvalidBasePaths(t *testing.T) {
 			if err == nil {
 				t.Fatal("Validate returned nil error")
 			}
-			if !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("error = %q, want %q", err.Error(), tt.want)
+			errText := err.Error()
+			if !strings.Contains(errText, tt.want) {
+				t.Fatalf("error = %q, want %q", errText, tt.want)
 			}
 		})
 	}
@@ -151,8 +152,9 @@ func TestStrictRejectsUnsafeDisabledAdapters(t *testing.T) {
 	if err == nil {
 		t.Fatal("strict config with unsafe disabled adapter returned nil error")
 	}
-	if !strings.Contains(err.Error(), "stripe.fake_secret") {
-		t.Fatalf("error = %q, want stripe.fake_secret", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "stripe.fake_secret") {
+		t.Fatalf("error = %q, want stripe.fake_secret", errText)
 	}
 }
 
@@ -251,8 +253,9 @@ func TestStrictRejectsNormalizedUnsafeConfigValues(t *testing.T) {
 			if err == nil {
 				t.Fatal("strict config with normalized unsafe value returned nil error")
 			}
-			if !strings.Contains(err.Error(), tt.wantField) {
-				t.Fatalf("error = %q, want %q", err.Error(), tt.wantField)
+			errText := err.Error()
+			if !strings.Contains(errText, tt.wantField) {
+				t.Fatalf("error = %q, want %q", errText, tt.wantField)
 			}
 		})
 	}
@@ -311,7 +314,8 @@ func TestStrictRejectsPublicBindHost(t *testing.T) {
 	if err == nil {
 		t.Fatal("strict config with public bind host returned nil error")
 	}
-	if !strings.Contains(err.Error(), "server.host") {
-		t.Fatalf("error = %q, want server.host", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "server.host") {
+		t.Fatalf("error = %q, want server.host", errText)
 	}
 }

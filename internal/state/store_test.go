@@ -1,7 +1,9 @@
 package state
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -247,5 +249,21 @@ func TestStoreUpdateDeepClonesPatchData(t *testing.T) {
 	}
 	if got.Data["items"].([]any)[0].(map[string]any)["sku"] != "sku_1" {
 		t.Fatalf("items were mutated through update patch/result: %#v", got.Data)
+	}
+}
+
+func TestStoreUpdateMissingResourceReturnsErrResourceNotFound(t *testing.T) {
+	store := NewStore()
+
+	_, err := store.Update("stripe", "checkout_session", "missing", map[string]any{"status": "complete"})
+	if err == nil {
+		t.Fatal("update missing resource returned nil error")
+	}
+	if !errors.Is(err, ErrResourceNotFound) {
+		t.Fatalf("error = %v, want ErrResourceNotFound", err)
+	}
+	errText := err.Error()
+	if !strings.Contains(errText, "missing") {
+		t.Fatalf("error = %q, want resource id in message", errText)
 	}
 }

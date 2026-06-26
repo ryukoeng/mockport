@@ -3,24 +3,30 @@ package cli
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
 
 func TestRunCommandRejectsMissingConfig(t *testing.T) {
-	cmd, _ := newTestCommand(t, "run", "--config", "missing.yml")
+	cmd, out := newTestCommand(t, "run", "--config", "missing.yml")
 
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("run returned nil error for missing config")
 	}
-	if !strings.Contains(err.Error(), "load config") {
-		t.Fatalf("error = %q, want load config", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "load config") {
+		t.Fatalf("error = %q, want load config", errText)
+	}
+	if strings.Contains(out.String(), "Usage:") {
+		t.Fatalf("runtime error should not print usage:\n%s", out.String())
 	}
 }
 
@@ -91,11 +97,12 @@ adapters:
 	if err == nil {
 		t.Fatal("run --check strict returned nil error")
 	}
-	if !strings.Contains(err.Error(), "strict mode rejected unsafe config fields") {
-		t.Fatalf("error = %q", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "strict mode rejected unsafe config fields") {
+		t.Fatalf("error = %q", errText)
 	}
-	if strings.Contains(err.Error(), "sk_live_secret_should_not_print") {
-		t.Fatalf("error leaked secret value: %q", err.Error())
+	if strings.Contains(errText, "sk_live_secret_should_not_print") {
+		t.Fatalf("error leaked secret value: %q", errText)
 	}
 }
 
@@ -150,8 +157,9 @@ adapters:
 	if err == nil {
 		t.Fatal("run --check strict --host returned nil error")
 	}
-	if !strings.Contains(err.Error(), "server.host") {
-		t.Fatalf("error = %q, want server.host", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "server.host") {
+		t.Fatalf("error = %q, want server.host", errText)
 	}
 }
 
@@ -286,14 +294,9 @@ func TestNewHTTPServerUsesBoundedTimeouts(t *testing.T) {
 }
 
 func TestFormatListenErrorIncludesAddress(t *testing.T) {
-	err := formatListenError("127.0.0.1:43101", errAddressInUse{})
-	if !strings.Contains(err.Error(), "127.0.0.1:43101") || !strings.Contains(err.Error(), "address already in use") {
-		t.Fatalf("error = %q", err.Error())
+	err := formatListenError("127.0.0.1:43101", fmt.Errorf("listen: %w", syscall.EADDRINUSE))
+	errText := err.Error()
+	if !strings.Contains(errText, "127.0.0.1:43101") || !strings.Contains(errText, "address already in use") {
+		t.Fatalf("error = %q", errText)
 	}
 }
-
-type errAddressInUse struct{}
-
-func (errAddressInUse) Error() string   { return "bind: address already in use" }
-func (errAddressInUse) Timeout() bool   { return false }
-func (errAddressInUse) Temporary() bool { return false }

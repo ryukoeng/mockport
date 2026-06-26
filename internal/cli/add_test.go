@@ -10,7 +10,11 @@ import (
 func TestAddAdaptersUpdatesConfig(t *testing.T) {
 	dir := chdirTemp(t)
 	configPath := filepath.Join(dir, "mockport.yml")
-	if err := os.WriteFile(configPath, []byte(generatedConfig([]adapterSpec{mustSpec(t, "stripe")})), 0o644); err != nil {
+	configContent, err := generatedConfig([]adapterSpec{mustSpec(t, "stripe")})
+	if err != nil {
+		t.Fatalf("generate config: %v", err)
+	}
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
 
