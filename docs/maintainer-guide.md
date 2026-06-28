@@ -38,8 +38,7 @@ scripts/verify-release-artifacts.sh 0.1.0-alpha "$tmpdir"
 On each release, update `0.1.0-alpha` (or the new semver) consistently in every file below. Run:
 
 ```bash
-grep -rln "0.1.0-alpha" --include="*.js" --include="*.json" --include="*.md" --include="*.yml" . \
-  | grep -v ".git/" | grep -v docs/releases/
+git grep -n "0.1.0-alpha" -- . ':(exclude)docs/releases/**'
 ```
 
 | File | Role |
