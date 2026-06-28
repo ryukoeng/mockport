@@ -21,25 +21,25 @@ type routes struct {
 }
 
 func (rt *routes) register(mux *http.ServeMux, prefix string) {
-	handle := func(pattern string, h http.HandlerFunc) {
-		mux.HandleFunc(pattern, withBodyLimit(h))
-	}
-	handle("POST "+prefix+"/v1/checkout/sessions", rt.writeCheckoutSession)
-	handle("GET "+prefix+"/v1/checkout/sessions", func(w http.ResponseWriter, _ *http.Request) {
+	rt.registerV1Routes(mux, prefix)
+	rt.registerTestRoutes(mux, prefix)
+}
+
+func (rt *routes) registerV1Routes(mux *http.ServeMux, prefix string) {
+	handleLimited(mux, "POST "+prefix+"/v1/checkout/sessions", rt.writeCheckoutSession)
+	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions", func(w http.ResponseWriter, _ *http.Request) {
 		rt.writeList(w, "checkout_session")
 	})
-	handle("GET "+prefix+"/v1/checkout/sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rt.writeResource(w, "checkout_session", r.PathValue("id"), fallbackCheckoutSession)
 	})
-	handle("POST "+prefix+"/v1/payment_intents", rt.writePaymentIntent)
-	handle("GET "+prefix+"/v1/payment_intents", func(w http.ResponseWriter, _ *http.Request) {
+	handleLimited(mux, "POST "+prefix+"/v1/payment_intents", rt.writePaymentIntent)
+	handleLimited(mux, "GET "+prefix+"/v1/payment_intents", func(w http.ResponseWriter, _ *http.Request) {
 		rt.writeList(w, "payment_intent")
 	})
-	handle("GET "+prefix+"/v1/payment_intents/{id}", func(w http.ResponseWriter, r *http.Request) {
+	handleLimited(mux, "GET "+prefix+"/v1/payment_intents/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rt.writeResource(w, "payment_intent", r.PathValue("id"), fallbackPaymentIntent)
 	})
-	handle("POST "+prefix+"/test/webhook/send", rt.sendWebhook)
-	handle("POST "+prefix+"/test/reset", rt.handleReset)
 	rt.registerResource(mux, prefix, "customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)
 	rt.registerResource(mux, prefix, "product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})
 	rt.registerResource(mux, prefix, "price", "/v1/prices", nil, map[string]any{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})
@@ -48,20 +48,26 @@ func (rt *routes) register(mux *http.ServeMux, prefix string) {
 	rt.registerResource(mux, prefix, "refund", "/v1/refunds", nil, map[string]any{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})
 }
 
+func (rt *routes) registerTestRoutes(mux *http.ServeMux, prefix string) {
+	handleLimited(mux, "POST "+prefix+"/test/webhook/send", rt.sendWebhook)
+	handleLimited(mux, "POST "+prefix+"/test/reset", rt.handleReset)
+}
+
 func (rt *routes) registerResource(mux *http.ServeMux, prefix, resourceType, path string,
 	fallback func(string) map[string]any, body map[string]any, required []string) {
-	handle := func(pattern string, h http.HandlerFunc) {
-		mux.HandleFunc(pattern, withBodyLimit(h))
-	}
-	handle("POST "+prefix+path, func(w http.ResponseWriter, r *http.Request) {
+	handleLimited(mux, "POST "+prefix+path, func(w http.ResponseWriter, r *http.Request) {
 		rt.writeGenericResource(w, r, resourceType, body, required)
 	})
-	handle("GET "+prefix+path, func(w http.ResponseWriter, _ *http.Request) {
+	handleLimited(mux, "GET "+prefix+path, func(w http.ResponseWriter, _ *http.Request) {
 		rt.writeList(w, resourceType)
 	})
-	handle("GET "+prefix+path+"/{id}", func(w http.ResponseWriter, r *http.Request) {
+	handleLimited(mux, "GET "+prefix+path+"/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rt.writeResource(w, resourceType, r.PathValue("id"), fallback)
 	})
+}
+
+func handleLimited(mux *http.ServeMux, pattern string, h http.HandlerFunc) {
+	mux.HandleFunc(pattern, withBodyLimit(h))
 }
 
 func withBodyLimit(next http.HandlerFunc) http.HandlerFunc {

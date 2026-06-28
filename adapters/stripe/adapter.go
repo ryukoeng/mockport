@@ -29,16 +29,14 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 		store:       state.NewStore(),
 		idempotency: state.NewIdempotencyStore(),
 	}
-	// Register the same routes under basePath and at /v1 for Stripe SDK clients that
-	// hit the API root directly. When basePath trims to empty, register once to avoid
-	// duplicate ServeMux patterns that would panic.
-	prefixes := []string{rt.basePath, ""}
 	if rt.basePath == "" {
-		prefixes = []string{""}
+		rt.register(mux, "")
+		return nil
 	}
-	for _, prefix := range prefixes {
-		rt.register(mux, prefix)
-	}
+	rt.register(mux, rt.basePath)
+	// Stripe SDK clients may hit the API root directly, but root-level test
+	// helpers would collide with other adapters' /test endpoints.
+	rt.registerV1Routes(mux, "")
 	return nil
 }
 
