@@ -445,6 +445,13 @@ func TestRootAliasPaths(t *testing.T) {
 	if retrieved.Code != http.StatusOK {
 		t.Fatalf("retrieve via /v1 alias status = %d, body=%s", retrieved.Code, retrieved.Body.String())
 	}
+
+	for _, path := range []string{"/test/reset", "/test/webhook/send"} {
+		rec := serveStripeRequest(mux, http.MethodPost, path, "", nil)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("root helper alias %s status = %d, want %d", path, rec.Code, http.StatusNotFound)
+		}
+	}
 }
 
 func TestGenericResourceDoesNotLeakFormFieldsBetweenRequests(t *testing.T) {

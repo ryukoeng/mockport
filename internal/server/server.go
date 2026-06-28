@@ -18,9 +18,13 @@ import (
 )
 
 const (
-	delayHeader = "X-Mockport-Delay"
-	maxDelay    = 30 * time.Second
+	delayHeader         = "X-Mockport-Delay"
+	maxDelay            = 30 * time.Second
+	invalidDelayMessage = "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)"
 )
+
+// delayTimerFunc abstracts time.After so tests can inject immediate timers and avoid real sleeps in CI.
+type delayTimerFunc func(time.Duration) <-chan time.Time
 
 // ErrAdapterNotRegistered marks enabled adapters missing from the registry.
 var ErrAdapterNotRegistered = errors.New("adapter is enabled but not registered")
@@ -211,6 +215,10 @@ func classifyAdapter(path string, adapters []report.AdapterStatus) (string, stri
 }
 
 func delayMiddleware(next http.Handler) http.Handler {
+	return delayMiddlewareWithTimer(next, time.After)
+}
+
+func delayMiddlewareWithTimer(next http.Handler, timer delayTimerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawDelay := strings.TrimSpace(r.Header.Get(delayHeader))
 		if rawDelay == "" {
@@ -220,13 +228,16 @@ func delayMiddleware(next http.Handler) http.Handler {
 
 		delayMs, err := strconv.ParseInt(rawDelay, 10, 64)
 		if err != nil || delayMs < 0 || delayMs > int64(maxDelay/time.Millisecond) {
-			http.Error(w, "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)", http.StatusBadRequest)
+			// Match docs/site/adapters.md exactly; http.Error appends a newline.
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(invalidDelayMessage))
 			return
 		}
 
 		delay := time.Duration(delayMs) * time.Millisecond
 		select {
-		case <-time.After(delay):
+		case <-timer(delay):
 			next.ServeHTTP(w, r)
 		case <-r.Context().Done():
 			return

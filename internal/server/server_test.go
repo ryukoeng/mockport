@@ -143,6 +143,23 @@ func TestRecordMiddlewareRecordsStreamingRequestAfterFlush(t *testing.T) {
 	}
 }
 
+func immediateDelayTimer() delayTimerFunc {
+	return func(time.Duration) <-chan time.Time {
+		ch := make(chan time.Time, 1)
+		ch <- time.Now()
+		return ch
+	}
+}
+
+// blockingDelayTimer returns a channel that never fires, letting the
+// context-cancellation branch win the select for cases that only need to
+// verify request validation without waiting for the real delay.
+func blockingDelayTimer() delayTimerFunc {
+	return func(time.Duration) <-chan time.Time {
+		return make(chan time.Time)
+	}
+}
+
 func TestDelayMiddlewareNoHeader(t *testing.T) {
 	handled := false
 	handler := delayMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -163,27 +180,27 @@ func TestDelayMiddlewareNoHeader(t *testing.T) {
 }
 
 func TestDelayMiddlewareAppliesDelayHeader(t *testing.T) {
+	var gotDelay time.Duration
+	timer := func(d time.Duration) <-chan time.Time {
+		gotDelay = d
+		return immediateDelayTimer()(d)
+	}
 	handled := make(chan struct{}, 1)
-	handler := delayMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := delayMiddlewareWithTimer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		close(handled)
 		w.WriteHeader(http.StatusOK)
-	}))
+	}), timer)
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set(delayHeader, "40")
 
-	start := time.Now()
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-	elapsed := time.Since(start)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	if elapsed < 35*time.Millisecond {
-		t.Fatalf("elapsed = %s, want at least 35ms", elapsed)
-	}
-	if elapsed > 200*time.Millisecond {
-		t.Fatalf("elapsed = %s, want not exceed 200ms", elapsed)
+	if gotDelay != 40*time.Millisecond {
+		t.Fatalf("delay = %s, want %s", gotDelay, 40*time.Millisecond)
 	}
 	select {
 	case <-handled:
@@ -222,7 +239,9 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 		delay       string
 		missing     bool
 		cancelCtx   bool
+		timer       delayTimerFunc
 		wantStatus  int
+		wantBody    string
 		wantHandled bool
 		maxElapsed  time.Duration
 	}{
@@ -243,11 +262,13 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 			delay:       "1",
 			wantStatus:  http.StatusOK,
 			wantHandled: true,
+			maxElapsed:  50 * time.Millisecond,
 		},
 		{
 			name:        "max boundary 30000",
 			delay:       "30000",
 			cancelCtx:   true,
+			timer:       blockingDelayTimer(),
 			wantStatus:  http.StatusOK,
 			wantHandled: false,
 		},
@@ -255,6 +276,7 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 			name:        "over max 30001",
 			delay:       "30001",
 			wantStatus:  http.StatusBadRequest,
+			wantBody:    invalidDelayMessage,
 			wantHandled: false,
 			maxElapsed:  50 * time.Millisecond,
 		},
@@ -262,19 +284,24 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 			name:        "negative one",
 			delay:       "-1",
 			wantStatus:  http.StatusBadRequest,
+			wantBody:    invalidDelayMessage,
 			wantHandled: false,
 			maxElapsed:  50 * time.Millisecond,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			timer := tc.timer
+			if timer == nil {
+				timer = immediateDelayTimer()
+			}
 			handled := make(chan struct{}, 1)
-			handler := delayMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := delayMiddlewareWithTimer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				select {
 				case handled <- struct{}{}:
 				default:
 				}
 				w.WriteHeader(http.StatusOK)
-			}))
+			}), timer)
 
 			var req *http.Request
 			if tc.cancelCtx {
@@ -296,6 +323,9 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 			if rec.Code != tc.wantStatus {
 				t.Fatalf("status = %d, want %d", rec.Code, tc.wantStatus)
 			}
+			if tc.wantBody != "" && rec.Body.String() != tc.wantBody {
+				t.Fatalf("body = %q, want %q", rec.Body.String(), tc.wantBody)
+			}
 			if tc.maxElapsed > 0 && elapsed > tc.maxElapsed {
 				t.Fatalf("elapsed = %s, want <= %s for invalid delay", elapsed, tc.maxElapsed)
 			}
@@ -315,9 +345,8 @@ func TestDelayMiddlewareBoundaryValues(t *testing.T) {
 
 func TestDelayMiddlewareRejectsBadDelay(t *testing.T) {
 	for _, tc := range []struct {
-		name    string
-		delay   string
-		wantMsg string
+		name  string
+		delay string
 	}{
 		{
 			name:  "non-integer",
@@ -334,9 +363,9 @@ func TestDelayMiddlewareRejectsBadDelay(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			handled := false
-			handler := delayMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := delayMiddlewareWithTimer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				handled = true
-			}))
+			}), immediateDelayTimer())
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			req.Header.Set(delayHeader, tc.delay)
@@ -345,6 +374,9 @@ func TestDelayMiddlewareRejectsBadDelay(t *testing.T) {
 
 			if rec.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+			}
+			if rec.Body.String() != invalidDelayMessage {
+				t.Fatalf("body = %q, want %q", rec.Body.String(), invalidDelayMessage)
 			}
 			if handled {
 				t.Fatalf("expected handler not to run for delay=%q", tc.delay)
