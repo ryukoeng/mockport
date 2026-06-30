@@ -217,13 +217,13 @@ Known gaps:
 Run the adapter and package tests:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/line ./internal/server ./internal/cli ./internal/config
+go test ./adapters/line ./internal/server ./internal/cli ./internal/config
 ```
 
 Run all tests:
 
 ```bash
-/usr/local/go/bin/go test ./...
+go test ./...
 ```
 
 Run the engineering gate:

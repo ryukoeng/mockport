@@ -87,5 +87,5 @@ The returned `Email` / `Display_Name` are configurable so an application can mat
 Run the adapter tests:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/zohooauth
+go test ./adapters/zohooauth
 ```
