@@ -71,7 +71,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | --- | --- |
 | `message_success` | Default successful local messaging workflow. |
 | `auth_error` | Returns Slack-like `invalid_auth` behavior. |
-| `rate_limited` | Returns Slack-like rate limit behavior. |
+| `rate_limited` | Returns HTTP 429 with `Retry-After: 1` and Slack-like `{"ok":false,"error":"ratelimited"}` body. |
 | `delivery_failed` | Returns Slack-like delivery failure behavior. |
 | `channel_not_found` | Returns Slack-like channel lookup failure behavior. |
 | `not_in_channel` | Returns Slack-like channel membership failure behavior. |
@@ -81,7 +81,7 @@ Use this table to jump from Mockport's supported local surface to the closest of
 | Priority | Task | Current source of truth |
 | --- | --- | --- |
 | P1 | Test whether the official `@slack/web-api` client can be pinned and pointed at Mockport. If not, record the exact blocker in the manifest. | `tasks/phase29_oauth_slack_client_evidence.md` |
-| P1 | Deepen client contract coverage for `invalid_auth`, `channel_not_found`, `not_in_channel`, `rate_limited` plus `Retry-After`, and `invalid_signature`. | `contract/sdk/slack-smoke.test.js` and `compat/fixtures/slack/` |
+| P1 | Deepen client contract coverage for `invalid_auth`, `channel_not_found`, `not_in_channel`, and `invalid_signature`. `rate_limited` with HTTP 429 and deterministic `Retry-After: 1` is covered by `go test ./adapters/slack` and `compat/fixtures/slack/error_rate_limited.json`. | `contract/sdk/slack-smoke.test.js` and `compat/fixtures/slack/` |
 | P1 | Add message lifecycle assertions for post, update, history, delete, and deleted-message visibility. | `tasks/phase29_oauth_slack_client_evidence.md` |
 | P1 | Add Events API URL verification and message callback contract evidence when official SDK coverage is not enough. | `compat/fixtures/slack/` |
 | P2 | Keep real delivery, Events API completeness, Block Kit validation, files, app scopes, enterprise policy, and workspace directory as known gaps. | `docs/site/support-matrix.md` |
