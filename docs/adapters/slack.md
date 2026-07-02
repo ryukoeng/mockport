@@ -91,6 +91,6 @@ Use this table to jump from Mockport's supported local surface to the closest of
 Run the adapter tests and client contract:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/slack
+go test ./adapters/slack
 bash scripts/run-sdk-contracts.sh slack
 ```
