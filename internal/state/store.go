@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -9,6 +10,9 @@ import (
 )
 
 var idInvalidChars = regexp.MustCompile(`[^a-z0-9_]+`)
+
+// ErrResourceNotFound marks lookups for resources that do not exist.
+var ErrResourceNotFound = errors.New("resource not found")
 
 type Resource struct {
 	ID       string         `json:"id"`
@@ -113,7 +117,7 @@ func (s *Store) Update(adapter, resourceType, id string, patch map[string]any) (
 	key := newScope(adapter, resourceType)
 	resource, ok := s.resources[key][id]
 	if !ok {
-		return Resource{}, fmt.Errorf("resource not found: %s", id)
+		return Resource{}, fmt.Errorf("%w: %s", ErrResourceNotFound, id)
 	}
 	if resource.Data == nil {
 		resource.Data = map[string]any{}

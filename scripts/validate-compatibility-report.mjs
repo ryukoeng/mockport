@@ -11,7 +11,15 @@ import { fileURLToPath } from "node:url";
 // to true is caught (a provenance guard: reject impossible combinations rather
 // than fully re-implement CanPromote).
 
-const REQUIRED_ADAPTERS = ["stripe", "openai", "github-oauth", "slack", "line"];
+const REQUIRED_ADAPTERS = ["stripe", "openai", "github-oauth", "slack", "line", "zoho-oauth"];
+
+const MATURITY_RANK = {
+  experimental: 0,
+  partial: 1,
+  "sdk-compatible": 2,
+  "workflow-compatible": 3,
+  "provider-compatible": 4,
+};
 
 // Minimal consistency each maturity must satisfy. promotion_eligible is the
 // source of truth, but rejecting impossible combinations here prevents
@@ -41,7 +49,49 @@ function hasContractEvidence(adapter) {
   );
 }
 
-function validateAdapter(adapter) {
+export function loadManifests(manifestDir = "compat/manifests") {
+  const manifests = {};
+  for (const name of REQUIRED_ADAPTERS) {
+    const path = `${manifestDir}/${name}.json`;
+    if (!fs.existsSync(path)) {
+      throw new Error(`missing compatibility manifest: ${path}`);
+    }
+    const manifest = JSON.parse(fs.readFileSync(path, "utf8"));
+    if (!manifest.adapter || !manifest.maturity) {
+      throw new Error(`invalid compatibility manifest: ${path}`);
+    }
+    if (manifest.adapter !== name) {
+      throw new Error(`manifest adapter mismatch in ${path}: ${manifest.adapter} != ${name}`);
+    }
+    manifests[name] = manifest;
+  }
+  return manifests;
+}
+
+function validateManifestConsistency(adapter, manifest) {
+  if (!REQUIRED_ADAPTERS.includes(adapter.name)) {
+    return;
+  }
+  if (!manifest) {
+    throw new Error(`missing checked-in manifest for adapter: ${adapter.name}`);
+  }
+  if (adapter.maturity !== manifest.maturity) {
+    throw new Error(
+      `${adapter.name} report maturity "${adapter.maturity}" does not match manifest maturity "${manifest.maturity}"`,
+    );
+  }
+  // Belt-and-suspenders: block silent promotion when CanPromote would reject it.
+  if (
+    adapter.promotion_eligible !== true &&
+    (MATURITY_RANK[adapter.maturity] ?? -1) > (MATURITY_RANK[manifest.maturity] ?? -1)
+  ) {
+    throw new Error(
+      `${adapter.name} maturity "${adapter.maturity}" exceeds manifest maturity "${manifest.maturity}" while promotion_eligible is false`,
+    );
+  }
+}
+
+function validateAdapter(adapter, manifests) {
   if (!adapter.name || !adapter.maturity || !Number.isInteger(adapter.score)) {
     throw new Error(`invalid adapter report entry: ${JSON.stringify(adapter)}`);
   }
@@ -89,12 +139,15 @@ function validateAdapter(adapter) {
   if (adapter.known_gaps.length === 0) {
     throw new Error(`${adapter.name} must publish known gaps`);
   }
+
+  validateManifestConsistency(adapter, manifests?.[adapter.name]);
 }
 
 // validateReport throws on the first violation it finds.
-export function validateReport(report) {
-  if (!Array.isArray(report.adapters) || report.adapters.length < 5) {
-    throw new Error("compatibility report must include at least five adapters");
+export function validateReport(report, options = {}) {
+  const manifests = options.manifests ?? loadManifests(options.manifestDir);
+  if (!Array.isArray(report.adapters) || report.adapters.length < REQUIRED_ADAPTERS.length) {
+    throw new Error(`compatibility report must include at least ${REQUIRED_ADAPTERS.length} adapters`);
   }
   for (const name of REQUIRED_ADAPTERS) {
     if (!report.adapters.some((adapter) => adapter.name === name)) {
@@ -102,7 +155,7 @@ export function validateReport(report) {
     }
   }
   for (const adapter of report.adapters) {
-    validateAdapter(adapter);
+    validateAdapter(adapter, manifests);
   }
 }
 

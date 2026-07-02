@@ -11,6 +11,7 @@ func NewRootCommand() *cobra.Command {
 		Use:   "mockport",
 		Short: "Secret-free service emulation for local and CI integration tests",
 	}
+	cmd.SilenceErrors = true
 	cmd.AddCommand(newVersionCommand())
 	cmd.AddCommand(newRunCommand())
 	cmd.AddCommand(newInitCommand())
@@ -20,4 +21,10 @@ func NewRootCommand() *cobra.Command {
 	cmd.AddCommand(newHealthcheckCommand())
 	cmd.SetHelpCommand(newHelpCommand(cmd))
 	return cmd
+}
+
+func silenceUsageForRuntimeError(cmd *cobra.Command) {
+	// Cobra handles flag parsing before RunE. Setting SilenceUsage here keeps
+	// runtime failures concise while preserving usage output for flag mistakes.
+	cmd.SilenceUsage = true
 }

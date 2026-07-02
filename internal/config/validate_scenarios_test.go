@@ -87,8 +87,9 @@ func TestStrictModeStillRejectsRealSecretEvenWithScenarios(t *testing.T) {
 	if err == nil {
 		t.Fatal("strict mode must reject real-looking secret even when scenarios block is present")
 	}
-	if !strings.Contains(err.Error(), "stripe.fake_secret") {
-		t.Fatalf("error = %q, want stripe.fake_secret", err.Error())
+	errText := err.Error()
+	if !strings.Contains(errText, "stripe.fake_secret") {
+		t.Fatalf("error = %q, want stripe.fake_secret", errText)
 	}
 }
 

@@ -104,7 +104,11 @@ func TestValidateMetadataRejectsInvalidContracts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateMetadata(tt.meta)
-			if err == nil || !strings.Contains(err.Error(), tt.want) {
+			if err == nil {
+				t.Fatalf("ValidateMetadata() error = %v, want %q", err, tt.want)
+			}
+			errText := err.Error()
+			if !strings.Contains(errText, tt.want) {
 				t.Fatalf("ValidateMetadata() error = %v, want %q", err, tt.want)
 			}
 		})

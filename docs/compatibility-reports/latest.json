@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/generate-compatibility-report.sh",
-  "generated_at": "2026-06-19",
+  "generated_at": "2026-07-02",
   "source": "_mockport/report",
   "release_labels": {
     "experimental": "Early adapter coverage for selected workflows. Expect gaps.",
@@ -166,7 +166,7 @@
       "score": 100,
       "provider_version": "2025-02-01",
       "sdk_versions": [
-        "openai@6.42.0"
+        "openai@6.45.0"
       ],
       "client_evidence": [],
       "endpoint_coverage": 100,
@@ -245,7 +245,7 @@
       "score": 100,
       "provider_version": "2025-10-29.clover",
       "sdk_versions": [
-        "stripe@22.2.1"
+        "stripe@22.3.0"
       ],
       "client_evidence": [],
       "endpoint_coverage": 100,

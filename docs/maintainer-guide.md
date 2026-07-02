@@ -14,8 +14,8 @@ bash scripts/check-public-trust.sh
 bash scripts/check-public-env.sh
 bash scripts/check-distribution.sh
 bash scripts/check-maintenance-policy.sh
-/usr/local/go/bin/go test ./...
-/usr/local/go/bin/go vet ./...
+go test ./...
+go vet ./...
 ```
 
 3. Build and verify release archives:
@@ -26,10 +26,40 @@ scripts/build-release-archives.sh 0.1.0-alpha "$tmpdir"
 scripts/verify-release-artifacts.sh 0.1.0-alpha "$tmpdir"
 ```
 
-4. Create an annotated tag and let GitHub Actions publish release archives and GHCR images.
-5. Download the GitHub Release artifacts and run `scripts/verify-release-artifacts.sh`.
-6. Pull the GHCR image and run Docker smoke from the published image.
-7. Record release URL, image tag, digest, known limitations, and verification evidence in `docs/releases/`.
+4. Sync the public preview image tag everywhere it appears before tagging (see [Release version update checklist](#release-version-update-checklist) below).
+
+5. Create an annotated tag and let GitHub Actions publish release archives and GHCR images.
+6. Download the GitHub Release artifacts and run `scripts/verify-release-artifacts.sh`.
+7. Pull the GHCR image and run Docker smoke from the published image.
+8. Record release URL, image tag, digest, known limitations, and verification evidence in `docs/releases/`.
+
+## Release Version Update Checklist
+
+On each release, update `0.1.0-alpha` (or the new semver) consistently in every file below. Run:
+
+```bash
+git grep -n "0.1.0-alpha" -- . ':(exclude)docs/releases/**'
+```
+
+| File | Role |
+| --- | --- |
+| `README.md` | 30-second quickstart `docker run` and distribution mentions |
+| `README.ja.md` | Japanese quickstart and distribution mentions |
+| `docs/site/quickstart.md` | Option A install command |
+| `docs/site/distribution.md` | Docker pull/run, archive download URLs, verification examples |
+| `packaging/npm/bin/mockport.js` | `MOCKPORT_IMAGE` default when env var is unset |
+| `packaging/npm/test/wrapper.test.js` | Asserts npm wrapper default image tag |
+| `packaging/npm/README.md` | Documents Docker fallback image tag |
+| `packaging/npm/README.ja.md` | Japanese Docker fallback image tag |
+| `internal/cli/init.go` | `defaultDockerImage` in generated `docker-compose.mockport.yml` |
+| `internal/cli/init_test.go` | Asserts generated compose pins the preview image |
+| `scripts/check-distribution.sh` | CI guard that npm wrapper default matches preview tag |
+| `scripts/verify-release-artifacts.sh` | Default `VERSION` argument in usage examples |
+| `CHANGELOG.md` | Release notes entry for the new tag |
+| `ROADMAP.md` | Current preview version mention |
+| `.github/workflows/docker.yml` | Workflow input description example tag |
+
+Also update release-process command examples in this guide (`build-release-archives.sh`, `verify-release-artifacts.sh`) and add a new `docs/releases/vX.Y.Z.md` entry. Historical task notes under `tasks/phase10_public_preview_release.md` and `tasks/status.md` are records only; update them only when documenting a milestone change.
 
 ## Issue Triage
 
@@ -62,10 +92,10 @@ For the full onboarding checklist, see [`docs/adding-an-adapter.md`](adding-an-a
 Recommended TDD command sequence:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/<adapter>
-/usr/local/go/bin/go test ./internal/server ./internal/cli ./internal/config
-/usr/local/go/bin/go test ./...
-/usr/local/go/bin/go vet ./...
+go test ./adapters/<adapter>
+go test ./internal/server ./internal/cli ./internal/config
+go test ./...
+go vet ./...
 go test -race ./...
 bash scripts/check-go-engineering.sh
 ```

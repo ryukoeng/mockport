@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/albert-einshutoin/mockport/internal/config"
 )
 
 func TestHealthcheckCommandChecksConfiguredHealthURL(t *testing.T) {
@@ -22,11 +23,7 @@ func TestHealthcheckCommandChecksConfiguredHealthURL(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, false)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, out := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck: %v", err)
@@ -43,17 +40,14 @@ func TestHealthcheckCommandRejectsBadResponse(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, false)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, _ := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("healthcheck succeeded for non-ok status payload")
 	}
-	if !strings.Contains(err.Error(), "healthcheck status value") {
+	errText := err.Error()
+	if !strings.Contains(errText, "healthcheck status value") {
 		t.Fatalf("error=%v", err)
 	}
 }
@@ -64,11 +58,7 @@ func TestHealthcheckCommandSupportsExplicitURL(t *testing.T) {
 	})
 	defer server.Close()
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--url", server.URL + "/health"})
+	cmd, out := newTestCommand(t, "healthcheck", "--url", server.URL+"/health")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck --url: %v", err)
 	}
@@ -82,8 +72,8 @@ func TestLoadHealthcheckConfigFallsBackToDefaultWithoutConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadHealthcheckConfig fallback: %v", err)
 	}
-	if cfg.Server.Host != "127.0.0.1" || cfg.Server.Port != 43101 {
-		t.Fatalf("fallback config = %+v, want host=127.0.0.1 port=43101", cfg.Server)
+	if cfg.Server.Host != "127.0.0.1" || cfg.Server.Port != config.DefaultPort {
+		t.Fatalf("fallback config = %+v, want host=127.0.0.1 port=%d", cfg.Server, config.DefaultPort)
 	}
 }
 
@@ -92,11 +82,7 @@ func TestHealthcheckCommandNormalizesPublicBindHost(t *testing.T) {
 	defer server.Close()
 
 	configPath := createHealthcheckConfigForServer(t, server, true)
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"healthcheck", "--config", configPath})
+	cmd, out := newTestCommand(t, "healthcheck", "--config", configPath)
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute healthcheck with 0.0.0.0 host: %v", err)

@@ -4,6 +4,10 @@
 
 Mockport への contribution では、secret-free なローカル統合テストという製品境界を保ちつつ、adapter surface、fixture、report、CI evidence をそろえることを重視します。
 
+## セットアップ
+
+Go 1.26.4 を使用します。mise、asdf、Homebrew、公式インストーラーなどで Go toolchain を導入し、PATH 上で `go` が使えることを確認してください。
+
 ## 進め方
 
 - 変更前に issue または既存 roadmap/task の意図を確認します。

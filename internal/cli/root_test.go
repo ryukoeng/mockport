@@ -1,17 +1,12 @@
 package cli
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 )
 
 func TestRootCommandShowsHelp(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"--help"})
+	cmd, out := newTestCommand(t, "--help")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute help: %v", err)
@@ -26,12 +21,24 @@ func TestRootCommandShowsHelp(t *testing.T) {
 	}
 }
 
+func TestRootCommandShowsUsageForFlagParseError(t *testing.T) {
+	cmd, out := newTestCommand(t, "run", "--definitely-not-a-flag")
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("execute returned nil error for unknown flag")
+	}
+	if !strings.Contains(err.Error(), "unknown flag: --definitely-not-a-flag") {
+		t.Fatalf("error = %q, want unknown flag", err.Error())
+	}
+	got := out.String()
+	if !strings.Contains(got, "Usage:") || !strings.Contains(got, "mockport run") {
+		t.Fatalf("flag parse error should show command usage, got:\n%s", got)
+	}
+}
+
 func TestVersionCommandPrintsVersion(t *testing.T) {
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"version"})
+	cmd, out := newTestCommand(t, "version")
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute version: %v", err)

@@ -23,14 +23,20 @@ func (a Adapter) Register(mux *http.ServeMux, cfg adapter.Config) error {
 	if basePath == "" {
 		basePath = "/stripe"
 	}
-	routes := &routes{
+	rt := &routes{
 		basePath:    strings.TrimRight(basePath, "/"),
 		cfg:         cfg,
 		store:       state.NewStore(),
 		idempotency: state.NewIdempotencyStore(),
 	}
-	mux.HandleFunc(routes.basePath+"/", routes.handle)
-	mux.HandleFunc("/v1/", routes.handleRoot)
+	if rt.basePath == "" {
+		rt.register(mux, "")
+		return nil
+	}
+	rt.register(mux, rt.basePath)
+	// Stripe SDK clients may hit the API root directly, but root-level test
+	// helpers would collide with other adapters' /test endpoints.
+	rt.registerV1Routes(mux, "")
 	return nil
 }
 
@@ -48,7 +54,7 @@ func (a Adapter) FakeEnv(cfg adapter.Config) map[string]string {
 		signingSecret = "whsec_mockport"
 	}
 	return map[string]string{
-		"STRIPE_API_URL":        "http://localhost:43101" + basePath,
+		"STRIPE_API_URL":        adapter.LocalBaseURL(basePath),
 		"STRIPE_SECRET_KEY":     secret,
 		"STRIPE_WEBHOOK_SECRET": signingSecret,
 	}
@@ -67,7 +73,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 		Name:            "stripe",
 		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-10-29.clover",
-		SDKVersions:     []adapter.SDKVersion{{Name: "stripe", Version: "22.2.1"}},
+		SDKVersions:     []adapter.SDKVersion{{Name: "stripe", Version: "22.3.0"}},
 		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities: []string{
 			"checkout_sessions",

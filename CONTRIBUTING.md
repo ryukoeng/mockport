@@ -4,12 +4,12 @@
 
 ## Setup
 
-Use Go 1.26.3.
+Use Go 1.26.4. Install a Go toolchain (mise, asdf, Homebrew, or the official installer) so `go` is available on your PATH.
 
 ```bash
-/usr/local/go/bin/go test ./...
-/usr/local/go/bin/go vet ./...
-/usr/local/go/bin/go build ./cmd/mockport
+go test ./...
+go vet ./...
+go build ./cmd/mockport
 ```
 
 ## Spec-First TDD
@@ -41,8 +41,8 @@ Run these before opening a pull request:
 ```bash
 bash scripts/check-public-trust.sh
 bash scripts/check-distribution.sh
-/usr/local/go/bin/go test ./...
-/usr/local/go/bin/go vet ./...
+go test ./...
+go vet ./...
 ```
 
 ## Adapter Changes
