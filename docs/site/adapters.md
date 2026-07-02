@@ -20,6 +20,8 @@ Adapters are scenario-driven today and are moving toward provider-compatible loc
 | Missing | No artificial delay; request proceeds immediately. |
 | `0` | Accepted; no sleep before handling. |
 | Positive (`1`–`30000`) | Sleep for the given milliseconds, then handle the request. |
+| Empty or whitespace-only | Rejected with `400 Bad Request`; no sleep. |
+| Non-integer | Rejected with `400 Bad Request`; no sleep. |
 | Negative | Rejected with `400 Bad Request`; no sleep. |
 | Above `30000` | Rejected with `400 Bad Request`; no sleep. |
 
