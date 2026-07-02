@@ -2,7 +2,7 @@
 
 [日本語版](latest.ja.md)
 
-Generated: 2026-06-19
+Generated: 2026-07-02
 
 Compatibility is measured from Mockport runtime metadata, SDK/client contract checks, fixture coverage, and known gaps. It is not a claim that provider internals or undocumented behavior are reproduced.
 
@@ -14,7 +14,7 @@ Compatibility is measured from Mockport runtime metadata, SDK/client contract ch
 | `line` | `workflow-compatible` | 80 | Messaging API v2 / Login v2.1 / Pay v3 / MINI App service messages / Mini Dapp SDK | none |
 | `openai` | `workflow-compatible` | 100 | 2025-02-01 | openai@6.42.0 |
 | `slack` | `workflow-compatible` | 100 | 2025-02-01 | slack-client-contract |
-| `stripe` | `workflow-compatible` | 100 | 2025-10-29.clover | stripe@22.2.1 |
+| `stripe` | `workflow-compatible` | 100 | 2025-10-29.clover | stripe@22.3.0 |
 | `zoho-oauth` | `workflow-compatible` | 100 | oauth-v2 | oauth-client-contract |
 
 ## Coverage
