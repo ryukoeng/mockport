@@ -1,15 +1,18 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/albert-einshutoin/mockport/adapters/stripe"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
 	"github.com/albert-einshutoin/mockport/internal/config"
 	"github.com/albert-einshutoin/mockport/internal/report"
@@ -411,5 +414,106 @@ func TestDelayMiddlewareHonorsCancelledContext(t *testing.T) {
 	case <-handled:
 		t.Fatalf("expected handler not to run on canceled context")
 	default:
+	}
+}
+
+func TestRequestBodySizeMiddleware(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		body        io.Reader
+		contentLen  int64
+		wantStatus  int
+		wantBody    string
+		wantPayload string
+	}{
+		{
+			name:       "content length over limit",
+			body:       http.NoBody,
+			contentLen: maxRequestBodyBytes + 1,
+			wantStatus: http.StatusRequestEntityTooLarge,
+			wantBody:   requestBodyTooLargeMessage,
+		},
+		{
+			name:       "unknown length oversized body",
+			body:       bytes.NewReader(bytes.Repeat([]byte("x"), int(maxRequestBodyBytes+1))),
+			contentLen: -1,
+			wantStatus: http.StatusRequestEntityTooLarge,
+			wantBody:   requestBodyTooLargeMessage,
+		},
+		{
+			name:        "body within limit",
+			body:        strings.NewReader(`{"ok":true}`),
+			contentLen:  11,
+			wantStatus:  http.StatusOK,
+			wantPayload: `{"ok":true}`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotPayload string
+			handler := requestBodySizeMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if tc.wantPayload == "" {
+					t.Fatal("inner handler should not run")
+				}
+				payload, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Fatalf("read body: %v", err)
+				}
+				gotPayload = string(payload)
+				w.WriteHeader(http.StatusOK)
+			}))
+
+			req := httptest.NewRequest(http.MethodPost, "/", tc.body)
+			req.ContentLength = tc.contentLen
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, req)
+
+			if rec.Code != tc.wantStatus {
+				t.Fatalf("status = %d, want %d", rec.Code, tc.wantStatus)
+			}
+			if tc.wantBody != "" && rec.Body.String() != tc.wantBody {
+				t.Fatalf("body = %q, want %q", rec.Body.String(), tc.wantBody)
+			}
+			if tc.wantPayload != "" && gotPayload != tc.wantPayload {
+				t.Fatalf("handler payload = %q, want %q", gotPayload, tc.wantPayload)
+			}
+		})
+	}
+}
+
+func TestConfiguredHandlerRejectsOversizedRequestBody(t *testing.T) {
+	cfg := config.Config{
+		Mode:   "ai-safe",
+		Server: config.ServerConfig{Host: "127.0.0.1", Port: 43101},
+		Adapters: map[string]config.AdapterConfig{
+			"stripe": {Enabled: true, BasePath: "/stripe", Scenario: "payment_success", FakeSecret: "mockport_stripe_secret"},
+		},
+	}
+	if err := config.Validate(&cfg); err != nil {
+		t.Fatalf("validate config: %v", err)
+	}
+	reg := adapter.NewRegistry()
+	if err := reg.Register(stripe.New()); err != nil {
+		t.Fatalf("register stripe: %v", err)
+	}
+	handler, err := NewConfiguredHandler(cfg, reg, report.NewRecorder())
+	if err != nil {
+		t.Fatalf("new handler: %v", err)
+	}
+
+	body := bytes.Repeat([]byte("x"), int(maxRequestBodyBytes+1))
+	req := httptest.NewRequest(http.MethodPost, "/stripe/v1/customers", bytes.NewReader(body))
+	req.ContentLength = -1
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusRequestEntityTooLarge, rec.Body.String())
+	}
+	if rec.Body.String() != requestBodyTooLargeMessage {
+		t.Fatalf("body = %q, want %q", rec.Body.String(), requestBodyTooLargeMessage)
+	}
+	if strings.HasPrefix(strings.TrimSpace(rec.Body.String()), "{") {
+		t.Fatalf("adapter handler ran, got JSON body %q", rec.Body.String())
 	}
 }

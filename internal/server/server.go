@@ -1,9 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"slices"
@@ -21,6 +23,9 @@ const (
 	delayHeader         = "X-Mockport-Delay"
 	maxDelay            = 30 * time.Second
 	invalidDelayMessage = "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)"
+	// maxRequestBodyBytes matches httpx.MaxBodyBytes so server-wide and adapter limits stay aligned.
+	maxRequestBodyBytes        int64 = 1 << 20
+	requestBodyTooLargeMessage       = "request body too large"
 )
 
 // delayTimerFunc abstracts time.After so tests can inject immediate timers and avoid real sleeps in CI.
@@ -95,7 +100,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		_ = json.NewEncoder(w).Encode(rec.Snapshot())
 	})
 
-	return recordMiddleware(delayMiddleware(mux), rec, adapterStatuses), nil
+	return recordMiddleware(requestBodySizeMiddleware(delayMiddleware(mux)), rec, adapterStatuses), nil
 }
 
 func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
@@ -212,6 +217,47 @@ func classifyAdapter(path string, adapters []report.AdapterStatus) (string, stri
 		}
 	}
 	return "", ""
+}
+
+func requestBodySizeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Body == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// ContentLength is honored first: a declared size above the limit must be rejected
+		// even when the underlying body would be empty, so clients cannot bypass the cap.
+		if r.ContentLength > maxRequestBodyBytes {
+			rejectRequestBodyTooLarge(w)
+			return
+		}
+
+		// Chunked or otherwise unknown-length bodies must be bounded before adapter handlers run.
+		// http.NoBody and other empty readers return EOF immediately, so they pass through safely.
+		if r.ContentLength < 0 {
+			body, err := io.ReadAll(io.LimitReader(r.Body, maxRequestBodyBytes+1))
+			_ = r.Body.Close()
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if int64(len(body)) > maxRequestBodyBytes {
+				rejectRequestBodyTooLarge(w)
+				return
+			}
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			r.ContentLength = int64(len(body))
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func rejectRequestBodyTooLarge(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusRequestEntityTooLarge)
+	_, _ = w.Write([]byte(requestBodyTooLargeMessage))
 }
 
 func delayMiddleware(next http.Handler) http.Handler {
