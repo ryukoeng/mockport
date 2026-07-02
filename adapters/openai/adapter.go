@@ -56,7 +56,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 		Name:            "openai",
 		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-02-01",
-		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.42.0"}},
+		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.45.0"}},
 		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities:    []string{"models", "chat_completions", "responses", "embeddings", "files", "batches"},
 		Scenarios:       scenarios,
