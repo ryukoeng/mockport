@@ -1,6 +1,31 @@
 "use strict";
 
+const fs = require("node:fs");
+const path = require("node:path");
 const Stripe = require("stripe");
+
+function stripeSDKLabel() {
+  return `stripe@${findPackageVersion(require.resolve("stripe"), "stripe")}`;
+}
+
+function findPackageVersion(entrypoint, packageName) {
+  let dir = path.dirname(entrypoint);
+  const root = path.parse(dir).root;
+
+  while (dir !== root) {
+    const packagePath = path.join(dir, "package.json");
+    if (fs.existsSync(packagePath)) {
+      const packageData = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+      // Stripe resolves through cjs/ first, so verify the package name before trusting the version field.
+      if (packageData.name === packageName && packageData.version) {
+        return packageData.version;
+      }
+    }
+    dir = path.dirname(dir);
+  }
+
+  throw new Error(`could not locate ${packageName} package metadata`);
+}
 
 async function runStripeSmoke(options) {
   const base = new URL(options.baseURL);
@@ -57,7 +82,7 @@ async function runStripeSmoke(options) {
     provider: "stripe",
     baseURL: options.baseURL,
     status: "sdk-ok",
-    sdk: "stripe@22.2.1",
+    sdk: stripeSDKLabel(),
     checkoutSession: checkout.id,
     paymentIntent: paymentIntent.id,
     customer: customer.id,
