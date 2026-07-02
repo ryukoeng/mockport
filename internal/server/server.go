@@ -266,9 +266,17 @@ func delayMiddleware(next http.Handler) http.Handler {
 
 func delayMiddlewareWithTimer(next http.Handler, timer delayTimerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rawDelay := strings.TrimSpace(r.Header.Get(delayHeader))
-		if rawDelay == "" {
+		// Header.Get conflates missing and empty; distinguish so explicit empty stays invalid.
+		values, present := r.Header[http.CanonicalHeaderKey(delayHeader)]
+		if !present {
 			next.ServeHTTP(w, r)
+			return
+		}
+		rawDelay := strings.TrimSpace(values[0])
+		if rawDelay == "" {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(invalidDelayMessage))
 			return
 		}
 
