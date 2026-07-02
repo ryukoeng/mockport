@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -54,8 +55,10 @@ func TestRecorderStoresReplayMetadataAndUnsupportedEndpoints(t *testing.T) {
 
 func TestRecorderCapsStoredRequests(t *testing.T) {
 	rec := NewRecorder()
-	for i := 0; i < MaxRecordedRequests+5; i++ {
-		rec.RecordRequest(http.MethodGet, "/health", http.StatusOK)
+	total := MaxRecordedRequests + 5
+	for i := 0; i < total; i++ {
+		path := fmt.Sprintf("/requests/%d", i+1)
+		rec.RecordRequest(http.MethodGet, path, http.StatusOK)
 	}
 
 	snapshot := rec.Snapshot()
@@ -64,6 +67,26 @@ func TestRecorderCapsStoredRequests(t *testing.T) {
 	}
 	if snapshot.Requests[0].ID != 6 {
 		t.Fatalf("first retained request id = %d, want 6", snapshot.Requests[0].ID)
+	}
+	if snapshot.Requests[0].Path != "/requests/6" {
+		t.Fatalf("first retained path = %q, want /requests/6", snapshot.Requests[0].Path)
+	}
+	last := snapshot.Requests[len(snapshot.Requests)-1]
+	if last.ID != int64(total) {
+		t.Fatalf("last retained request id = %d, want %d", last.ID, total)
+	}
+	if wantPath := fmt.Sprintf("/requests/%d", total); last.Path != wantPath {
+		t.Fatalf("last retained path = %q, want %q", last.Path, wantPath)
+	}
+	for i, req := range snapshot.Requests {
+		wantID := int64(i + 6)
+		if req.ID != wantID {
+			t.Fatalf("requests[%d].ID = %d, want %d", i, req.ID, wantID)
+		}
+		wantPath := fmt.Sprintf("/requests/%d", i+6)
+		if req.Path != wantPath {
+			t.Fatalf("requests[%d].Path = %q, want %q", i, req.Path, wantPath)
+		}
 	}
 }
 

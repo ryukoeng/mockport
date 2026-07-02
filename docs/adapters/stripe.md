@@ -110,6 +110,6 @@ Use this table to jump from Mockport's supported local surface to the closest of
 Run the adapter tests and SDK contract:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/stripe
+go test ./adapters/stripe
 bash scripts/run-sdk-contracts.sh stripe
 ```

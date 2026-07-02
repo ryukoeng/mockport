@@ -20,6 +20,8 @@ Adapters are scenario-driven today and are moving toward provider-compatible loc
 | Missing | No artificial delay; request proceeds immediately. |
 | `0` | Accepted; no sleep before handling. |
 | Positive (`1`–`30000`) | Sleep for the given milliseconds, then handle the request. |
+| Empty or whitespace-only | Rejected with `400 Bad Request`; no sleep. |
+| Non-integer | Rejected with `400 Bad Request`; no sleep. |
 | Negative | Rejected with `400 Bad Request`; no sleep. |
 | Above `30000` | Rejected with `400 Bad Request`; no sleep. |
 
@@ -34,6 +36,14 @@ Example delayed request:
 ```bash
 curl -H "X-Mockport-Delay: 250" http://localhost:43101/stripe/v1/customers
 ```
+
+Mockport rejects request bodies larger than **1 MiB (1,048,576 bytes)** before adapter handlers run. This server-wide limit protects local and CI emulator runs from unbounded reads while staying high enough for current adapter workflows and fixtures. Oversized bodies return `413 Payload Too Large` with:
+
+```text
+request body too large
+```
+
+Adapter handlers may apply the same limit independently for provider-shaped error responses on bodies that pass the server check.
 
 Detailed adapter specifications:
 

@@ -28,7 +28,7 @@ require_text "SECURITY.md" "Do not include real secrets"
 
 require_file "CONTRIBUTING.md"
 require_text "CONTRIBUTING.md" "TDD"
-require_text "CONTRIBUTING.md" "/usr/local/go/bin/go test ./..."
+require_text "CONTRIBUTING.md" "go test ./..."
 require_text "CONTRIBUTING.md" "bash scripts/check-public-trust.sh"
 
 require_file "CODE_OF_CONDUCT.md"

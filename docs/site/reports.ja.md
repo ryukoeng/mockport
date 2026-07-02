@@ -9,3 +9,7 @@ reports は、Mockport の test run が何を実行し、どの safety check に
 - HTTP では `/_mockport/report` を参照します。
 - CLI では `mockport report` または JSON format を使います。
 - CI では report を artifact として保存すると、adapter coverage と safety status を追いやすくなります。
+
+## リクエスト履歴
+
+リクエスト履歴は、実行中に記録された最新の1000件のリクエストのメタデータを保持します。この制限を超えると、古いエントリから順に削除（プルーニング）され、レポートには常に最新のリクエストが時系列順に返されます。この制限付きの履歴は、レポートのペイロード内の `unsupportedEndpoints` にも同様に適用されます。
