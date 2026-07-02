@@ -57,14 +57,24 @@ require_file ".github/workflows/docker.yml"
 require_file ".github/workflows/release.yml"
 require_file ".github/workflows/smoke.yml"
 require_file ".github/workflows/compatibility.yml"
+require_file ".github/workflows/security.yml"
 
-for workflow in .github/workflows/ci.yml .github/workflows/docker.yml .github/workflows/release.yml .github/workflows/smoke.yml .github/workflows/compatibility.yml; do
+node24_workflows=(.github/workflows/ci.yml .github/workflows/docker.yml .github/workflows/release.yml .github/workflows/smoke.yml .github/workflows/compatibility.yml)
+checkout_workflows=("${node24_workflows[@]}" .github/workflows/security.yml)
+
+for workflow in "${node24_workflows[@]}"; do
   require_text "$workflow" "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24"
-  require_absent_text "$workflow" "actions/checkout@v4"
   require_absent_text "$workflow" "actions/setup-go@v5"
 done
 
-require_text ".github/workflows/ci.yml" "actions/checkout@v6"
+# Keep every repository checkout on the Node.js 24-compatible major so the policy gate follows Dependabot action bumps.
+for workflow in "${checkout_workflows[@]}"; do
+  require_text "$workflow" "actions/checkout@v7"
+  require_absent_text "$workflow" "actions/checkout@v4"
+  require_absent_text "$workflow" "actions/checkout@v5"
+  require_absent_text "$workflow" "actions/checkout@v6"
+done
+
 require_text ".github/workflows/ci.yml" "actions/setup-go@v6"
 require_text ".github/workflows/ci.yml" "actions/setup-node@v6"
 require_text ".github/workflows/ci.yml" "bash scripts/run-sdk-contracts.sh all"
