@@ -35,6 +35,14 @@ Example delayed request:
 curl -H "X-Mockport-Delay: 250" http://localhost:43101/stripe/v1/customers
 ```
 
+Mockport rejects request bodies larger than **1 MiB (1,048,576 bytes)** before adapter handlers run. This server-wide limit protects local and CI emulator runs from unbounded reads while staying high enough for current adapter workflows and fixtures. Oversized bodies return `413 Payload Too Large` with:
+
+```text
+request body too large
+```
+
+Adapter handlers may apply the same limit independently for provider-shaped error responses on bodies that pass the server check.
+
 Detailed adapter specifications:
 
 - [Stripe adapter](../adapters/stripe.md)
