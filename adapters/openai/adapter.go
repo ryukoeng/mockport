@@ -45,7 +45,7 @@ func (a Adapter) FakeEnv(cfg adapter.Config) map[string]string {
 		basePath = "/openai"
 	}
 	return map[string]string{
-		"OPENAI_BASE_URL": "http://localhost:43101" + basePath + "/v1",
+		"OPENAI_BASE_URL": adapter.LocalBaseURL(basePath + "/v1"),
 		"OPENAI_API_KEY":  "mockport_openai_key",
 	}
 }
@@ -62,7 +62,7 @@ func (a Adapter) Metadata() adapter.Metadata {
 		Name:            "openai",
 		Maturity:        adapter.MaturityWorkflowCompatible,
 		ProviderVersion: "2025-02-01",
-		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.42.0"}},
+		SDKVersions:     []adapter.SDKVersion{{Name: "openai", Version: "6.45.0"}},
 		Levels:          []adapter.Level{adapter.LevelWire, adapter.LevelSDK, adapter.LevelWorkflow, adapter.LevelState, adapter.LevelError},
 		Capabilities:    []string{"models", "chat_completions", "responses", "embeddings", "files", "batches"},
 		Scenarios:       scenarios,
@@ -432,26 +432,103 @@ func base64Embedding(values []float32) string {
 	return base64.StdEncoding.EncodeToString(buf)
 }
 
+const (
+	streamCompletionID          = "chatcmpl-mockport"
+	streamCompletionModel       = "gpt-mockport"
+	streamCompletionCreated     = int64(1700000000)
+	streamCompletionFingerprint = "fp_mockport"
+	streamCompletionFullText    = "Mockport simulated streaming response."
+)
+
 func writeChatCompletionStream(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.WriteHeader(http.StatusOK)
-	chunk := map[string]any{
-		"id":     "mockport_openai_response",
-		"object": "chat.completion.chunk",
-		"choices": []map[string]any{{
-			"index": 0,
-			"delta": map[string]string{
-				"content": "Mockport response",
-			},
-		}},
+
+	base := chatCompletionChunk{
+		ID:                streamCompletionID,
+		Object:            "chat.completion.chunk",
+		Created:           streamCompletionCreated,
+		Model:             streamCompletionModel,
+		SystemFingerprint: streamCompletionFingerprint,
 	}
+
+	// OpenAI streams an initial role chunk before content deltas.
+	emptyContent := ""
+	writeSSEChunk(w, chatCompletionChunk{
+		ID:                base.ID,
+		Object:            base.Object,
+		Created:           base.Created,
+		Model:             base.Model,
+		SystemFingerprint: base.SystemFingerprint,
+		Choices: []chatCompletionChunkChoice{{
+			Index:        0,
+			Delta:        chatCompletionChunkDelta{Role: "assistant", Content: &emptyContent},
+			FinishReason: nil,
+		}},
+	})
+
+	// Split into fixed-size word groups so tests and SDK contracts see multiple chunks.
+	for _, content := range splitStreamTextIntoChunks(streamCompletionFullText, 2) {
+		content := content
+		writeSSEChunk(w, chatCompletionChunk{
+			ID:                base.ID,
+			Object:            base.Object,
+			Created:           base.Created,
+			Model:             base.Model,
+			SystemFingerprint: base.SystemFingerprint,
+			Choices: []chatCompletionChunkChoice{{
+				Index:        0,
+				Delta:        chatCompletionChunkDelta{Content: &content},
+				FinishReason: nil,
+			}},
+		})
+	}
+
+	stop := "stop"
+	writeSSEChunk(w, chatCompletionChunk{
+		ID:                base.ID,
+		Object:            base.Object,
+		Created:           base.Created,
+		Model:             base.Model,
+		SystemFingerprint: base.SystemFingerprint,
+		Choices: []chatCompletionChunkChoice{{
+			Index:        0,
+			Delta:        chatCompletionChunkDelta{},
+			FinishReason: &stop,
+		}},
+	})
+
+	_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
+	_ = http.NewResponseController(w).Flush()
+}
+
+func writeSSEChunk(w http.ResponseWriter, chunk chatCompletionChunk) {
 	data, _ := json.Marshal(chunk)
 	_, _ = fmt.Fprintf(w, "data: %s\n\n", data)
 	_ = http.NewResponseController(w).Flush()
-	_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
-	_ = http.NewResponseController(w).Flush()
+}
+
+// splitStreamTextIntoChunks groups words deterministically; trailing spaces keep chunk joins stable.
+func splitStreamTextIntoChunks(text string, wordsPerChunk int) []string {
+	words := strings.Fields(text)
+	if len(words) == 0 || wordsPerChunk < 1 {
+		return nil
+	}
+	chunks := make([]string, 0, (len(words)+wordsPerChunk-1)/wordsPerChunk)
+	for i := 0; i < len(words); i += wordsPerChunk {
+		end := i + wordsPerChunk
+		if end > len(words) {
+			end = len(words)
+		}
+		chunk := strings.Join(words[i:end], " ")
+		if end < len(words) {
+			chunk += " "
+		}
+		chunks = append(chunks, chunk)
+	}
+	return chunks
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {

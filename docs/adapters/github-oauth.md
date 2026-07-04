@@ -83,6 +83,6 @@ The default OAuth flow requires `client_id` on `/github/login/oauth/authorize`. 
 Run the adapter tests and client contract:
 
 ```bash
-/usr/local/go/bin/go test ./adapters/githuboauth
+go test ./adapters/githuboauth
 bash scripts/run-sdk-contracts.sh github-oauth
 ```

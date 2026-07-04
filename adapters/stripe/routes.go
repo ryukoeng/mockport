@@ -3,6 +3,7 @@ package stripe
 import (
 	"encoding/json"
 	"errors"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,79 +21,61 @@ type routes struct {
 	resolver    *adapter.ScenarioResolver
 }
 
-func (rt *routes) handle(w http.ResponseWriter, r *http.Request) {
-	httpx.LimitRequestBody(w, r)
-	path := strings.TrimPrefix(r.URL.Path, rt.basePath)
-	rt.handlePath(w, r, path)
+func (rt *routes) register(mux *http.ServeMux, prefix string) {
+	rt.registerV1Routes(mux, prefix)
+	rt.registerTestRoutes(mux, prefix)
 }
 
-func (rt *routes) handleRoot(w http.ResponseWriter, r *http.Request) {
-	httpx.LimitRequestBody(w, r)
-	rt.handlePath(w, r, r.URL.Path)
+func (rt *routes) registerV1Routes(mux *http.ServeMux, prefix string) {
+	handleLimited(mux, "POST "+prefix+"/v1/checkout/sessions", rt.writeCheckoutSession)
+	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions", func(w http.ResponseWriter, _ *http.Request) {
+		rt.writeList(w, "checkout_session")
+	})
+	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rt.writeResource(w, "checkout_session", r.PathValue("id"), fallbackCheckoutSession)
+	})
+	handleLimited(mux, "POST "+prefix+"/v1/payment_intents", rt.writePaymentIntent)
+	handleLimited(mux, "GET "+prefix+"/v1/payment_intents", func(w http.ResponseWriter, _ *http.Request) {
+		rt.writeList(w, "payment_intent")
+	})
+	handleLimited(mux, "GET "+prefix+"/v1/payment_intents/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rt.writeResource(w, "payment_intent", r.PathValue("id"), fallbackPaymentIntent)
+	})
+	rt.registerResource(mux, prefix, "customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)
+	rt.registerResource(mux, prefix, "product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})
+	rt.registerResource(mux, prefix, "price", "/v1/prices", nil, map[string]any{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})
+	rt.registerResource(mux, prefix, "subscription", "/v1/subscriptions", nil, map[string]any{"object": "subscription", "status": "active"}, []string{"customer"})
+	rt.registerResource(mux, prefix, "invoice", "/v1/invoices", nil, map[string]any{"object": "invoice", "status": "draft"}, []string{"customer"})
+	rt.registerResource(mux, prefix, "refund", "/v1/refunds", nil, map[string]any{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})
 }
 
-func (rt *routes) handlePath(w http.ResponseWriter, r *http.Request, path string) {
-	for _, route := range rt.routes() {
-		if route.matches(r.Method, path) {
-			route.handle(w, r, path)
-			return
-		}
-	}
-	http.NotFound(w, r)
+func (rt *routes) registerTestRoutes(mux *http.ServeMux, prefix string) {
+	handleLimited(mux, "POST "+prefix+"/test/webhook/send", rt.sendWebhook)
+	handleLimited(mux, "POST "+prefix+"/test/reset", rt.handleReset)
 }
 
-type routeEntry struct {
-	method string
-	path   string
-	prefix bool
-	handle func(http.ResponseWriter, *http.Request, string)
+func (rt *routes) registerResource(mux *http.ServeMux, prefix, resourceType, path string,
+	fallback func(string) map[string]any, body map[string]any, required []string) {
+	handleLimited(mux, "POST "+prefix+path, func(w http.ResponseWriter, r *http.Request) {
+		rt.writeGenericResource(w, r, resourceType, body, required)
+	})
+	handleLimited(mux, "GET "+prefix+path, func(w http.ResponseWriter, _ *http.Request) {
+		rt.writeList(w, resourceType)
+	})
+	handleLimited(mux, "GET "+prefix+path+"/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rt.writeResource(w, resourceType, r.PathValue("id"), fallback)
+	})
 }
 
-func (r routeEntry) matches(method, path string) bool {
-	if method != r.method {
-		return false
-	}
-	if r.prefix {
-		return strings.HasPrefix(path, r.path)
-	}
-	return path == r.path
+func handleLimited(mux *http.ServeMux, pattern string, h http.HandlerFunc) {
+	mux.HandleFunc(pattern, withBodyLimit(h))
 }
 
-func (rt *routes) routes() []routeEntry {
-	resource := func(resourceType, path string, fallback func(string) map[string]any, body map[string]any, required []string) []routeEntry {
-		return []routeEntry{
-			{method: http.MethodPost, path: path, handle: func(w http.ResponseWriter, r *http.Request, _ string) {
-				rt.writeGenericResource(w, r, resourceType, body, required)
-			}},
-			{method: http.MethodGet, path: path, handle: func(w http.ResponseWriter, _ *http.Request, _ string) {
-				rt.writeList(w, resourceType)
-			}},
-			{method: http.MethodGet, path: path + "/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
-				rt.writeResource(w, resourceType, strings.TrimPrefix(requestPath, path+"/"), fallback)
-			}},
-		}
+func withBodyLimit(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		httpx.LimitRequestBody(w, r)
+		next(w, r)
 	}
-	routes := []routeEntry{
-		{method: http.MethodPost, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writeCheckoutSession(w, r) }},
-		{method: http.MethodGet, path: "/v1/checkout/sessions", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "checkout_session") }},
-		{method: http.MethodGet, path: "/v1/checkout/sessions/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
-			rt.writeResource(w, "checkout_session", strings.TrimPrefix(requestPath, "/v1/checkout/sessions/"), fallbackCheckoutSession)
-		}},
-		{method: http.MethodPost, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.writePaymentIntent(w, r) }},
-		{method: http.MethodGet, path: "/v1/payment_intents", handle: func(w http.ResponseWriter, _ *http.Request, _ string) { rt.writeList(w, "payment_intent") }},
-		{method: http.MethodGet, path: "/v1/payment_intents/", prefix: true, handle: func(w http.ResponseWriter, _ *http.Request, requestPath string) {
-			rt.writeResource(w, "payment_intent", strings.TrimPrefix(requestPath, "/v1/payment_intents/"), fallbackPaymentIntent)
-		}},
-		{method: http.MethodPost, path: "/test/webhook/send", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.sendWebhook(w, r) }},
-		{method: http.MethodPost, path: "/test/reset", handle: func(w http.ResponseWriter, r *http.Request, _ string) { rt.handleReset(w, r) }},
-	}
-	routes = append(routes, resource("customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)...)
-	routes = append(routes, resource("product", "/v1/products", nil, map[string]any{"object": "product", "active": true}, []string{"name"})...)
-	routes = append(routes, resource("price", "/v1/prices", nil, map[string]any{"object": "price", "active": true}, []string{"product", "currency", "unit_amount"})...)
-	routes = append(routes, resource("subscription", "/v1/subscriptions", nil, map[string]any{"object": "subscription", "status": "active"}, []string{"customer"})...)
-	routes = append(routes, resource("invoice", "/v1/invoices", nil, map[string]any{"object": "invoice", "status": "draft"}, []string{"customer"})...)
-	routes = append(routes, resource("refund", "/v1/refunds", nil, map[string]any{"object": "refund", "status": "succeeded"}, []string{"payment_intent"})...)
-	return routes
 }
 
 func (rt *routes) writeCheckoutSession(w http.ResponseWriter, r *http.Request) {
@@ -161,6 +144,9 @@ func (rt *routes) writePaymentIntent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rt *routes) writeGenericResource(w http.ResponseWriter, r *http.Request, resourceType string, body map[string]any, required []string) {
+	// Clone the template map so registration-time closures do not share mutable state
+	// across concurrent requests.
+	body = maps.Clone(body)
 	fields := formFields(r)
 	if !rt.validateFormFields(w, fields) {
 		return

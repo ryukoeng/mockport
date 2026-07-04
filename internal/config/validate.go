@@ -19,7 +19,15 @@ func Validate(cfg *Config) error {
 		return fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
 
+	// loader.go の2段デコードで事前に追加された warning（unknown_config_key 等、
+	// Validate 自身が生成しないカテゴリ）だけを退避しておく。Validate 管轄カテゴリは
+	// 再生成して上書きするため、2回呼んでも結果が安定する（冪等）。
 	var warnings []SafetyWarning
+	for _, w := range cfg.SafetyWarnings {
+		if !validateOwnedCategories[w.Category] {
+			warnings = append(warnings, w)
+		}
+	}
 	if warning, ok := serverHostWarning(cfg.Server.Host); ok {
 		warnings = append(warnings, warning)
 	}
@@ -53,16 +61,45 @@ func Validate(cfg *Config) error {
 		}
 	}
 
-	if cfg.Mode == "strict" && len(warnings) > 0 {
-		fields := make([]string, 0, len(warnings))
-		for _, warning := range warnings {
-			fields = append(fields, warning.Field)
-		}
-		slices.Sort(fields)
-		return fmt.Errorf("strict mode rejected unsafe config fields: %s", strings.Join(fields, ", "))
+	// scenarios: ブロックが設定されていても未実装のため警告のみ（エラーにしない）
+	if len(cfg.Scenarios) > 0 {
+		warnings = append(warnings, SafetyWarning{
+			Field:    "scenarios",
+			Category: "unsupported_config",
+			Message:  "the scenarios block is not implemented yet and is ignored; see docs/scenario-policy.md",
+		})
 	}
+
+	// strict モードは秘密情報・外部URL・公開バインドなどのセキュリティ系警告のみ起動拒否する。
+	// unsupported_config / unknown_config_key はユーザビリティ警告であり strict 対象外。
+	if cfg.Mode == "strict" {
+		var strictWarnings []SafetyWarning
+		for _, w := range warnings {
+			if w.Category != "unsupported_config" && w.Category != "unknown_config_key" {
+				strictWarnings = append(strictWarnings, w)
+			}
+		}
+		if len(strictWarnings) > 0 {
+			fields := make([]string, 0, len(strictWarnings))
+			for _, w := range strictWarnings {
+				fields = append(fields, w.Field)
+			}
+			slices.Sort(fields)
+			return fmt.Errorf("strict mode rejected unsafe config fields: %s", strings.Join(fields, ", "))
+		}
+	}
+	// 退避した loader 由来 warning + 今回生成した warning で上書きする。
 	cfg.SafetyWarnings = warnings
 	return nil
+}
+
+// validateOwnedCategories は Validate 自身が生成する SafetyWarning カテゴリの集合。
+// Validate を複数回呼んだときの重複を防ぐため、冒頭でこれらを除去してから付け直す。
+var validateOwnedCategories = map[string]bool{
+	"public_bind":         true,
+	"real_looking_secret": true,
+	"external_url":        true,
+	"unsupported_config":  true,
 }
 
 func validateBasePath(adapterName, basePath string, seen map[string]string) error {

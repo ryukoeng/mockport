@@ -13,10 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	defaultHealthcheckHost = "127.0.0.1"
-	defaultHealthcheckPort = 43101
-)
+const defaultHealthcheckHost = "127.0.0.1"
 
 func newHealthcheckCommand() *cobra.Command {
 	var configPath string
@@ -26,6 +23,7 @@ func newHealthcheckCommand() *cobra.Command {
 		Use:   "healthcheck",
 		Short: "Check Mockport health endpoint",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			silenceUsageForRuntimeError(cmd)
 			resolvedURL, err := resolveHealthcheckURL(configPath, healthURL)
 			if err != nil {
 				return err
@@ -79,7 +77,7 @@ func loadHealthcheckConfig(configPath string) (config.Config, error) {
 		if os.IsNotExist(err) {
 			return config.Config{Server: config.ServerConfig{
 				Host: defaultHealthcheckHost,
-				Port: defaultHealthcheckPort,
+				Port: config.DefaultPort,
 			}}, nil
 		}
 		return config.Config{}, fmt.Errorf("load config %s: %w", configPath, err)

@@ -1,17 +1,12 @@
 package cli
 
 import (
-	"github.com/albert-einshutoin/mockport/adapters/githuboauth"
-	"github.com/albert-einshutoin/mockport/adapters/line"
-	"github.com/albert-einshutoin/mockport/adapters/openai"
-	"github.com/albert-einshutoin/mockport/adapters/slack"
-	"github.com/albert-einshutoin/mockport/adapters/stripe"
-	"github.com/albert-einshutoin/mockport/adapters/zohooauth"
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/builtins"
 )
 
 func builtinAdapters() []adapter.Adapter {
-	return []adapter.Adapter{stripe.New(), openai.New(), githuboauth.New(), slack.New(), line.New(), zohooauth.New()}
+	return builtins.Adapters()
 }
 
 func builtinAdapterFor(name string) (adapter.Adapter, bool) {

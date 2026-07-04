@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,11 +17,7 @@ func TestReportCommandPrintsTextSummary(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"report", "--url", server.URL + "/_mockport/report"})
+	cmd, out := newTestCommand(t, "report", "--url", server.URL+"/_mockport/report")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute report: %v", err)
 	}
@@ -48,11 +43,7 @@ func TestReportCommandPrintsJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"report", "--url", server.URL, "--format", "json"})
+	cmd, out := newTestCommand(t, "report", "--url", server.URL, "--format", "json")
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute report: %v", err)
 	}

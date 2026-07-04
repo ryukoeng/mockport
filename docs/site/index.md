@@ -1,8 +1,12 @@
 # Mockport Docs
 
-Mockport is a Docker-first local emulator for external service integration tests.
+Mockport runs Stripe, OpenAI, Slack, GitHub OAuth, LINE, and Zoho OAuth integration code locally without giving real API keys to AI coding agents or CI. Point your SDK or HTTP client at `localhost` instead of the provider.
 
 [日本語版](index.ja.md)
+
+**Fastest path:** [Quickstart](quickstart.md) → [Examples](examples.md) → [Support matrix](support-matrix.md)
+
+Built-in adapters: `stripe`, `openai`, `github-oauth`, `slack`, `line`, and `zoho-oauth` are all `workflow-compatible` today.
 
 - [Quickstart](quickstart.md)
 - [Adapters](adapters.md)

@@ -86,3 +86,15 @@ The Phase 15 foundation runs a live placeholder contract against local Mockport 
 | `provider-compatible` | Contract level evidence exists with manifest, fixtures, SDK/client contracts, workflow/state/error coverage, score, and known gaps. |
 
 Adapters must not be promoted only because local app-specific behavior works. Unsupported and approximate behavior must stay visible in reports.
+
+## Versioned Manifests
+
+Checked-in compatibility manifests live under `compat/manifests/{adapter}.json`. Each file is the JSON output of `compat.FromMetadata()` for the adapter's current `Metadata()` claim. They exist so maturity and evidence changes produce reviewable diffs instead of hiding behind runtime-only metadata.
+
+Update workflow:
+
+1. Change adapter `Metadata()` when compatibility claims or evidence change.
+2. Regenerate manifests: `go run ./scripts/gen-compat-manifests` (or `UPDATE_COMPAT_MANIFESTS=1 go test ./internal/compat -run TestUpdateCheckedInManifests`)
+3. Commit the updated JSON in the same pull request as the metadata change.
+
+CI runs `scripts/check-compat-manifests.sh`, which regenerates manifests to a temporary directory and fails on any drift from the checked-in files. The compatibility release gate also requires report maturity to match the checked-in manifest maturity for every published adapter.

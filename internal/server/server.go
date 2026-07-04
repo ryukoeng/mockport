@@ -1,8 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"slices"
@@ -17,13 +20,23 @@ import (
 )
 
 const (
-	delayHeader = "X-Mockport-Delay"
-	maxDelay    = 30 * time.Second
+	delayHeader         = "X-Mockport-Delay"
+	maxDelay            = 30 * time.Second
+	invalidDelayMessage = "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)"
+	// maxRequestBodyBytes matches httpx.MaxBodyBytes so server-wide and adapter limits stay aligned.
+	maxRequestBodyBytes        int64 = 1 << 20
+	requestBodyTooLargeMessage       = "request body too large"
 )
+
+// delayTimerFunc abstracts time.After so tests can inject immediate timers and avoid real sleeps in CI.
+type delayTimerFunc func(time.Duration) <-chan time.Time
+
+// ErrAdapterNotRegistered marks enabled adapters missing from the registry.
+var ErrAdapterNotRegistered = errors.New("adapter is enabled but not registered")
 
 func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.Recorder) (http.Handler, error) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("GET /health", healthHandler)
 	if rec == nil {
 		rec = report.NewRecorder()
 	}
@@ -47,7 +60,7 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 		}
 		registered, ok := reg.Get(name)
 		if !ok {
-			return nil, fmt.Errorf("adapter %s is enabled but not registered", name)
+			return nil, fmt.Errorf("adapter %s: %w", name, ErrAdapterNotRegistered)
 		}
 		meta := registered.Metadata()
 		if err := adapter.ValidateMetadata(meta); err != nil {
@@ -82,16 +95,12 @@ func NewConfiguredHandler(cfg config.Config, reg *adapter.Registry, rec *report.
 	rec.SetBehaviorMatrix(matrix)
 	rec.SetCompatibility(compatibility)
 	rec.SetStateCoverage(state)
-	mux.HandleFunc("/_mockport/report", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+	mux.HandleFunc("GET /_mockport/report", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(rec.Snapshot())
 	})
 
-	return recordMiddleware(delayMiddleware(mux), rec, adapterStatuses), nil
+	return recordMiddleware(requestBodySizeMiddleware(delayMiddleware(mux)), rec, adapterStatuses), nil
 }
 
 func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
@@ -116,11 +125,8 @@ func compatibilityStatus(manifest compat.Manifest) report.CompatibilityStatus {
 	}
 	status.ClientEvidence = append(status.ClientEvidence, manifest.ClientEvidence...)
 	if manifest.ContractEvidence != nil {
-		status.ContractEvidence = &report.ContractEvidence{
-			Fixtures:     slices.Clone(manifest.ContractEvidence.Fixtures),
-			SDKContracts: slices.Clone(manifest.ContractEvidence.SDKContracts),
-			KnownGaps:    slices.Clone(manifest.ContractEvidence.KnownGaps),
-		}
+		evidence := manifest.ContractEvidence.Clone()
+		status.ContractEvidence = &evidence
 	}
 	for _, unsupported := range manifest.Unsupported {
 		status.UnsupportedEndpoints = append(status.UnsupportedEndpoints, unsupported.ID)
@@ -223,23 +229,79 @@ func classifyAdapter(path string, adapters []report.AdapterStatus) (string, stri
 	return "", ""
 }
 
-func delayMiddleware(next http.Handler) http.Handler {
+func requestBodySizeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rawDelay := strings.TrimSpace(r.Header.Get(delayHeader))
-		if rawDelay == "" {
+		if r.Body == nil {
 			next.ServeHTTP(w, r)
+			return
+		}
+
+		// ContentLength is honored first: a declared size above the limit must be rejected
+		// even when the underlying body would be empty, so clients cannot bypass the cap.
+		if r.ContentLength > maxRequestBodyBytes {
+			rejectRequestBodyTooLarge(w)
+			return
+		}
+
+		// Chunked or otherwise unknown-length bodies must be bounded before adapter handlers run.
+		// http.NoBody and other empty readers return EOF immediately, so they pass through safely.
+		if r.ContentLength < 0 {
+			body, err := io.ReadAll(io.LimitReader(r.Body, maxRequestBodyBytes+1))
+			_ = r.Body.Close()
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if int64(len(body)) > maxRequestBodyBytes {
+				rejectRequestBodyTooLarge(w)
+				return
+			}
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			r.ContentLength = int64(len(body))
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func rejectRequestBodyTooLarge(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusRequestEntityTooLarge)
+	_, _ = w.Write([]byte(requestBodyTooLargeMessage))
+}
+
+func delayMiddleware(next http.Handler) http.Handler {
+	return delayMiddlewareWithTimer(next, time.After)
+}
+
+func delayMiddlewareWithTimer(next http.Handler, timer delayTimerFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Header.Get conflates missing and empty; distinguish so explicit empty stays invalid.
+		values, present := r.Header[http.CanonicalHeaderKey(delayHeader)]
+		if !present {
+			next.ServeHTTP(w, r)
+			return
+		}
+		rawDelay := strings.TrimSpace(values[0])
+		if rawDelay == "" {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(invalidDelayMessage))
 			return
 		}
 
 		delayMs, err := strconv.ParseInt(rawDelay, 10, 64)
 		if err != nil || delayMs < 0 || delayMs > int64(maxDelay/time.Millisecond) {
-			http.Error(w, "invalid X-Mockport-Delay: must be 0-30000 (milliseconds)", http.StatusBadRequest)
+			// Match docs/site/adapters.md exactly; http.Error appends a newline.
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(invalidDelayMessage))
 			return
 		}
 
 		delay := time.Duration(delayMs) * time.Millisecond
 		select {
-		case <-time.After(delay):
+		case <-timer(delay):
 			next.ServeHTTP(w, r)
 		case <-r.Context().Done():
 			return

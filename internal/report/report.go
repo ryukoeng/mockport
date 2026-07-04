@@ -1,5 +1,7 @@
 package report
 
+import "github.com/albert-einshutoin/mockport/internal/adapter"
+
 type Snapshot struct {
 	Mode                 string                `json:"mode"`
 	Safety               SafetySummary         `json:"safety"`
@@ -90,11 +92,9 @@ type CompatibilityStatus struct {
 	UnsupportedEndpoints []string          `json:"unsupported_endpoints,omitempty"`
 }
 
-type ContractEvidence struct {
-	Fixtures     []string `json:"fixtures,omitempty"`
-	SDKContracts []string `json:"sdk_contracts,omitempty"`
-	KnownGaps    []string `json:"known_gaps,omitempty"`
-}
+// ContractEvidence is an alias of the canonical adapter type. The json tags
+// live on the adapter definition.
+type ContractEvidence = adapter.ContractEvidence
 
 type StateCoverageStatus struct {
 	Adapter           string   `json:"adapter"`

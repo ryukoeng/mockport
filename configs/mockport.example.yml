@@ -43,47 +43,52 @@ adapters:
     webhook:
       target_url: http://app:3000/webhooks/line
       signing_secret: mockport_line_secret
-scenarios:
-  payment_success:
-    adapter: stripe
-    response:
-      status: 200
-      payment_status: paid
-    webhook:
-      event: checkout.session.completed
 
-  chat_success:
-    adapter: openai
-    response:
-      status: 200
-      object: chat.completion
-
-  payment_failed:
-    adapter: stripe
-    response:
-      status: 402
-      error_code: card_declined
-    webhook:
-      event: payment_intent.payment_failed
-
-
-  message_success:
-    adapter: slack
-    response:
-      status: 200
-
-  line_success:
-    adapter: line
-    response:
-      status: 200
-
-  zoho_oauth_success:
-    adapter: zoho-oauth
-    response:
-      status: 200
-      access_token: mockport_access_token
-
-  oauth_success:
-    adapter: github-oauth
-    response:
-      status: 200
+# NOTE: The scenarios block is NOT implemented yet and is silently ignored at runtime.
+# A warning will be emitted at startup if this block is present.
+# For response switching, use built-in scenarios via the adapter's `scenario:` field
+# or the X-Mockport-Scenario header. See docs/scenario-policy.md for future plans.
+#
+# scenarios:
+#   payment_success:
+#     adapter: stripe
+#     response:
+#       status: 200
+#       payment_status: paid
+#     webhook:
+#       event: checkout.session.completed
+#
+#   chat_success:
+#     adapter: openai
+#     response:
+#       status: 200
+#       object: chat.completion
+#
+#   payment_failed:
+#     adapter: stripe
+#     response:
+#       status: 402
+#       error_code: card_declined
+#     webhook:
+#       event: payment_intent.payment_failed
+#
+#   message_success:
+#     adapter: slack
+#     response:
+#       status: 200
+#
+#   line_success:
+#     adapter: line
+#     response:
+#       status: 200
+#
+#   zoho_oauth_success:
+#     adapter: zoho-oauth
+#     response:
+#       status: 200
+#       access_token: mockport_access_token
+#
+#   oauth_success:
+#     adapter: github-oauth
+#     response:
+#       status: 200

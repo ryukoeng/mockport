@@ -1,0 +1,112 @@
+{
+  "adapter": "slack",
+  "provider_version": "2025-02-01",
+  "maturity": "workflow-compatible",
+  "client_evidence": [
+    "slack-client-contract"
+  ],
+  "levels": [
+    "wire",
+    "client",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "post_slack_api_auth_test",
+      "method": "POST",
+      "path": "/slack/api/auth.test",
+      "supported": true
+    },
+    {
+      "id": "post_slack_api_chat_postmessage",
+      "method": "POST",
+      "path": "/slack/api/chat.postMessage",
+      "supported": true
+    },
+    {
+      "id": "post_slack_api_chat_update",
+      "method": "POST",
+      "path": "/slack/api/chat.update",
+      "supported": true
+    },
+    {
+      "id": "post_slack_api_chat_delete",
+      "method": "POST",
+      "path": "/slack/api/chat.delete",
+      "supported": true
+    },
+    {
+      "id": "post_slack_api_conversations_list",
+      "method": "POST",
+      "path": "/slack/api/conversations.list",
+      "supported": true
+    },
+    {
+      "id": "get_slack_api_conversations_history",
+      "method": "GET",
+      "path": "/slack/api/conversations.history",
+      "supported": true
+    },
+    {
+      "id": "post_slack_api_conversations_history",
+      "method": "POST",
+      "path": "/slack/api/conversations.history",
+      "supported": true
+    },
+    {
+      "id": "post_slack_events",
+      "method": "POST",
+      "path": "/slack/events",
+      "supported": true
+    },
+    {
+      "id": "post_slack_test_reset",
+      "method": "POST",
+      "path": "/slack/test/reset",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "message_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "auth_error",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "rate_limited",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "delivery_failed",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "channel_not_found",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "not_in_channel",
+      "built_in": true,
+      "supported": true
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "channel",
+      "user",
+      "bot",
+      "message"
+    ],
+    "reset": true
+  }
+}

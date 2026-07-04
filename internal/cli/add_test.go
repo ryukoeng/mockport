@@ -1,25 +1,46 @@
 package cli
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
+func TestAddRequiresAtLeastOneAdapter(t *testing.T) {
+	cmd, _ := newTestCommand(t, "add")
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when add is called without adapters")
+	}
+	if !strings.Contains(err.Error(), "requires at least 1 arg(s)") {
+		t.Fatalf("error = %q, want cobra minimum args message", err)
+	}
+}
+
+func TestAddMissingConfigUsesLoadFileError(t *testing.T) {
+	cmd, _ := newTestCommand(t, "add", "stripe", "--config", "missing-mockport.yml")
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error for missing config")
+	}
+	if !strings.Contains(err.Error(), "load config missing-mockport.yml:") {
+		t.Fatalf("error = %q, want load config prefix from LoadFile", err)
+	}
+}
+
 func TestAddAdaptersUpdatesConfig(t *testing.T) {
 	dir := chdirTemp(t)
 	configPath := filepath.Join(dir, "mockport.yml")
-	if err := os.WriteFile(configPath, []byte(generatedConfig([]adapterSpec{mustSpec(t, "stripe")})), 0o644); err != nil {
+	configContent, err := generatedConfig([]adapterSpec{mustSpec(t, "stripe")})
+	if err != nil {
+		t.Fatalf("generate config: %v", err)
+	}
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
 
-	cmd := NewRootCommand()
-	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetErr(&out)
-	cmd.SetArgs([]string{"add", "openai", "github-oauth", "slack", "line", "--config", configPath})
+	cmd, _ := newTestCommand(t, "add", "openai", "github-oauth", "slack", "line", "--config", configPath)
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute add: %v", err)
 	}

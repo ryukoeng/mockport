@@ -33,3 +33,10 @@ coverage.out
 .vscode/
 *.swp
 *.tmp
+
+# Local TAKT/devloop state
+/.devloop/
+/.takt/
+/.takt/runs/
+/.takt/persona_sessions.json
+/.takt/session-state.json

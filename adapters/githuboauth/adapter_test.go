@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/albert-einshutoin/mockport/internal/adapter"
+	"github.com/albert-einshutoin/mockport/internal/adapter/adaptertest"
 )
 
 func TestAuthorizeRedirect(t *testing.T) {
@@ -401,50 +401,29 @@ func performRequest(t *testing.T, cfg adapter.Config, method, path string) *http
 
 func newGitHubMux(t *testing.T, cfg adapter.Config) *http.ServeMux {
 	t.Helper()
-	mux := http.NewServeMux()
-	if err := New().Register(mux, cfg); err != nil {
-		t.Fatalf("register adapter: %v", err)
-	}
-	return mux
+	return adaptertest.NewMux(t, New(), cfg)
 }
 
 func serveGitHubRequest(mux http.Handler, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	header := http.Header{}
 	if body != "" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 	for name, value := range headers {
-		req.Header.Set(name, value)
+		header.Set(name, value)
 	}
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.Serve(mux, method, path, strings.NewReader(body), header)
 }
 
 func serveGitHubResetRequest(mux http.Handler, remoteAddr string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodPost, "/github/test/reset", nil)
-	req.RemoteAddr = remoteAddr
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
-	return rec
+	return adaptertest.ServeWithRemote(mux, http.MethodPost, "/github/test/reset", nil, nil, remoteAddr)
 }
 
 func exchangeGitHubTokenConcurrently(mux http.Handler, body string, attempts int) []int {
-	var wg sync.WaitGroup
-	start := make(chan struct{})
-	statuses := make([]int, attempts)
-	for i := range attempts {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			<-start
-			rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", body, map[string]string{"Accept": "application/json"})
-			statuses[i] = rec.Code
-		}(i)
-	}
-	close(start)
-	wg.Wait()
-	return statuses
+	return adaptertest.ConcurrentStatusCodes(attempts, func() int {
+		rec := serveGitHubRequest(mux, http.MethodPost, "/github/login/oauth/access_token", body, map[string]string{"Accept": "application/json"})
+		return rec.Code
+	})
 }
 
 func issueGitHubToken(t *testing.T, mux http.Handler, scope string) string {

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+bash scripts/check-compat-manifests.sh
+
 require_file() {
   local path="$1"
   if [[ ! -f "$path" ]]; then

@@ -1,0 +1,88 @@
+{
+  "adapter": "github-oauth",
+  "provider_version": "2022-11-28",
+  "maturity": "workflow-compatible",
+  "client_evidence": [
+    "oauth-client-contract"
+  ],
+  "levels": [
+    "wire",
+    "client",
+    "workflow",
+    "state",
+    "error"
+  ],
+  "endpoints": [
+    {
+      "id": "get_github_login_oauth_authorize",
+      "method": "GET",
+      "path": "/github/login/oauth/authorize",
+      "supported": true
+    },
+    {
+      "id": "post_github_login_oauth_access_token",
+      "method": "POST",
+      "path": "/github/login/oauth/access_token",
+      "supported": true
+    },
+    {
+      "id": "get_github_user",
+      "method": "GET",
+      "path": "/github/user",
+      "supported": true
+    },
+    {
+      "id": "get_github_user_emails",
+      "method": "GET",
+      "path": "/github/user/emails",
+      "supported": true
+    },
+    {
+      "id": "get_github_user_orgs",
+      "method": "GET",
+      "path": "/github/user/orgs",
+      "supported": true
+    },
+    {
+      "id": "post_github_test_reset",
+      "method": "POST",
+      "path": "/github/test/reset",
+      "supported": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "oauth_success",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "invalid_code",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "expired_token",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "scope_missing",
+      "built_in": true,
+      "supported": true
+    },
+    {
+      "name": "redirect_uri_mismatch",
+      "built_in": true,
+      "supported": true
+    }
+  ],
+  "state_evidence": {
+    "stateful_resources": [
+      "oauth_code",
+      "oauth_token",
+      "user_identity"
+    ],
+    "reset": true
+  }
+}

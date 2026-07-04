@@ -46,6 +46,16 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions \
 - ヘッダによる切り替えはリクエスト単位なので並列テストでも干渉しません
 - 対象はアダプタの `Metadata().Scenarios` に登録された組み込みシナリオのみです
 
+## Request body 上限
+
+Mockport は adapter handler より前に、**1 MiB（1,048,576 bytes）** を超える request body を拒否します。ローカルおよび CI の emulator 実行で unbounded read を避けるための server-wide 制限で、現行 adapter workflow と fixture には十分な上限です。超過時は `413 Payload Too Large` と次の本文を返します。
+
+```text
+request body too large
+```
+
+adapter handler 側でも同じ上限で provider 形式のエラーを返す場合があります。
+
 詳細な adapter 仕様:
 
 - [Stripe adapter](../adapters/stripe.ja.md)
