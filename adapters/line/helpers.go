@@ -117,14 +117,6 @@ func (r *routes) resolveScenarioPay(w http.ResponseWriter, req *http.Request) (s
 	return scenario, true
 }
 
-func normalizeScenario(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return "line_success"
-	}
-	return value
-}
-
 func firstNonEmpty(values ...any) any {
 	for _, value := range values {
 		switch typed := value.(type) {
