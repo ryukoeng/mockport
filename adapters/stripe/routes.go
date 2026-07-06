@@ -57,12 +57,21 @@ func (rt *routes) registerTestRoutes(mux *http.ServeMux, prefix string) {
 func (rt *routes) registerResource(mux *http.ServeMux, prefix, resourceType, path string,
 	fallback func(string) map[string]any, body map[string]any, required []string) {
 	handleLimited(mux, "POST "+prefix+path, func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeGenericResource(w, r, resourceType, body, required)
 	})
-	handleLimited(mux, "GET "+prefix+path, func(w http.ResponseWriter, _ *http.Request) {
+	handleLimited(mux, "GET "+prefix+path, func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeList(w, resourceType)
 	})
 	handleLimited(mux, "GET "+prefix+path+"/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeResource(w, resourceType, r.PathValue("id"), fallback)
 	})
 }
