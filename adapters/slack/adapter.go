@@ -290,6 +290,10 @@ func (r *routes) writeHistory(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *routes) writeEvent(w http.ResponseWriter, req *http.Request) {
+	if _, err := r.resolver.Resolve(req); err != nil {
+		httpx.WriteJSON(w, http.StatusBadRequest, slackErrorResponse{OK: false, Error: "unknown_mockport_scenario"})
+		return
+	}
 	raw, err := io.ReadAll(req.Body)
 	if err != nil {
 		if httpx.IsRequestBodyTooLarge(err) {

@@ -72,9 +72,10 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions \
 
 Resolution order: **header > config scenario > adapter default**
 
-- An unknown scenario name returns a 400 error (no silent fallback to the success scenario)
+- An unknown scenario name is rejected (no silent fallback to the success scenario). The error uses each provider's own error shape: most adapters return HTTP 400, while LINE Pay follows its real API and returns HTTP 200 with a `returnCode`/`returnMessage` body carrying `unknown_mockport_scenario`.
 - Per-request switching does not interfere with parallel test runs
 - Only built-in scenarios registered in `Metadata().Scenarios` are accepted
+- Management endpoints such as `/test/reset` reset stored state and are exempt from scenario validation
 
 Detailed adapter specifications:
 

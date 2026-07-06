@@ -28,17 +28,29 @@ func (rt *routes) register(mux *http.ServeMux, prefix string) {
 
 func (rt *routes) registerV1Routes(mux *http.ServeMux, prefix string) {
 	handleLimited(mux, "POST "+prefix+"/v1/checkout/sessions", rt.writeCheckoutSession)
-	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions", func(w http.ResponseWriter, _ *http.Request) {
+	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeList(w, "checkout_session")
 	})
 	handleLimited(mux, "GET "+prefix+"/v1/checkout/sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeResource(w, "checkout_session", r.PathValue("id"), fallbackCheckoutSession)
 	})
 	handleLimited(mux, "POST "+prefix+"/v1/payment_intents", rt.writePaymentIntent)
-	handleLimited(mux, "GET "+prefix+"/v1/payment_intents", func(w http.ResponseWriter, _ *http.Request) {
+	handleLimited(mux, "GET "+prefix+"/v1/payment_intents", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeList(w, "payment_intent")
 	})
 	handleLimited(mux, "GET "+prefix+"/v1/payment_intents/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rt.resolveScenario(w, r); !ok {
+			return
+		}
 		rt.writeResource(w, "payment_intent", r.PathValue("id"), fallbackPaymentIntent)
 	})
 	rt.registerResource(mux, prefix, "customer", "/v1/customers", nil, map[string]any{"object": "customer"}, nil)

@@ -66,3 +66,24 @@ func TestSlackUnknownScenarioReturns400(t *testing.T) {
 		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
 	}
 }
+
+func TestSlackEventsUnknownScenarioReturns400(t *testing.T) {
+	// /events も dispatch 前に未知シナリオを 400 で拒否する（署名検証より前で早期リターン）
+	mux := newSlackScenarioMux(t, adapter.Config{BasePath: "/slack", Scenario: "message_success"})
+	req := httptest.NewRequest(http.MethodPost, "/slack/events", strings.NewReader(`{"type":"url_verification","challenge":"abc"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Mockport-Scenario", "no_such_scenario")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d", rec.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	errStr, _ := body["error"].(string)
+	if errStr != "unknown_mockport_scenario" {
+		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
+	}
+}

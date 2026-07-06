@@ -103,6 +103,10 @@ func TestLINEBotInfoUnknownScenarioReturns400(t *testing.T) {
 // TestLINEPayUnknownScenarioReturnsCommonCode は LINE Pay エンドポイント
 // （{"returnCode": ..., "returnMessage": ...} 形式）で returnCode の数値契約を壊さず、
 // 共通コードが returnMessage 先頭プレフィックスで判別できることを固定する。
+//
+// LINE Pay は実 API 仕様に合わせて業務エラーを HTTP 200 + returnCode で表すため、
+// 未知シナリオも意図的に 400 ではなく HTTP 200 を返す（provider-shaped な例外）。
+// その 200 契約を明示的に固定する。
 func TestLINEPayUnknownScenarioReturnsCommonCode(t *testing.T) {
 	mux := newLineMuxForScenario(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
 	req := httptest.NewRequest(http.MethodPost, "/line/v3/payments/request", strings.NewReader(`{"amount":1000}`))
@@ -110,6 +114,10 @@ func TestLINEPayUnknownScenarioReturnsCommonCode(t *testing.T) {
 	req.Header.Set("X-Mockport-Scenario", "not_a_real_scenario")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
+	// LINE Pay の provider-shaped 例外: 未知シナリオでも HTTP 200 を返す。
+	if rec.Code != http.StatusOK {
+		t.Errorf("want 200 (LINE Pay returns business errors as HTTP 200), got %d", rec.Code)
+	}
 	var resp map[string]any
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
 		t.Fatalf("decode: %v", err)
@@ -176,6 +184,10 @@ func TestLINEPayCheckUnknownScenarioReturnsCommonCode(t *testing.T) {
 	req.Header.Set("X-Mockport-Scenario", "not_a_real_scenario")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
+	// LINE Pay の provider-shaped 例外: 未知シナリオでも HTTP 200 を返す。
+	if rec.Code != http.StatusOK {
+		t.Errorf("want 200 (LINE Pay returns business errors as HTTP 200), got %d", rec.Code)
+	}
 	var resp map[string]any
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
 		t.Fatalf("decode: %v", err)
