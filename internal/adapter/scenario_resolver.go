@@ -104,6 +104,9 @@ func (s *ScenarioResolver) resolve(req *http.Request) (string, error) {
 		return value, nil
 	}
 	if s.configured != "" {
+		if !s.known[s.configured] {
+			return "", fmt.Errorf("%w: %s", ErrUnknownScenario, s.configured)
+		}
 		return s.configured, nil
 	}
 	return s.defaultName, nil

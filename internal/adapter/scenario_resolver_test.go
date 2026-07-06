@@ -38,6 +38,13 @@ func TestScenarioResolver(t *testing.T) {
 			want:           "payment_failed",
 		},
 		{
+			name:           "ヘッダなし・config値が未知→ErrUnknownScenario",
+			configScenario: "payment_faled", // タイプミス等の未知値
+			defaultName:    "payment_success",
+			headerValue:    "",
+			wantErr:        true,
+		},
+		{
 			name:           "ヘッダなし・config空→default値を返す",
 			configScenario: "",
 			defaultName:    "payment_success",
