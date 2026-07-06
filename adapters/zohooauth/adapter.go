@@ -89,11 +89,15 @@ type routes struct {
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	httpx.LimitRequestBody(w, req)
-	if _, err := r.resolver.Resolve(req); err != nil {
-		writeError(w, http.StatusBadRequest, "unknown_mockport_scenario")
-		return
-	}
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
+	// Reject unknown scenario names before routing. The /test/reset management
+	// endpoint only clears state and is exempt from scenario validation.
+	if path != "/test/reset" {
+		if _, err := r.resolver.Resolve(req); err != nil {
+			writeError(w, http.StatusBadRequest, "unknown_mockport_scenario")
+			return
+		}
+	}
 	switch {
 	case req.Method == http.MethodGet && path == "/oauth/v2/auth":
 		r.authorize(w, req)

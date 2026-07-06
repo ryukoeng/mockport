@@ -173,9 +173,13 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 // Grouping mirrors the error shapes the concrete handlers already emit:
 //   - LINE Pay (/v3/payments/*): resolveScenarioPay -> {"returnCode","returnMessage"}
 //   - OAuth/Login (/oauth2/*, /v2/oauth/*): resolveScenarioOAuth -> {"error",...}
-//   - everything else (Messaging API, LIFF, MINI App, Mini Dapp, test): resolveScenario -> {"message"}
+//   - everything else (Messaging API, LIFF, MINI App, Mini Dapp): resolveScenario -> {"message"}
+//
+// The /test/reset management endpoint only clears state and is exempt.
 func (r *routes) validateScenarioForPath(w http.ResponseWriter, req *http.Request, path string) bool {
 	switch {
+	case path == "/test/reset":
+		return true
 	case strings.HasPrefix(path, "/v3/payments/"):
 		_, ok := r.resolveScenarioPay(w, req)
 		return ok

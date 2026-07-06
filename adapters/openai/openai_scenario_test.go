@@ -33,6 +33,27 @@ func TestOpenAIHeaderOverridesConfig(t *testing.T) {
 	}
 }
 
+func TestOpenAIResetExemptFromScenarioValidation(t *testing.T) {
+	// /test/reset は状態リセット専用の管理エンドポイントなので、未知シナリオヘッダを
+	// 付けても 400 で弾かず通常どおりリセットが成功する（ループバックからの実行）。
+	mux := newOpenAIMuxScenario(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+	req := httptest.NewRequest(http.MethodPost, "/openai/test/reset", nil)
+	req.RemoteAddr = "127.0.0.1:12345"
+	req.Header.Set("X-Mockport-Scenario", "no_such_scenario")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("want 200 (reset exempt from scenario validation), got %d, body=%s", rec.Code, rec.Body.String())
+	}
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp["reset"] != true {
+		t.Errorf("want reset=true, got %#v", resp)
+	}
+}
+
 func TestOpenAIUnknownScenarioReturns400(t *testing.T) {
 	mux := newOpenAIMuxScenario(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
 	body := strings.NewReader(`{"model":"gpt-4o","messages":[{"role":"user","content":"hi"}]}`)

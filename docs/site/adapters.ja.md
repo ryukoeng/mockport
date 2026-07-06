@@ -42,9 +42,10 @@ curl -X POST http://localhost:43101/stripe/v1/checkout/sessions \
 
 解決順序: **ヘッダ > config の scenario > アダプタのデフォルト**
 
-- 未知のシナリオ名を指定すると 400 エラーが返ります（黙って成功系にフォールバックしません）
+- 未知のシナリオ名は拒否されます（黙って成功系にフォールバックしません）。エラー形式は各プロバイダ固有の形式に従い、多くのアダプタは HTTP 400 を返しますが、LINE Pay は実 API に合わせて HTTP 200 で `returnCode`/`returnMessage`（`unknown_mockport_scenario` を含む）を返します
 - ヘッダによる切り替えはリクエスト単位なので並列テストでも干渉しません
 - 対象はアダプタの `Metadata().Scenarios` に登録された組み込みシナリオのみです
+- `/test/reset` などの管理用エンドポイントは状態リセット専用で、シナリオ検証の対象外です
 
 ## Request body 上限
 

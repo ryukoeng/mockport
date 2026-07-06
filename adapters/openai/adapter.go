@@ -97,11 +97,15 @@ type routes struct {
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	httpx.LimitRequestBody(w, req)
-	if _, err := r.resolver.Resolve(req); err != nil {
-		writeError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
-		return
-	}
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
+	// Reject unknown scenario names before routing. The /test/reset management
+	// endpoint only clears state and is exempt from scenario validation.
+	if path != "/test/reset" {
+		if _, err := r.resolver.Resolve(req); err != nil {
+			writeError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+			return
+		}
+	}
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"object": "list", "data": []map[string]string{{"id": "gpt-mockport", "object": "model"}}})
