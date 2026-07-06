@@ -63,6 +63,27 @@ func TestGitHubOAuthUnknownScenarioReturns400(t *testing.T) {
 	}
 }
 
+// TestGitHubAuthorizeUnknownScenarioReturns400 は GET /github/login/oauth/authorize
+// （authorize エンドポイント）で未知の X-Mockport-Scenario が 400 になることを固定する（指摘3）。
+// 修正前はこのエンドポイントが dispatcher で resolver を呼ばず 302 でリダイレクトしていた。
+func TestGitHubAuthorizeUnknownScenarioReturns400(t *testing.T) {
+	mux := newGitHubMuxForScenario(t, adapter.Config{BasePath: "/github", Scenario: "oauth_success"})
+	req := httptest.NewRequest(http.MethodGet, "/github/login/oauth/authorize?client_id=testclient&redirect_uri=http://localhost/callback", nil)
+	req.Header.Set("X-Mockport-Scenario", "totally_unknown")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if errStr, _ := body["error"].(string); errStr != "unknown_mockport_scenario" {
+		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
+	}
+}
+
 // TestGitHubUserUnknownScenarioUsesErrorCode は user 情報エンドポイント（GitHub REST
 // 形式 {"message": ..., "documentation_url": ...}）の未知シナリオ応答で、共通コードが
 // メッセージ連結ではなく機械可読な error フィールドへ厳密一致で入ることを固定する。

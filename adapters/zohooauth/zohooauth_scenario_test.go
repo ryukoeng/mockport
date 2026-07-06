@@ -72,6 +72,27 @@ func TestZohoOAuthUnknownScenarioReturns400(t *testing.T) {
 	}
 }
 
+// TestZohoAuthorizeUnknownScenarioReturns400 は GET /zoho/oauth/v2/auth（authorize エンドポイント）で
+// 未知の X-Mockport-Scenario が 400 になることを固定する（指摘3）。
+// 修正前はこのエンドポイントが dispatcher で resolver を呼ばず 302 でリダイレクトしていた。
+func TestZohoAuthorizeUnknownScenarioReturns400(t *testing.T) {
+	mux := newZohoMuxForScenario(t, adapter.Config{BasePath: "/zoho", Scenario: "oauth_success"})
+	req := httptest.NewRequest(http.MethodGet, "/zoho/oauth/v2/auth?client_id=testclient&redirect_uri=http://localhost/callback", nil)
+	req.Header.Set("X-Mockport-Scenario", "totally_fake")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if errStr, _ := body["error"].(string); errStr != "unknown_mockport_scenario" {
+		t.Errorf("want error=unknown_mockport_scenario, got %q", errStr)
+	}
+}
+
 // TestZohoUserInfoUnknownScenarioReturns400 は userInfo 経路の未知シナリオが
 // 400 + 機械可読な error=unknown_mockport_scenario を返すことを固定する（S3）。
 // userInfo は token 経路（Zoho の業務エラーは 200）と異なり、Mockport レベルの

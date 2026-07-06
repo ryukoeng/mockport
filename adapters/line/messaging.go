@@ -131,7 +131,10 @@ func (r *routes) writeContentEndpoint(w http.ResponseWriter, path string) {
 	}
 }
 
-func (r *routes) writeBotInfo(w http.ResponseWriter) {
+func (r *routes) writeBotInfo(w http.ResponseWriter, req *http.Request) {
+	if _, ok := r.resolveScenario(w, req); !ok {
+		return
+	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"userId":         "U00000000000000000000000000000000",
 		"basicId":        "@mockport",

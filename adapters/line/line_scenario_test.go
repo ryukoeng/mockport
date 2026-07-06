@@ -78,6 +78,28 @@ func TestLINEOAuthUnknownScenarioUsesErrorCode(t *testing.T) {
 	}
 }
 
+// TestLINEBotInfoUnknownScenarioReturns400 は GET /line/v2/bot/info（read エンドポイント）で
+// 未知の X-Mockport-Scenario が 400 になることを固定する（指摘3）。
+// 修正前はこのエンドポイントが resolver を呼ばず 200 で成功していた。
+func TestLINEBotInfoUnknownScenarioReturns400(t *testing.T) {
+	mux := newLineMuxForScenario(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+	req := httptest.NewRequest(http.MethodGet, "/line/v2/bot/info", nil)
+	req.Header.Set("X-Mockport-Scenario", "totally_unknown")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	msg, _ := resp["message"].(string)
+	if !strings.HasPrefix(msg, "unknown_mockport_scenario:") {
+		t.Errorf("want message prefixed with unknown_mockport_scenario:, got %q", msg)
+	}
+}
+
 // TestLINEPayUnknownScenarioReturnsCommonCode は LINE Pay エンドポイント
 // （{"returnCode": ..., "returnMessage": ...} 形式）で returnCode の数値契約を壊さず、
 // 共通コードが returnMessage 先頭プレフィックスで判別できることを固定する。

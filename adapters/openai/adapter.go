@@ -97,6 +97,10 @@ type routes struct {
 
 func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	httpx.LimitRequestBody(w, req)
+	if _, err := r.resolver.Resolve(req); err != nil {
+		writeError(w, http.StatusBadRequest, "unknown_mockport_scenario", err.Error())
+		return
+	}
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
 	switch {
 	case req.Method == http.MethodGet && path == "/v1/models":

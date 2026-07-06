@@ -62,7 +62,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	case req.Method == http.MethodGet && path == "/v2/profile":
 		r.writeLoginProfile(w, req)
 	case req.Method == http.MethodGet && path == "/v2/bot/info":
-		r.writeBotInfo(w)
+		r.writeBotInfo(w, req)
 	case req.Method == http.MethodGet && path == "/v2/bot/message/quota":
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"type": "limited", "value": 10000})
 	case req.Method == http.MethodGet && path == "/v2/bot/message/quota/consumption":

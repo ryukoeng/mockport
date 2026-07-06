@@ -57,3 +57,29 @@ func TestOpenAIUnknownScenarioReturns400(t *testing.T) {
 		t.Errorf("want code=unknown_mockport_scenario, got %q", code)
 	}
 }
+
+// TestOpenAIModelsUnknownScenarioReturns400 は GET /openai/v1/models（read エンドポイント）で
+// 未知の X-Mockport-Scenario が 400 になることを固定する（指摘3）。
+// 修正前はこのエンドポイントが dispatcher で resolver を呼ばず 200 で成功していた。
+func TestOpenAIModelsUnknownScenarioReturns400(t *testing.T) {
+	mux := newOpenAIMuxScenario(t, adapter.Config{BasePath: "/openai", Scenario: "chat_success"})
+	req := httptest.NewRequest(http.MethodGet, "/openai/v1/models", nil)
+	req.Header.Set("X-Mockport-Scenario", "totally_unknown")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d", rec.Code)
+	}
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	errObj, _ := resp["error"].(map[string]any)
+	if errObj == nil {
+		t.Fatal("want error object")
+	}
+	code, _ := errObj["code"].(string)
+	if code != "unknown_mockport_scenario" {
+		t.Errorf("want code=unknown_mockport_scenario, got %q", code)
+	}
+}
