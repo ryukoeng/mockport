@@ -122,3 +122,69 @@ func TestLINEPayUnknownScenarioReturnsCommonCode(t *testing.T) {
 		t.Errorf("want returnMessage prefixed with unknown_mockport_scenario:, got %q", msg)
 	}
 }
+
+// TestLINEMessagingFollowersUnknownScenarioReturns400 は dispatch 層一元検証により
+// これまで resolver を通していなかった Messaging API の read エンドポイント
+// GET /v2/bot/followers/ids も未知シナリオで 400（{"message": ...} 形式）を返すことを固定する。
+func TestLINEMessagingFollowersUnknownScenarioReturns400(t *testing.T) {
+	mux := newLineMuxForScenario(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+	req := httptest.NewRequest(http.MethodGet, "/line/v2/bot/followers/ids", nil)
+	req.Header.Set("X-Mockport-Scenario", "not_a_real_scenario")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	msg, _ := resp["message"].(string)
+	if !strings.HasPrefix(msg, "unknown_mockport_scenario:") {
+		t.Errorf("want message prefixed with unknown_mockport_scenario:, got %q", msg)
+	}
+}
+
+// TestLINEOAuthVerifyUnknownScenarioReturns400 は dispatch 層一元検証により
+// GET /oauth2/v2.1/verify（OAuth/Login 系 read エンドポイント）も未知シナリオで
+// 400 + 機械可読な error=unknown_mockport_scenario を返すことを固定する。
+func TestLINEOAuthVerifyUnknownScenarioReturns400(t *testing.T) {
+	mux := newLineMuxForScenario(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+	req := httptest.NewRequest(http.MethodGet, "/line/oauth2/v2.1/verify?access_token=mockport", nil)
+	req.Header.Set("X-Mockport-Scenario", "not_a_real_scenario")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("want 400, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if code, _ := resp["error"].(string); code != "unknown_mockport_scenario" {
+		t.Errorf("want error=unknown_mockport_scenario, got %q", code)
+	}
+}
+
+// TestLINEPayCheckUnknownScenarioReturnsCommonCode は dispatch 層一元検証により
+// GET /v3/payments/requests/{id}/check（LINE Pay 系 read エンドポイント）も未知シナリオで
+// 共通コードを returnMessage プレフィックスで返すことを固定する。LINE Pay は業務エラーを
+// HTTP 200 + returnCode で表す契約のため、ステータスは 200 のまま returnCode の数値契約を保つ。
+func TestLINEPayCheckUnknownScenarioReturnsCommonCode(t *testing.T) {
+	mux := newLineMuxForScenario(t, adapter.Config{BasePath: "/line", Scenario: "line_success"})
+	req := httptest.NewRequest(http.MethodGet, "/line/v3/payments/requests/tx_mockport/check", nil)
+	req.Header.Set("X-Mockport-Scenario", "not_a_real_scenario")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	var resp map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if code, _ := resp["returnCode"].(string); code != "2101" {
+		t.Errorf("want returnCode=2101 (numeric contract preserved), got %q", code)
+	}
+	msg, _ := resp["returnMessage"].(string)
+	if !strings.HasPrefix(msg, "unknown_mockport_scenario:") {
+		t.Errorf("want returnMessage prefixed with unknown_mockport_scenario:, got %q", msg)
+	}
+}

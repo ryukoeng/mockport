@@ -12,6 +12,14 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	httpx.LimitRequestBody(w, req)
 	w.Header().Set("X-Line-Request-Id", "line-request-mockport")
 	path := strings.TrimPrefix(req.URL.Path, r.basePath)
+	// Validate X-Mockport-Scenario once at the dispatch layer so every LINE
+	// endpoint rejects unknown scenario names with a 400 instead of silently
+	// falling through to a success path. The error body shape depends on the
+	// path group (Messaging API vs OAuth vs LINE Pay), so pick the matching
+	// resolver helper before routing to the concrete handler.
+	if !r.validateScenarioForPath(w, req, path) {
+		return
+	}
 	switch {
 	case req.Method == http.MethodPost && strings.HasPrefix(path, "/v2/bot/message/validate/"):
 		r.writeValidateMessage(w, req)
@@ -62,7 +70,7 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 	case req.Method == http.MethodGet && path == "/v2/profile":
 		r.writeLoginProfile(w, req)
 	case req.Method == http.MethodGet && path == "/v2/bot/info":
-		r.writeBotInfo(w, req)
+		r.writeBotInfo(w)
 	case req.Method == http.MethodGet && path == "/v2/bot/message/quota":
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"type": "limited", "value": 10000})
 	case req.Method == http.MethodGet && path == "/v2/bot/message/quota/consumption":
@@ -156,6 +164,27 @@ func (r *routes) handle(w http.ResponseWriter, req *http.Request) {
 		r.writeMiniDappPaymentLookup(w, strings.TrimPrefix(path, "/mini-dapp/v1/payments/"))
 	default:
 		http.NotFound(w, req)
+	}
+}
+
+// validateScenarioForPath resolves the request scenario using the resolver
+// helper that matches the path group's error format, returning false (after
+// writing a 400) when the X-Mockport-Scenario header names an unknown scenario.
+// Grouping mirrors the error shapes the concrete handlers already emit:
+//   - LINE Pay (/v3/payments/*): resolveScenarioPay -> {"returnCode","returnMessage"}
+//   - OAuth/Login (/oauth2/*, /v2/oauth/*): resolveScenarioOAuth -> {"error",...}
+//   - everything else (Messaging API, LIFF, MINI App, Mini Dapp, test): resolveScenario -> {"message"}
+func (r *routes) validateScenarioForPath(w http.ResponseWriter, req *http.Request, path string) bool {
+	switch {
+	case strings.HasPrefix(path, "/v3/payments/"):
+		_, ok := r.resolveScenarioPay(w, req)
+		return ok
+	case strings.HasPrefix(path, "/oauth2/") || strings.HasPrefix(path, "/v2/oauth/"):
+		_, ok := r.resolveScenarioOAuth(w, req)
+		return ok
+	default:
+		_, ok := r.resolveScenario(w, req)
+		return ok
 	}
 }
 
